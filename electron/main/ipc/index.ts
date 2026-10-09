@@ -10,7 +10,6 @@ import { registerLyricsIpc } from "./lyrics";
 import { registerHotkeyIpc } from "./hotkey";
 import { registerThemeIpc } from "./theme";
 import { registerStreamingIpc } from "./streaming";
-import { registerLastfmIpc } from "./lastfm";
 import { registerCacheIpc } from "./cache";
 import { registerDownloadIpc } from "./download";
 import { registerMcpIpc } from "./mcp";
@@ -38,7 +37,6 @@ export const registerIpcHandlers = (): void => {
   registerThemeIpc();
   registerStreamingIpc();
   registerPlaylistIpc();
-  registerLastfmIpc();
   registerCacheIpc();
   registerDownloadIpc();
   registerMcpIpc();

@@ -13,7 +13,6 @@ import { toCacheUrl } from "@main/utils/protocol";
 import { toMs } from "@main/utils/time";
 import * as mediaService from "@main/services/media";
 import * as nowPlaying from "@main/services/nowPlaying";
-import * as lastfm from "@main/services/lastfm";
 import * as neteaseScrobble from "@main/services/neteaseScrobble";
 import { fetchBytes } from "@main/utils/fetchBytes";
 import { getPlayer, resetPlayer, onPlayerCreated, onPlayerReset } from "@main/services/engine";
@@ -144,7 +143,6 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
           setTaskbarProgress(-1);
         }
         nowPlaying.onPlayStateChange(state);
-        lastfm.onState(state === "playing");
         neteaseScrobble.onState(state === "playing");
         const statusEvent = {
           type: "status",
@@ -163,7 +161,6 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
       case "ended": {
         sendToMain("player:event", { type: "ended" });
         mediaService.setPlayState({ status: "Paused" });
-        lastfm.onEnded();
         neteaseScrobble.onEnded();
         setTaskbarProgress(-1);
         break;
@@ -201,7 +198,6 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
         if (getMainWindow()?.isVisible()) sendToMain("player:event", positionEvent);
         mediaService.setTimeline({ currentMs: posMs, totalMs: durMs });
         nowPlaying.onPosition(posMs, true);
-        lastfm.onPosition();
         neteaseScrobble.onPosition(posMs);
         if (store.get("system.taskbarProgress") && durMs > 0) setTaskbarProgress(posMs / durMs);
         break;
@@ -300,13 +296,6 @@ const completeTrackLoad = (
   setTraySongName(header);
   setTrayPlayState(autoPlay ? "playing" : "paused");
   if (!isRemote) setTaskbarThumbnailCover(meta.cover);
-  lastfm.onTrackLoaded({
-    title: displayTitle,
-    artist: displayArtists[0]?.name ?? "",
-    album: displayAlbum,
-    durationMs,
-    autoPlay,
-  });
   neteaseScrobble.onTrackLoaded(authoritative, options.context, durationMs, autoPlay);
   if (coverFetchUrl) {
     void fetchBytes(coverFetchUrl).then((buf) => {

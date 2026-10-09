@@ -729,7 +729,6 @@
       "hotkeys": "Hotkeys",
       "musicSpectrum": "Music Spectrum",
       "discord": "Discord RPC",
-      "lastfm": "Last.fm",
       "mcp": "MCP",
       "systemConfig": "System",
       "pluginManage": "Import Plugins",
@@ -1592,38 +1591,6 @@
       "name": "App Name",
       "details": "Song Name",
       "state": "Artist Name"
-    },
-    "lastfmEnabled": {
-      "label": "Last.fm",
-      "description": "Connect your Last.fm account to scrobble and sync loves"
-    },
-    "lastfmScrobble": {
-      "label": "Scrobbling",
-      "description": "Record a play to Last.fm after listening for a while"
-    },
-    "lastfmNowPlaying": {
-      "label": "Now Playing",
-      "description": "Send the currently playing track to Last.fm"
-    },
-    "lastfmLoveSync": {
-      "label": "Sync Loves",
-      "description": "Mirror your likes as Last.fm Love / Unlove"
-    },
-    "lastfm": {
-      "connect": "Connect account",
-      "connecting": "Finish authorization in your browser…",
-      "cancel": "Cancel",
-      "disconnect": "Disconnect",
-      "connectedAs": "Connected: {name}",
-      "notConnected": "No Last.fm account connected",
-      "connectHint": "Clicking connect opens the authorization page in your browser",
-      "toast": {
-        "connected": "Connected to Last.fm: {name}",
-        "timeout": "Authorization timed out, please retry",
-        "canceled": "Authorization canceled",
-        "failed": "Connection failed, please retry",
-        "disconnected": "Disconnected from Last.fm"
-      }
     },
     "platformLogin": {
       "title": "Log in to {name} Account",

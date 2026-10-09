@@ -26,7 +26,6 @@ vi.mock("@main/utils/logger", () => ({ systemLog: {} }));
 vi.mock("@main/utils/config", () => ({ isWin: true }));
 vi.mock("@main/utils/broadcast", () => ({}));
 vi.mock("@main/services/media", () => ({}));
-vi.mock("@main/services/lastfm", () => ({}));
 vi.mock("@main/services/engine", () => ({}));
 vi.mock("@main/window", () => ({}));
 vi.mock("@main/services/mcp/http", () => ({}));

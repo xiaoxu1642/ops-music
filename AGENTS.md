@@ -103,8 +103,7 @@ Declarative — defined in `src/settings/schema.ts`, types in `src/types/setting
 {userData}/app-data/        # Unified data directory, separate from Chromium cache data
 ├── config/
 │   ├── settings.json       # Main config (electron/main/store/)
-│   ├── streaming.json      # Streaming credentials (safeStorage encrypted)
-│   └── lastfm.json         # Last.fm credentials (safeStorage encrypted)
+│   └── streaming.json      # Streaming credentials (safeStorage encrypted)
 ├── database/library.db     # Music library (better-sqlite3, WAL)
 ├── cache/                  # covers/ (cover:// protocol) + artists/ backgrounds/ songs/
 ├── logs/                   # App logs + native/

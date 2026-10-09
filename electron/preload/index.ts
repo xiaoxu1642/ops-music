@@ -662,19 +662,6 @@ const api = {
     getLyrics: (serverId: string, trackId: string, hint?: { artist?: string; title?: string }) =>
       ipcRenderer.invoke("streaming:getLyrics", serverId, trackId, hint),
   },
-  lastfm: {
-    // 发起授权
-    connect: () => ipcRenderer.invoke("lastfm:connect"),
-    // 取消授权轮询
-    cancelConnect: () => ipcRenderer.invoke("lastfm:cancelConnect"),
-    // 断开并清除凭证
-    disconnect: () => ipcRenderer.invoke("lastfm:disconnect"),
-    // 查询连接状态
-    getStatus: () => ipcRenderer.invoke("lastfm:getStatus"),
-    // 同步喜欢
-    love: (artist: string, track: string, loved: boolean) =>
-      ipcRenderer.invoke("lastfm:love", artist, track, loved),
-  },
   mcp: {
     // 重启 MCP 服务
     restart: () => ipcRenderer.invoke("mcp:restart"),

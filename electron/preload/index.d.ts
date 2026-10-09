@@ -21,7 +21,6 @@ import {
 } from "@shared/types/window";
 import { HotkeyApi } from "@shared/types/hotkey";
 import { StreamingApi } from "@shared/types/streaming";
-import { LastfmApi } from "@shared/types/lastfm";
 import { IpcResponse } from "@shared/types/player";
 import { StatsApi } from "@shared/types/stats";
 import { CloudUploadApi } from "@shared/types/cloudUpload";
@@ -111,7 +110,6 @@ declare global {
       stats: StatsApi;
       hotkey: HotkeyApi;
       streaming: StreamingApi;
-      lastfm: LastfmApi;
       mcp: {
         restart: () => Promise<McpStatus>;
         getStatus: () => Promise<McpStatus>;

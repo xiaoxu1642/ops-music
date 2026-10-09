@@ -12,7 +12,6 @@ import {
 import { isMac } from "@main/utils/config";
 import { registerIpcHandlers } from "@main/ipc";
 import { init as initMedia, shutdown as shutdownMedia } from "@main/services/media";
-import { init as initLastfm } from "@main/services/lastfm";
 import { initGlobalHotkey } from "@main/services/globalHotkey";
 import { initDatabase, closeDatabase } from "@main/database";
 import { init as initSongCache } from "@main/services/songCache";
@@ -124,8 +123,6 @@ export const initApp = (): void => {
     // 启动下载服务
     void initDownload();
     initMedia();
-    // 初始化 Last.fm 集成
-    initLastfm();
     // 初始化插件系统
     pluginRegistry.init();
     // 初始化播放事件桥（需在 pluginRegistry.init 之后，读 hasEnabledControlPlugin）

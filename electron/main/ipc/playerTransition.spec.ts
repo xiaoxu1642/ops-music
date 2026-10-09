@@ -70,7 +70,6 @@ vi.mock("@main/utils/protocol", () => ({ toCacheUrl: () => undefined }));
 vi.mock("@main/utils/config", () => ({ appName: "SPlayer", getSongCacheDir: () => "cache" }));
 vi.mock("@main/utils/fetchBytes", () => ({}));
 vi.mock("@main/utils/powerBlocker", () => ({}));
-vi.mock("@main/services/lastfm", () => ({ onTrackLoaded: vi.fn() }));
 vi.mock("@main/services/neteaseScrobble", () => ({ onTrackLoaded: vi.fn() }));
 vi.mock("@main/services/songCache", () => ({}));
 vi.mock("@main/services/thumbar", () => ({ getThumbar: () => null }));

@@ -717,7 +717,6 @@
       "hotkeys": "快捷键",
       "musicSpectrum": "音乐频谱",
       "discord": "Discord RPC",
-      "lastfm": "Last.fm",
       "mcp": "MCP",
       "systemConfig": "系统配置",
       "pluginManage": "导入插件",
@@ -1580,38 +1579,6 @@
       "name": "应用名",
       "details": "歌曲名",
       "state": "歌手名"
-    },
-    "lastfmEnabled": {
-      "label": "Last.fm",
-      "description": "连接 Last.fm 账号，记录播放并同步喜欢"
-    },
-    "lastfmScrobble": {
-      "label": "记录播放（Scrobble）",
-      "description": "播放一段时间后自动记录到 Last.fm"
-    },
-    "lastfmNowPlaying": {
-      "label": "正在播放",
-      "description": "向 Last.fm 同步当前正在播放的歌曲"
-    },
-    "lastfmLoveSync": {
-      "label": "同步喜欢",
-      "description": "点击喜欢时同步为 Last.fm 的 Love / Unlove"
-    },
-    "lastfm": {
-      "connect": "连接账号",
-      "connecting": "请在浏览器中完成授权…",
-      "cancel": "取消",
-      "disconnect": "断开连接",
-      "connectedAs": "已连接：{name}",
-      "notConnected": "尚未连接 Last.fm 账号",
-      "connectHint": "点击连接后将在浏览器中打开授权页面",
-      "toast": {
-        "connected": "已连接到 Last.fm：{name}",
-        "timeout": "授权超时，请重试",
-        "canceled": "已取消授权",
-        "failed": "连接失败，请重试",
-        "disconnected": "已断开 Last.fm 连接"
-      }
     },
     "platformLogin": {
       "title": "登录 {name} 账号",

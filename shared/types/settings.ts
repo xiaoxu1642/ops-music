@@ -76,18 +76,6 @@ export interface DiscordSettings {
   displayMode: DiscordDisplayMode;
 }
 
-/** Last.fm 集成配置 */
-export interface LastfmSettings {
-  /** 总开关 */
-  enabled: boolean;
-  /** 记录播放（scrobble） */
-  scrobble: boolean;
-  /** 正在播放上报 */
-  nowPlaying: boolean;
-  /** 喜欢同步 */
-  loveSync: boolean;
-}
-
 /** 媒体集成配置 */
 export interface MediaSettings {
   /** 是否启用系统媒体控件（SMTC / MPRIS / MPNowPlaying） */
@@ -408,8 +396,6 @@ export interface SystemConfig {
   download: DownloadSettings;
   /** 流媒体总开关 */
   streaming: StreamingSettings;
-  /** Last.fm 集成配置 */
-  lastfm: LastfmSettings;
   /** AI 集成使用的 MCP 服务 */
   mcp: McpSettings;
   /** 系统配置 */

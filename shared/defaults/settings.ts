@@ -129,12 +129,6 @@ export const defaultSystemConfig: SystemConfig = {
   streaming: {
     enabled: true,
   },
-  lastfm: {
-    enabled: false,
-    scrobble: true,
-    nowPlaying: true,
-    loveSync: true,
-  },
   mcp: {
     enabled: false,
     port: 14559,
