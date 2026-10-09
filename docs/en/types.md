@@ -12,14 +12,13 @@ The `track` payload for [`trackChange`](/en/plugins/control#playback-events) and
 | --------------- | ---------------------------------- | -------------------------------------- |
 | `id`            | `string`                           | Track ID                               |
 | `extId`         | `string?`                          | Secondary ID                           |
+| `mediaId`       | `string?`                          | Platform media-file ID                 |
 | `source`        | [`TrackSource`](#tracksource)      | Track source                           |
 | `path`          | `string?`                          | Local file path                        |
 | `cuePath`       | `string?`                          | CUE file path                          |
 | `cueAudioPath`  | `string?`                          | Audio file referenced by the CUE       |
 | `cueStartMs`    | `number?`                          | CUE segment start in milliseconds      |
 | `cueEndMs`      | `number?`                          | CUE segment end in milliseconds        |
-| `serverId`      | `string?`                          | Streaming server instance ID           |
-| `originalId`    | `string?`                          | Server-native track ID                 |
 | `title`         | `string`                           | Title                                  |
 | `comment`       | `string?`                          | Comment or subtitle                    |
 | `artists`       | [`Artist[]`](#artist)              | Artists                                |
@@ -37,7 +36,7 @@ The `track` payload for [`trackChange`](/en/plugins/control#playback-events) and
 
 ### TrackSource
 
-`"local"`, `"streaming"`, or one of the built-in platforms: `"netease"`, `"qqmusic"`, and `"kugou"`. Plugin source keys are not stored as `TrackSource`.
+`"local"` for local files, or the built-in online platform `"netease"`. This project removed the QQ Music, Kugou, and streaming-server sources. Plugin source keys are not stored as `TrackSource`.
 
 ### TrackFee
 

@@ -10,13 +10,9 @@ This page covers the basics of SPlayer-Next. See [Download](/en/download) for in
 
 ## Local music
 
-1. Open **Settings → Local Music** or the library page and add folders to scan.
+1. Open the **Library** page in the sidebar and add the folders to scan.
 2. After scanning, browse the library by track, album, or artist.
 3. Local track tags and cover art can be edited in the metadata editor.
-
-## Streaming
-
-Connect self-hosted Subsonic, Navidrome, Jellyfin, or Emby servers. See [Streaming Services](/en/streaming).
 
 ## Lyrics
 
@@ -40,17 +36,13 @@ If you maintain your own TTML files, select a local directory as a lyrics librar
 
 ### Lyrics windows
 
-- **Desktop lyrics:** A configurable floating window with positioning, typography, colors, alignment, translations, word timing, locking, and click-through.
-- **Dynamic Island:** A compact lyric strip centered at the top of the screen.
-- **Taskbar lyrics (Windows):** Displays the current line in the Windows taskbar.
-
-Toggle these windows from the player or tray menu and configure their styles independently.
+Only **taskbar lyrics (Windows)** remain: the current line is drawn inside the Windows taskbar, with word-by-word sweep, font size, position, colors and translation options under **Settings → External Lyrics**. The desktop lyrics and Dynamic Island windows were removed as part of this project's scope cut, and their settings no longer exist.
 
 ## System integration
 
-- **System media controls:** Windows SMTC, Linux MPRIS, and macOS Now Playing provide lock-screen, notification, and media-key control.
-- **Discord status:** Optionally show the current track in Discord.
-- **Global shortcuts:** Bind global playback shortcuts in Settings.
+- **System media controls:** Windows SMTC provides lock-screen, notification, and media-key control.
+- **Tray:** The app keeps running in the tray after the main window is closed, with playback and taskbar-lyric toggles in the menu.
+- **Global shortcuts:** Bind global playback shortcuts under **Settings → Hotkey Settings**.
 
 ## Plugins
 
@@ -58,4 +50,4 @@ The plugin system extends music sources and playback control. See [Using Plugins
 
 ## External control
 
-Optional HTTP and WebSocket APIs and a separate local MCP service let other programs or AI clients inspect and control playback. See the [HTTP API](/en/api), [WebSocket API](/en/socket), and [MCP interface](/en/mcp).
+A local MCP service with its own switch lets AI clients inspect and control playback. See the [MCP interface](/en/mcp). The external HTTP and WebSocket APIs were removed as part of this project's scope cut.

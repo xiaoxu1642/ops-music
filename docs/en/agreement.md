@@ -16,12 +16,11 @@ SPlayer Next is a free and open-source cross-platform desktop music player. Read
 - **User / you:** Any individual or organization that installs or uses the software.
 - **Local content:** Audio stored on your devices or storage you are authorized to access.
 - **Online platform:** A public online music service operated independently by a third party.
-- **Self-hosted media server:** A Subsonic-compatible, Jellyfin, Emby, or similar server you operate or are authorized to access.
 - **Third-party plugin / source:** A community script imported locally or from the network, including compatible LX Music scripts.
 
 ## 2. Nature of the software
 
-The software is a client-side tool for decoding, playing, organizing, and managing local audio and, when configured by you, interacting with online platforms, self-hosted servers, or plugins.
+The software is a client-side tool for decoding, playing, organizing, and managing local audio and, when configured by you, interacting with online platforms and plugins.
 
 It is free software provided without a promise of commercial service, continued maintenance, or support for a particular purpose. Rights to use, copy, modify, and redistribute it are governed by AGPL-3.0.
 
@@ -47,27 +46,23 @@ You must not use the software to violate applicable law, infringe third-party ri
 
 The software provides general client capabilities that request data when initiated by you. Third-party platforms are independently operated and are not affiliated with or authorized by the developers. Their terms, privacy policies, copyright rules, access controls, and availability apply.
 
-### 5.2 Self-hosted servers
-
-You must be authorized to access each configured server and its content. You are responsible for server availability, legality, and security.
-
-### 5.3 Plugins and sources
+### 5.2 Plugins and sources
 
 The software includes an open extension mechanism and optional plugin market. Market entries index third-party submissions; they are not authored or operated by the SPlayer Next developers unless explicitly stated.
 
 Market submissions receive automated checks and maintainer review, but this is not a complete security audit, legal determination, or endorsement. Locally or remotely imported plugins do not pass through market review. Plugins are executable code that can make network requests and persist data, so inspect their source and permissions and install only trusted plugins.
 
-### 5.4 Copyrighted data
+### 5.3 Copyrighted data
 
 The developers claim no ownership over track URLs, metadata, lyrics, covers, or other third-party content. Your access, storage, use, and distribution must comply with applicable law, authorization from rights holders, and platform terms. Technical capability does not grant rights to third-party content.
 
-### 5.5 MCP and external APIs
+### 5.4 MCP interface and automation
 
-HTTP, WebSocket, and MCP interfaces are neutral local control mechanisms. You are responsible for actions, data changes, and security risks caused by AI agents, automation scripts, or other clients using them.
+The MCP (Model Context Protocol) interface is a neutral local control mechanism. You are responsible for actions, data changes, and security risks caused by AI agents, automation scripts, or other clients using it.
 
 ## 6. Accounts and credentials
 
-Credentials are used only for requested features and remain on your device. Streaming passwords and Last.fm session keys prefer operating-system `safeStorage`; when unavailable, the app stores them as Base64 and logs a warning. AI model API keys are not saved without secure storage. Base64 is not encryption. The developers do not upload these credentials to a server they control.
+Credentials are used only for requested features and remain on your device. The developers do not upload these credentials to a server they control.
 
 You are responsible for protecting accounts, devices, and credentials.
 
@@ -91,7 +86,7 @@ The website may offer third-party acceleration routes that proxy official GitHub
 
 ## 11. Updates
 
-The application may optionally check and download releases from the official repository. No particular release is guaranteed continued maintenance, and development or distribution may change or stop.
+The application has **no update checking and no auto-updater** (both were removed as part of this project's scope cut); install new versions manually from the download page. No particular release is guaranteed continued maintenance, and development or distribution may change or stop.
 
 ## 12. Third-party open-source components
 

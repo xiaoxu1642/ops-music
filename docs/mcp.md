@@ -4,7 +4,7 @@ SPlayer-Next 内置 [Model Context Protocol](https://modelcontextprotocol.io/) �
 
 ## 连接
 
-MCP 服务默认关闭。先在 **设置 → AI 集成 → MCP** 中启用，再使用设置页显示的实际端口与连接密钥。
+MCP 服务默认关闭。先在 **设置 → 服务 → MCP** 中启用，再使用设置页显示的实际端口与连接密钥。
 
 - **传输协议**：Streamable HTTP
 - **地址**：`http://127.0.0.1:<port>/mcp`

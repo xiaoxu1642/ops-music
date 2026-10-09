@@ -10,12 +10,12 @@ SPlayer-Next 是基于 **Electron + Vue 3 + TypeScript** 的桌面音乐播放�
 
 - **主进程** `electron/main/`：窗口管理、IPC、原生模块调度
 - **Preload** `electron/preload/`：通过 contextBridge 暴露 `window.api`
-- **渲染进程** `src/`：Vue 3 SPA；另有三个独立窗口 `windows/desktop-lyric`、`windows/dynamic-island`、`windows/taskbar-lyric`
+- **渲染进程** `src/`：Vue 3 SPA；另有一个独立窗口 `windows/taskbar-lyric`（复用 `windows/shared/`）
 
 ### 原生模块（`native/`）
 
 - `audio-engine`：`ffmpeg_audio` 解码（静态编 FFmpeg，零环境依赖）+ rodio 播放 + FFT + 封面提取；URL 通过 `ffmpeg_audio::HttpAudioSource`（配对 `HttpCancelHandle` 用于打断与 Seek 重置，`reqwest` + `rustls`）包成 Read+Seek 流喂给 `ffmpeg_audio`
-- `media-ctrl`：跨平台系统媒体控件（Windows SMTC / Linux MPRIS / macOS MPNowPlaying）+ Discord RPC
+- `media-ctrl`：系统媒体控件（Windows SMTC；crate 内仍保留 Linux MPRIS / macOS MPNowPlaying 后端，但本项目只发布 Windows 版本，已无 Discord RPC）
 - `taskbar-lyric`：Windows 专属，把窗口嵌入任务栏 + RegistryWatcher / UiaWatcher / TrayWatcher 四路监听
 
 所有原生模块通过 `loadNativeModule()`（`electron/main/utils/nativeLoader.ts`）懒加载。
@@ -27,7 +27,7 @@ SPlayer-Next 是基于 **Electron + Vue 3 + TypeScript** 的桌面音乐播放�
 | `@/*`                    | `src/*`                | 渲染进程                                   |
 | `@shared/*`              | `shared/*`             | 主进程 + 渲染进程 + 原生类型               |
 | `@main/*`                | `electron/main/*`      | 主进程                                     |
-| `@windows/*`             | `windows/*`            | 三个独立歌词窗口（复用 `windows/shared/`） |
+| `@windows/*`             | `windows/*`            | 任务栏歌词窗口（复用 `windows/shared/`）   |
 | `@splayer/audio-engine`  | `native/audio-engine`  | 主进程，类型从自动生成的 `index.d.ts` 导入 |
 | `@splayer/media-ctrl`    | `native/media-ctrl`    | 同上                                       |
 | `@splayer/taskbar-lyric` | `native/taskbar-lyric` | 同上                                       |
@@ -48,11 +48,11 @@ SPlayer-Next 是基于 **Electron + Vue 3 + TypeScript** 的桌面音乐播放�
 
 ## 窗口侧（`windows/`）
 
-三个歌词窗口都复用：
+任务栏歌词窗口复用：
 
 - `@windows/shared/composables/useNowPlayingSync` 提供播放同步、歌词索引、锚点插值
 - `getNowPlayingCurrentMs()` 非响应式读当前时间，供逐字高亮 RAF 循环用
-- 歌词行选择算法按窗口语义选：桌面歌词用 `pickPrimaryIndex`（考虑 overlap）、灵动岛用 `pickLatestStartedIndex`（立即切换）
+- 歌词行选择由调用方通过 `pickIndex` 传入；任务栏歌词用 `lyric-kit` 的 `pickPrimaryIndex`（考虑 overlap）。桌面歌词与灵动岛窗口已移除，不再有各自的选行策略
 
 不要在窗口内重新实现上述逻辑，直接调用共享 composable。
 

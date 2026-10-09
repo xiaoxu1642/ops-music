@@ -66,7 +66,7 @@ pnpm build:native     # 仅构建 Rust 原生模块（加 `--dev` 为 debug 构�
 electron/main/      主进程：窗口、IPC、原生模块、服务
 electron/preload/   预加载：通过 contextBridge 暴露 window.api
 src/                渲染层：Vue 3 单页应用
-windows/            桌面歌词 / 灵动岛 / 任务栏歌词等独立窗口
+windows/            任务栏歌词独立窗口（复用 windows/shared/）
 native/             Rust 原生模块（NAPI-RS）
 shared/             跨进程共享的类型与默认配置
 ```

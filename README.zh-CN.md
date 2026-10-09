@@ -28,16 +28,18 @@
 ## 功能特性
 
 - 🎵 **广泛的格式支持** —— MP3、FLAC、WAV、AAC、OGG、APE 等，基于 FFmpeg 解码
-- 📝 **丰富的歌词** —— LRC / QRC / YRC / TTML，逐字高亮与翻译，支持桌面、灵动岛、任务栏歌词窗口
-- 🌐 **流媒体服务** —— Subsonic / Navidrome / Jellyfin / Emby（多服务器、自动连接）
-- 🖥️ **跨平台** —— Windows / macOS / Linux
+- 📝 **丰富的歌词** —— LRC / QRC / YRC / TTML，逐字高亮与翻译，主播放页歌词与 Windows 任务栏歌词（逐字扫词）
+- 🌐 **在线逐字歌词** —— 可选匹配社区维护的 AMLL TTML DB，也可用本地 TTML 歌词库覆盖在线结果
+- 🖥️ **Windows 桌面播放器** —— 不再发布 macOS / Linux 版本
+- 📁 **本地曲库** —— 文件夹扫描、歌单、收藏与播放记录
 - 🎚️ **音乐频谱** —— 实时 FFT 可视化
 - 🏷️ **元信息编辑** —— 编辑本地曲目标签与封面
-- ⬇️ **下载** —— 内置下载管理器
-- 🎧 **系统媒体集成** —— Windows SMTC / Linux MPRIS / macOS Now Playing + Discord RPC
+- ⬇️ **下载** —— 内置下载管理器，写入标签、封面与歌词文件
+- 🗂️ **缓存与统计** —— 缓存管理、听歌统计
+- 🎧 **系统媒体集成** —— Windows SMTC（锁屏、通知栏、媒体键）、托盘菜单与全局快捷键
 - ⚡ **高性能音频引擎** —— FFmpeg + Rust
 - 🎨 **自适应主题** —— 基于封面取色，Light / Dark / Auto
-- 📈 **Last.fm Scrobble**
+- 🧩 **可扩展** —— lx-music（`user_api`）插件音源与面向 AI 客户端的本机 MCP 接口
 
 ## 开发
 
@@ -51,11 +53,13 @@
 
 核心性能特性由 Rust 编写的原生模块提供：
 
-| 模块            | 说明                                               |
-| --------------- | -------------------------------------------------- |
-| `audio-engine`  | 高性能音频解码（FFmpeg）、播放、FFT 频谱、封面提取 |
-| `media-ctrl`    | 系统媒体控制 + Discord Rich Presence               |
-| `taskbar-lyric` | Windows 任务栏歌词原生渲染                         |
+| 模块                | 说明                                               |
+| ------------------- | -------------------------------------------------- |
+| `audio-engine`      | 高性能音频解码（FFmpeg）、播放、FFT 频谱、封面提取 |
+| `media-ctrl`        | 系统媒体控制（Windows SMTC）                       |
+| `taskbar-lyric`     | Windows 任务栏歌词原生渲染                         |
+| `taskbar-thumbnail` | Windows 任务栏悬停缩略图 / Peek 预览替换为专辑封面 |
+| `opencc`            | 歌词文本的中文简繁转换                             |
 
 `pnpm dev` 与 `pnpm build` 会自动编译原生模块。若只做 UI 开发想跳过，可设置 `SKIP_NATIVE_BUILD=true`。
 
@@ -80,6 +84,7 @@ pnpm build:linux   # 打包 Linux（AppImage / deb / rpm / tar.gz / pacman）
 ```
 
 > 默认仅构建当前架构，暂不支持交叉编译。
+> Ops Music 只发布 Windows 安装包；`build:mac` 与 `build:linux` 沿用自上游，不属于本项目的发布流程。
 
 ### 其他脚本
 

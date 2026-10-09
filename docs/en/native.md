@@ -7,9 +7,10 @@ Performance-sensitive features are implemented in **Rust**, compiled with [NAPI-
 | Module              | Responsibility                                                     |
 | ------------------- | ------------------------------------------------------------------ |
 | `audio-engine`      | FFmpeg decoding, rodio playback, FFT, and cover extraction         |
-| `media-ctrl`        | Windows SMTC, Linux MPRIS, macOS Now Playing, and Discord RPC      |
+| `media-ctrl`        | System media controls (Windows SMTC)                               |
 | `taskbar-lyric`     | Windows taskbar lyric rendering                                    |
 | `taskbar-thumbnail` | Replaces Windows taskbar thumbnail and Peek preview with album art |
+| `opencc`            | Chinese simplified/traditional conversion for lyric text           |
 
 ### audio-engine
 
@@ -21,7 +22,7 @@ Performance-sensitive features are implemented in **Rust**, compiled with [NAPI-
 
 ### media-ctrl
 
-Provides system media controls on Windows, Linux, and macOS, plus Discord Rich Presence.
+System media controls. Ops Music ships Windows builds only, so the integration in use is **Windows SMTC** (lock screen, notifications, media keys). The crate still contains Linux MPRIS and macOS Now Playing backends inherited from upstream; they are neither shipped nor verified by this project.
 
 ### taskbar-lyric
 
@@ -30,6 +31,10 @@ Renders lyrics in the Windows taskbar and adapts to theme and taskbar state.
 ### taskbar-thumbnail
 
 Uses DWM iconic representation on Windows to replace the taskbar hover thumbnail and full-size Peek preview with album artwork.
+
+### opencc
+
+OpenCC Chinese variant conversion. The main process calls `opencc.convertText` / `convertTexts` to convert lyric text between simplified and traditional Chinese for display and matching.
 
 ## Building
 
@@ -47,6 +52,7 @@ NAPI-RS generates each module's `index.d.ts`. The main process imports them thro
 @splayer/media-ctrl        → native/media-ctrl
 @splayer/taskbar-lyric     → native/taskbar-lyric
 @splayer/taskbar-thumbnail → native/taskbar-thumbnail
+@splayer/opencc            → native/opencc
 ```
 
 ::: tip Skipping native builds

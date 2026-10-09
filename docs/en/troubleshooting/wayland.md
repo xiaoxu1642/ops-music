@@ -25,56 +25,17 @@ In KDE Plasma, the same change can be made by editing the application's desktop 
 
 Wayland intentionally prevents applications from reading or setting global coordinates and applies stricter rules to transparent, borderless, always-on-top windows.
 
-| Feature                           | Possible behavior under Wayland                     |
-| --------------------------------- | --------------------------------------------------- |
-| Desktop lyrics / Dynamic Island   | Rendering errors, opaque background, wrong position |
-| Absolute positioning and snapping | Unavailable or inaccurate                           |
-| Always on top                     | Limited compositor support                          |
-| Click-through                     | May not work                                        |
-| Global cursor hover detection     | Hidden/interactive behavior may be inaccurate       |
-| Global shortcuts                  | May fail to register                                |
+| Feature                           | Possible behavior under Wayland               |
+| --------------------------------- | --------------------------------------------- |
+| Absolute positioning and snapping | Unavailable or inaccurate                     |
+| Always on top                     | Limited compositor support                    |
+| Click-through                     | May not work                                  |
+| Global cursor hover detection     | Hidden/interactive behavior may be inaccurate |
+| Global shortcuts                  | May fail to register                          |
 
 Behavior varies between GNOME Mutter, KDE KWin, wlroots-based compositors, and other environments.
 
-## Desktop lyric window rules
-
-The desktop lyric window has the fixed title `SPlayer-Next - Desktop Lyric`. In KWin, create a rule matching window class `top.imsyy.splayer_next` and this exact title. You can force Always on Top, Overlay layer, All Desktops, and skip taskbar/pager/switcher behavior.
-
-Example KWin rule:
-
-```ini
-[SPlayer Next Desktop Lyric]
-Description=SPlayer Next Desktop Lyric
-above=true
-aboverule=2
-desktops=\0
-desktopsrule=2
-layer=overlay
-layerrule=2
-skippager=true
-skippagerrule=2
-skipswitcher=true
-skipswitcherrule=2
-skiptaskbar=true
-skiptaskbarrule=2
-title=SPlayer-Next - Desktop Lyric
-titlematch=1
-wmclass=top.imsyy.splayer_next
-wmclassmatch=1
-```
-
-Example Niri rule, which has not been extensively tested:
-
-```kdl
-window-rule {
-    match app-id="top.imsyy.splayer_next" title="SPlayer-Next - Desktop Lyric"
-    open-floating true
-}
-```
-
-If normal mouse dragging does not work, enable **Settings → External Lyrics → Desktop Lyrics → Use CSS dragging**. Otherwise, use the compositor shortcut, such as Meta + left mouse button in KWin or Alt + left mouse button in Mutter.
-
-Click-through while locked is a known issue; Xwayland may help.
+> Ops Music ships Windows builds only. The Linux notes below are inherited from the upstream baseline and are for users who build a Linux version themselves. The window rules and dragging notes for the floating desktop lyric and Dynamic Island windows were removed together with those windows.
 
 ## Global shortcuts
 
@@ -91,10 +52,6 @@ dbus-send --session --dest=org.freedesktop.portal.Desktop --print-reply \
 ```
 
 See the [XDG Desktop Portal ArchWiki page](https://wiki.archlinux.org/title/XDG_Desktop_Portal#List_of_backends_and_interfaces) for backend support.
-
-## External display alternatives
-
-If Electron floating windows do not work well, a desktop-native panel or widget can read the [HTTP API](/en/api) or [WebSocket API](/en/socket) and render lyrics through the compositor's own UI.
 
 ## Reporting a problem
 

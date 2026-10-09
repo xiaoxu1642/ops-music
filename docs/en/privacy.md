@@ -18,8 +18,7 @@ This policy explains how SPlayer Next processes, stores, and protects informatio
 
 ### 2.1 Information you provide
 
-- **Third-party credentials:** Server URLs, usernames, passwords, tokens, or API keys entered for services such as Subsonic, Navidrome, Jellyfin, Emby, Last.fm, or a configured AI model. Credentials are encrypted locally through the operating system's secure storage when available. If it is unavailable, streaming passwords and Last.fm session keys fall back to Base64 storage and the application writes a warning to the local log; AI model API keys are refused instead of being saved. Base64 is not encryption. Credentials are not sent to a server controlled by the developers.
-- **Preferences:** Language, theme, shortcuts, audio output, and other settings.
+- **Preferences:** Language, theme, shortcuts, audio output device, local scan folders, plugin sources, and lyric service addresses. These are stored on your device only and remain under your control.
 
 ### 2.2 Local runtime and cache data
 
@@ -32,13 +31,12 @@ The software processes this information to play and organize media, restore your
 
 ## 4. Third-party services and extensions
 
-1. **Self-hosted media servers:** Traffic is sent directly from your client to the configured server. You and the server operator are responsible for its security and privacy.
-2. **Plugins and source extensions:** The optional plugin market performs automated checks and maintainer review, but this is not a complete security audit or endorsement. Community plugins can make their own network requests and process data. Review their source, permissions, and origin before use.
-3. **Discord, Last.fm, and similar integrations:** When enabled, the app communicates with the relevant local IPC endpoint or official API. Their own terms and privacy policies apply.
+1. **Plugins and source extensions:** The optional plugin market performs automated checks and maintainer review, but this is not a complete security audit or endorsement. Community plugins can make their own network requests and process data. Review their source, permissions, and origin before use.
+2. **Online music platforms:** When you sign in or browse, the app talks directly to the platform's public endpoints. That platform's own terms and privacy policy apply.
 
 ## 5. Storage, retention, and protection
 
-Most data remains in the application's local data directory until you clear it or remove the application data. Sensitive credentials prefer operating-system secure storage. Base64 fallback for streaming and Last.fm is explicitly logged; AI model API keys are not saved when secure storage is unavailable. Network features prefer HTTPS/TLS when the destination supports it.
+Most data remains in the application's local data directory until you clear it or remove the application data. Network features prefer HTTPS/TLS when the destination supports it.
 
 No system can guarantee absolute security. Protect your device and third-party accounts accordingly.
 

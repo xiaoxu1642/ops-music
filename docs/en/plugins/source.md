@@ -1,6 +1,6 @@
 # Source Plugins
 
-A source plugin (`@type source`) provides playable URLs when the built-in provider cannot return one. It can also supply fallback lyrics, covers, and comments for online, local, and streaming tracks.
+A source plugin (`@type source`) provides playable URLs when the built-in provider cannot return one. It can also supply fallback lyrics, covers, and comments for online and local tracks.
 
 Read [Plugin Overview](/en/plugins/) first for common APIs such as `request`, `storage`, `log`, and `utils`.
 
@@ -254,7 +254,7 @@ splayer.on("musicPic", async ({ musicInfo }) => {
 
 ### Trigger order
 
-- Lyrics fallback applies to online, local, and streaming tracks. Built-in providers or the streaming server are tried first; plugins follow in user priority order.
+- Lyrics fallback applies to online and local tracks. Built-in sources are tried first; plugins follow in user priority order.
 - Cover fallback applies only when a track from any source has no cover at all.
 - Comment sources appear only when they declare both `musicSearch` and `musicComment`.
 - Source plugins receive network permission automatically.

@@ -8,36 +8,35 @@
 
 一首歌曲的完整信息。控制插件的 [`trackChange`](/plugins/control#监听播放事件) 事件载荷与菜单点击（[`menuClick`](/plugins/control#菜单扩展)）入参的 `track` 均为此对象。
 
-| 字段            | 类型                               | 说明                                  |
-| --------------- | ---------------------------------- | ------------------------------------- |
-| `id`            | `string`                           | 曲目 ID                               |
-| `extId`         | `string?`                          | 二级 ID                               |
-| `source`        | [`TrackSource`](#tracksource)      | 歌曲来源                              |
-| `path`          | `string?`                          | 本地文件路径（仅本地歌曲）            |
-| `cuePath`       | `string?`                          | CUE 文件路径                          |
-| `cueAudioPath`  | `string?`                          | CUE 指向的音频文件路径                |
-| `cueStartMs`    | `number?`                          | CUE 分轨起始时间（毫秒）              |
-| `cueEndMs`      | `number?`                          | CUE 分轨结束时间（毫秒）              |
-| `serverId`      | `string?`                          | 流媒体服务器实例 ID（仅 `streaming`） |
-| `originalId`    | `string?`                          | 流媒体服务器原生 ID（仅 `streaming`） |
-| `title`         | `string`                           | 标题                                  |
-| `comment`       | `string?`                          | 注释 / 副标题                         |
-| `artists`       | [`Artist[]`](#artist)              | 歌手                                  |
-| `album`         | [`Album`](#album)`?`               | 专辑                                  |
-| `track`         | `number?`                          | 曲目编号                              |
-| `duration`      | `number`                           | 时长（毫秒）                          |
-| `cover`         | `string?`                          | 封面地址                              |
-| `coverOriginal` | `string?`                          | 原始封面地址                          |
-| `fileSize`      | `number?`                          | 文件大小（字节）                      |
-| `mtime`         | `number?`                          | 修改时间（Unix 毫秒）                 |
-| `ctime`         | `number?`                          | 创建时间（Unix 毫秒）                 |
-| `quality`       | [`AudioQuality`](#audioquality)`?` | 音质信息                              |
-| `fee`           | [`TrackFee`](#trackfee)`?`         | 付费标记                              |
-| `cloud`         | `boolean?`                         | 是否云盘歌曲                          |
+| 字段            | 类型                               | 说明                       |
+| --------------- | ---------------------------------- | -------------------------- |
+| `id`            | `string`                           | 曲目 ID                    |
+| `extId`         | `string?`                          | 二级 ID                    |
+| `mediaId`       | `string?`                          | 平台媒体文件 ID            |
+| `source`        | [`TrackSource`](#tracksource)      | 歌曲来源                   |
+| `path`          | `string?`                          | 本地文件路径（仅本地歌曲） |
+| `cuePath`       | `string?`                          | CUE 文件路径               |
+| `cueAudioPath`  | `string?`                          | CUE 指向的音频文件路径     |
+| `cueStartMs`    | `number?`                          | CUE 分轨起始时间（毫秒）   |
+| `cueEndMs`      | `number?`                          | CUE 分轨结束时间（毫秒）   |
+| `title`         | `string`                           | 标题                       |
+| `comment`       | `string?`                          | 注释 / 副标题              |
+| `artists`       | [`Artist[]`](#artist)              | 歌手                       |
+| `album`         | [`Album`](#album)`?`               | 专辑                       |
+| `track`         | `number?`                          | 曲目编号                   |
+| `duration`      | `number`                           | 时长（毫秒）               |
+| `cover`         | `string?`                          | 封面地址                   |
+| `coverOriginal` | `string?`                          | 原始封面地址               |
+| `fileSize`      | `number?`                          | 文件大小（字节）           |
+| `mtime`         | `number?`                          | 修改时间（Unix 毫秒）      |
+| `ctime`         | `number?`                          | 创建时间（Unix 毫秒）      |
+| `quality`       | [`AudioQuality`](#audioquality)`?` | 音质信息                   |
+| `fee`           | [`TrackFee`](#trackfee)`?`         | 付费标记                   |
+| `cloud`         | `boolean?`                         | 是否云盘歌曲               |
 
 ### TrackSource
 
-歌曲来源：`"local"`（本地文件）、`"streaming"`（流媒体服务器），或内置在线平台 `"netease"`、`"qqmusic"`、`"kugou"`。插件自己的 source key 不会写入 `TrackSource`。
+歌曲来源：`"local"`（本地文件）或内置在线平台 `"netease"`。本项目已移除 QQ 音乐、酷狗与流媒体服务器来源；插件自己的 source key 不会写入 `TrackSource`。
 
 ### TrackFee
 

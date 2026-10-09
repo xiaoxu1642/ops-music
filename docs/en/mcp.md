@@ -4,7 +4,7 @@ SPlayer-Next includes a [Model Context Protocol](https://modelcontextprotocol.io
 
 ## Connection
 
-MCP is disabled by default. Enable **Settings → AI Integration → MCP**, then use the port and connection key shown in Settings.
+MCP is disabled by default. Enable **Settings → Services → MCP**, then use the port and connection key shown in Settings.
 
 - **Transport:** Streamable HTTP
 - **URL:** `http://127.0.0.1:<port>/mcp`

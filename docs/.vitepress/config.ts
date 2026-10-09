@@ -14,7 +14,6 @@ const zhTheme: DefaultTheme.Config = {
       items: [
         { text: "原生模块", link: "/native" },
         { text: "插件开发", link: "/plugins/" },
-        { text: "外部 API", link: "/api" },
         { text: "MCP 接口", link: "/mcp" },
         { text: "贡献指南", link: "/contributing" },
       ],
@@ -35,7 +34,6 @@ const zhTheme: DefaultTheme.Config = {
       items: [
         { text: "下载", link: "/download" },
         { text: "使用指南", link: "/guide" },
-        { text: "流媒体服务", link: "/streaming" },
         { text: "插件使用", link: "/plugins-usage" },
         { text: "用户协议", link: "/agreement" },
         { text: "隐私策略", link: "/privacy" },
@@ -43,11 +41,7 @@ const zhTheme: DefaultTheme.Config = {
     },
     {
       text: "接口",
-      items: [
-        { text: "外部 API（HTTP）", link: "/api" },
-        { text: "WebSocket API", link: "/socket" },
-        { text: "MCP 接口", link: "/mcp" },
-      ],
+      items: [{ text: "MCP 接口", link: "/mcp" }],
     },
     {
       text: "开发",
@@ -104,7 +98,6 @@ const enTheme: DefaultTheme.Config = {
       items: [
         { text: "Native Modules", link: "/en/native" },
         { text: "Plugin Development", link: "/en/plugins/" },
-        { text: "External API", link: "/en/api" },
         { text: "MCP", link: "/en/mcp" },
         { text: "Contributing", link: "/en/contributing" },
       ],
@@ -125,7 +118,6 @@ const enTheme: DefaultTheme.Config = {
       items: [
         { text: "Download", link: "/en/download" },
         { text: "User Guide", link: "/en/guide" },
-        { text: "Streaming Services", link: "/en/streaming" },
         { text: "Using Plugins", link: "/en/plugins-usage" },
         { text: "User Agreement", link: "/en/agreement" },
         { text: "Privacy Policy", link: "/en/privacy" },
@@ -133,11 +125,7 @@ const enTheme: DefaultTheme.Config = {
     },
     {
       text: "Interfaces",
-      items: [
-        { text: "External API (HTTP)", link: "/en/api" },
-        { text: "WebSocket API", link: "/en/socket" },
-        { text: "MCP", link: "/en/mcp" },
-      ],
+      items: [{ text: "MCP", link: "/en/mcp" }],
     },
     {
       text: "Development",
@@ -194,7 +182,7 @@ export default defineConfig({
       "meta",
       {
         name: "keywords",
-        content: "SPlayer,SPlayer-Next,music player,desktop lyrics,streaming,Electron,Vue3,Rust",
+        content: "SPlayer,SPlayer-Next,music player,taskbar lyrics,Electron,Vue3,Rust",
       },
     ],
   ],
@@ -202,14 +190,14 @@ export default defineConfig({
     root: {
       label: "简体中文",
       lang: "zh-CN",
-      description: "一款简洁而精致的多平台桌面音乐播放器",
+      description: "一款简洁而精致的 Windows 桌面音乐播放器",
       themeConfig: zhTheme,
     },
     en: {
       label: "English",
       lang: "en-US",
       link: "/en/",
-      description: "A clean and refined cross-platform desktop music player",
+      description: "A clean and refined Windows desktop music player",
       themeConfig: enTheme,
     },
   },

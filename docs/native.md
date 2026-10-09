@@ -4,12 +4,13 @@ SPlayer-Next 将性能敏感的能力下沉到 **Rust**，通过 [NAPI-RS](https
 
 ## 模块一览
 
-| 模块                | 职责                                                                         |
-| ------------------- | ---------------------------------------------------------------------------- |
-| `audio-engine`      | 音频解码（FFmpeg）与播放（rodio）、FFT 频谱、封面提取                        |
-| `media-ctrl`        | 系统媒体控制（Windows SMTC / Linux MPRIS / macOS Now Playing）与 Discord RPC |
-| `taskbar-lyric`     | Windows 任务栏歌词文字渲染                                                   |
-| `taskbar-thumbnail` | Windows 任务栏悬停缩略图 / Peek 预览替换为专辑封面                           |
+| 模块                | 职责                                                  |
+| ------------------- | ----------------------------------------------------- |
+| `audio-engine`      | 音频解码（FFmpeg）与播放（rodio）、FFT 频谱、封面提取 |
+| `media-ctrl`        | 系统媒体控制（Windows SMTC）                          |
+| `taskbar-lyric`     | Windows 任务栏歌词文字渲染                            |
+| `taskbar-thumbnail` | Windows 任务栏悬停缩略图 / Peek 预览替换为专辑封面    |
+| `opencc`            | 歌词文本的中文简繁转换                                |
 
 ### audio-engine
 
@@ -23,10 +24,7 @@ SPlayer-Next 将性能敏感的能力下沉到 **Rust**，通过 [NAPI-RS](https
 
 ### media-ctrl
 
-跨平台的系统媒体集成：
-
-- Windows SMTC、Linux MPRIS、macOS Now Playing；
-- Discord Rich Presence（播放状态展示）。
+系统媒体控件：本项目只发布 Windows 版本，接入的是 **Windows SMTC**（锁屏、通知栏、键盘媒体键）。crate 内仍保留 Linux MPRIS 与 macOS Now Playing 的后端代码，但它们不属于本项目的发布与验证范围。
 
 ### taskbar-lyric
 
@@ -38,6 +36,10 @@ Windows 任务栏缩略图自定义（仅 Windows）：
 
 - 借助 DWM 的 iconic representation，把任务栏**悬停缩略图**与 **Peek 全尺寸预览**替换为指定图片（当前专辑封面），而非默认的实时窗口内容；
 - 对主窗口子类化，被动应答 DWM 的位图请求，封面变化时通知 DWM 重新拉取。
+
+### opencc
+
+中文简繁转换（OpenCC）：主进程通过 `opencc.convertText` / `convertTexts` 对歌词文本做繁简、异体字转换，供歌词展示与本地化匹配使用。
 
 ## 构建
 
@@ -60,6 +62,7 @@ NAPI-RS 会自动生成各模块的 `index.d.ts` 类型声明，主进程通过�
 @splayer/media-ctrl        → native/media-ctrl
 @splayer/taskbar-lyric     → native/taskbar-lyric
 @splayer/taskbar-thumbnail → native/taskbar-thumbnail
+@splayer/opencc            → native/opencc
 ```
 
 ::: tip 跳过原生构建

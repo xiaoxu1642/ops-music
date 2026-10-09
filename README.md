@@ -28,16 +28,18 @@
 ## Features
 
 - 🎵 **Broad format support** — MP3, FLAC, WAV, AAC, OGG, APE, and more, decoded via FFmpeg
-- 📝 **Rich lyrics** — LRC / QRC / YRC / TTML, word-by-word highlighting and translations, with desktop, dynamic-island, and taskbar lyric windows
-- 🌐 **Streaming servers** — Subsonic / Navidrome / Jellyfin / Emby (multi-server, auto-connect)
-- 🖥️ **Cross-platform** — Windows / macOS / Linux
+- 📝 **Rich lyrics** — LRC / QRC / YRC / TTML with word-by-word highlighting and translations, in the player and in the Windows taskbar lyric (word-by-word sweep)
+- 🌐 **Online word-level lyrics** — optional match against the community AMLL TTML DB, plus your own local TTML lyric library as an override
+- 🖥️ **Windows desktop player** — no macOS / Linux builds shipped
+- 📁 **Local library** — folder scanning, playlists, favorites and play history
 - 🎚️ **Audio spectrum** — real-time FFT visualization
 - 🏷️ **Metadata editing** — edit local track tags and cover art
-- ⬇️ **Downloads** — built-in download manager
-- 🎧 **System media integration** — Windows SMTC / Linux MPRIS / macOS Now Playing + Discord RPC
+- ⬇️ **Downloads** — built-in download manager that writes tags, cover art and lyric files
+- 🗂️ **Cache & stats** — cache management and listening statistics
+- 🎧 **System media integration** — Windows SMTC (lock screen, notifications, media keys), tray menu and global shortcuts
 - ⚡ **High-performance audio engine** — FFmpeg + Rust
 - 🎨 **Adaptive theming** — cover-based colors, Light / Dark / Auto
-- 📈 **Last.fm scrobbling**
+- 🧩 **Extensible** — lx-music (`user_api`) plugin sources and a local MCP interface for AI clients
 
 ## Development
 
@@ -51,11 +53,13 @@
 
 Core performance features are powered by Rust-based native modules:
 
-| Module          | Description                                                                        |
-| --------------- | ---------------------------------------------------------------------------------- |
-| `audio-engine`  | High-performance audio decoding (FFmpeg), playback, FFT spectrum, cover extraction |
-| `media-ctrl`    | System media controls + Discord Rich Presence                                      |
-| `taskbar-lyric` | Native Windows taskbar lyric rendering                                             |
+| Module              | Description                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| `audio-engine`      | High-performance audio decoding (FFmpeg), playback, FFT spectrum, cover extraction |
+| `media-ctrl`        | System media controls (Windows SMTC)                                               |
+| `taskbar-lyric`     | Native Windows taskbar lyric rendering                                             |
+| `taskbar-thumbnail` | Windows taskbar thumbnail / Peek preview replaced with the album cover             |
+| `opencc`            | Chinese variant conversion for lyric text                                          |
 
 `pnpm dev` and `pnpm build` compile the native modules automatically. To skip them (e.g. when working only on the UI), set `SKIP_NATIVE_BUILD=true`.
 
@@ -80,6 +84,8 @@ pnpm build:linux   # Package for Linux (AppImage / deb / rpm / tar.gz / pacman)
 ```
 
 > By default a build targets the current architecture only. Cross-compilation is not supported.
+> Ops Music ships Windows packages only; `build:mac` and `build:linux` are inherited from upstream and are not part of the release process.
+> Ops Music ships Windows packages only; `build:mac` and `build:linux` are inherited from upstream and are not part of this project's release process.
 
 ### Other Scripts
 

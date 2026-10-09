@@ -57,7 +57,7 @@ pnpm build:native --dev
 electron/main/      Main process: windows, IPC, native modules, services
 electron/preload/   contextBridge APIs exposed as window.api
 src/                Vue 3 renderer application
-windows/            Desktop lyric, Dynamic Island, and taskbar lyric windows
+windows/            Taskbar lyric window (shares windows/shared/)
 native/             Rust native modules built with NAPI-RS
 shared/             Cross-process types and defaults
 ```

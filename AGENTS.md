@@ -76,7 +76,7 @@ Don't reimplement these inside individual windows.
 
 - `shared/types/player.ts` — `Track`, `TrackDetail`, `Artist`, `Album`, `AudioQuality`, `PlayerState`, `PlayerStatus`, `PlayerEvent`, `LoadOptions`, `LoadResult`, `IpcResponse`
 - `shared/types/lyrics.ts` — `LyricFormat`, `LyricSource (external | embedded | online)`, `LyricData`, `LyricLine`, `LyricWord`, `LyricSpan`
-- `shared/types/platform.ts` — `Platform (netease | qqmusic | kugou)`
+- `shared/types/platform.ts` — `Platform (netease)`
 
 `Track` is for queue storage (no heavy data); `TrackDetail` loads on demand.
 

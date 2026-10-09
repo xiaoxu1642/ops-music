@@ -16,7 +16,7 @@ The list below fetches the latest release for the selected channel from GitHub a
 | **Beta**   | Early feature access    | Beta, then Stable           | `1.3.0-beta.1`  |
 | **Alpha**  | Development and testing | Alpha, then Beta and Stable | `1.4.0-alpha.1` |
 
-Change the channel under **Settings → General → Release channel**. Alpha builds may be highly unstable. Moving to a more stable channel may require installing a build with a lower version number.
+The channel only selects which kind of Release this page lists. The application has **no update checking and no auto-updater** (removed as part of this project's scope cut); download new versions from this page manually.
 
 ## Other sources
 
@@ -25,7 +25,7 @@ Change the channel under **Settings → General → Release channel**. Alpha bui
 
 ## Installation notes
 
-- **Windows:** Choose the installer for automatic updates or the single-file portable build.
+- **Windows:** Choose the NSIS installer or the single-file portable build. Neither checks for nor installs updates on its own.
 - **macOS:** If macOS reports that the app is damaged or cannot verify it, see [macOS reports a damaged app](/en/troubleshooting/macos-damaged).
 - **Linux:** Choose AppImage if you are unsure which package format your distribution uses. See [Ubuntu sandbox startup failure](/en/troubleshooting/ubuntu-sandbox) for launch errors.
 
