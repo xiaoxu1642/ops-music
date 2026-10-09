@@ -21,6 +21,7 @@ export {
   closeTaskbarLyricWindow,
   toggleTaskbarLyricWindow,
   getTaskbarLyricWindow,
+  isTaskbarLyricPresented,
   applyTaskbarLyricLayout,
   updateTaskbarLyricContentWidth,
 } from "./taskbarLyric";

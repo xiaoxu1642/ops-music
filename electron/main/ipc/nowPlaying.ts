@@ -1,5 +1,6 @@
 import { ipcMain } from "electron";
 import { broadcast } from "@main/utils/broadcast";
+import { getTaskbarLyricWindow, isTaskbarLyricPresented } from "@main/window";
 import * as nowPlaying from "@main/services/nowPlaying";
 import type { NowPlayingUpdatePayload } from "@shared/types/nowPlaying";
 
@@ -17,15 +18,20 @@ export const registerNowPlayingIpc = (): void => {
   // 窗口拉取当前完整快照
   ipcMain.handle("nowPlaying:requestSnapshot", () => nowPlaying.snapshot());
 
-  // 订阅 service 事件：同时广播给渲染端窗口和外部 WS 客户端
-  // position-sync 高频（5Hz），WS 端走 HIGH_FREQ_EVENTS 过滤自动跳过
+  // 订阅 service 事件，广播给主窗口与各歌词窗口
   nowPlaying.onTrackChange((data) => {
     broadcast("nowPlaying:track-change", data);
   });
   nowPlaying.onLyricChange((snap) => {
     broadcast("nowPlaying:lyric-change", snap);
   });
-  nowPlaying.onPositionSync((data) => broadcast("nowPlaying:position-sync", data, true));
+  // position-sync 是 5Hz 高频通道，只有任务栏歌词窗口在消费。该窗口嵌在任务栏里，
+  // isVisible() 恒为真，必须用真实呈现态作门，否则看不见的歌词窗口会被持续灌位置；
+  // 低频的 track-change / lyric-change 仍无条件下发，窗口重新显示后据此自行接续
+  nowPlaying.onPositionSync((data) => {
+    if (!isTaskbarLyricPresented()) return;
+    getTaskbarLyricWindow()?.webContents.send("nowPlaying:position-sync", data);
+  });
   nowPlaying.onLyricOffsetChange((data) => {
     broadcast("nowPlaying:lyric-offset-change", data);
   });

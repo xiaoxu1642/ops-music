@@ -2,12 +2,15 @@ import { BrowserWindow, shell } from "electron";
 import { join } from "path";
 import { is } from "@electron-toolkit/utils";
 import { createWindow } from "./create";
+import { MAIN_WINDOW_IDLE_DESTROY_MS, shouldDestroyIdleMainWindow } from "./idleDestroy";
 import { initThumbar } from "@main/services/thumbar";
 import { enableTaskbarThumbnail } from "@main/services/thumbnail";
 import { initTray } from "@main/services/tray";
+import { lightSnapshot } from "@main/services/nowPlaying";
 import { store } from "@main/store";
 import { handleCacheProtocolOnPartition, MAIN_PARTITION } from "@main/utils/protocol";
 import { isAppQuitting } from "@main/utils/lifecycle";
+import { coreLog } from "@main/utils/logger";
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
 import { CURRENT_AGREEMENT_VERSION } from "@shared/constants/agreement";
@@ -20,6 +23,33 @@ const isInternalNavigation = (url: string): boolean => {
 };
 
 let mainWindow: BrowserWindow | null = null;
+
+/** 隐藏空闲销毁计时器，只在窗口处于隐藏态期间存在 */
+let idleDestroyTimer: NodeJS.Timeout | null = null;
+
+/** 取消隐藏空闲销毁计时 */
+const cancelIdleDestroy = (): void => {
+  if (idleDestroyTimer) clearTimeout(idleDestroyTimer);
+  idleDestroyTimer = null;
+};
+
+/**
+ * 主窗口隐藏后起闲置计时：到点仍隐藏且没在播放就销毁窗口，回收常驻的渲染进程；
+ * 条件不成立则重新计时。窗口显示、关闭或销毁时由 cancelIdleDestroy 清除
+ * @param win - 起计时的窗口，回调只操作它自己
+ */
+const armIdleDestroy = (win: BrowserWindow): void => {
+  cancelIdleDestroy();
+  idleDestroyTimer = setTimeout(() => {
+    idleDestroyTimer = null;
+    if (!shouldDestroyIdleMainWindow(!win.isVisible(), lightSnapshot().playing)) {
+      armIdleDestroy(win);
+      return;
+    }
+    coreLog.info("主窗口隐藏超时且未在播放，销毁窗口以释放常驻内存");
+    win.destroy();
+  }, MAIN_WINDOW_IDLE_DESTROY_MS);
+};
 
 /**
  * 创建主窗口
@@ -116,6 +146,9 @@ export const createMainWindow = (): BrowserWindow => {
     event.preventDefault();
     mainWindow?.hide();
   });
+  // 隐藏期间才允许闲置销毁；重新显示立即取消计时
+  mainWindow.on("hide", () => armIdleDestroy(mainWindow!));
+  mainWindow.on("show", cancelIdleDestroy);
   // 最大化
   mainWindow.on("maximize", () => {
     saveWindowState();
@@ -176,6 +209,7 @@ export const createMainWindow = (): BrowserWindow => {
 
   mainWindow.on("closed", () => {
     if (saveStateTimer) clearTimeout(saveStateTimer);
+    cancelIdleDestroy();
     mainWindow = null;
   });
 
@@ -192,13 +226,18 @@ export const getMainWindow = (): BrowserWindow | null => {
   return null;
 };
 
-/** 显示并聚焦主窗口（最小化时自动恢复） */
+/** 显示并聚焦主窗口（最小化时自动恢复，被闲置销毁后按创建流程重建） */
 export const focusMainWindow = (): void => {
   const win = getMainWindow();
-  if (!win) return;
-  if (win.isMinimized()) win.restore();
-  win.show();
-  win.focus();
+  if (win) {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+    return;
+  }
+  // 重建时不提前 show()：交给 ready-to-show 显示，避免空白窗口闪烁
+  const created = createMainWindow();
+  created.once("ready-to-show", () => created.focus());
 };
 
 /** 最小化主窗口 */

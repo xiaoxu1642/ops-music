@@ -76,7 +76,8 @@ export const enableTaskbarThumbnail = (win: BrowserWindow): void => {
   if (!isWin) return;
   // 记住主窗，供设置开关运行时重新启用
   mainWin = win;
-  if (enabled) return;
+  // 主窗口被闲置销毁后重建，旧 HWND 句柄已失效，先解绑再对新句柄重新接管
+  if (enabled) disableTaskbarThumbnail();
   // 设置关闭则不接管任务栏缩略图（保留系统默认的实时窗口预览）
   if (!store.get("system.taskbarThumbnailCover")) return;
   const mod = load();

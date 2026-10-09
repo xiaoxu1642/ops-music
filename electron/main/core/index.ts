@@ -76,11 +76,13 @@ export const initApp = (): void => {
     return;
   }
   app.on("second-instance", (_event, commandLine) => {
-    focusMainWindow();
+    // 先落捕获再唤窗：主窗口被闲置销毁后此刻还没有渲染进程，
+    // 捕获会转入 pending 暂存，由重建后的渲染层启动时取回，否则唤起参数会丢
     const url = extractOrpheusUrl(commandLine);
     if (url) captureOrpheusUrl(url);
     const files = extractAudioFiles(commandLine);
     if (files.length > 0) captureAudioFiles(files);
+    focusMainWindow();
   });
   // macOS 通过 open-url 接收协议唤起
   app.on("open-url", (event, url) => {
@@ -132,6 +134,9 @@ export const initApp = (): void => {
     // 周期记录各进程内存
     setTimeout(logProcessMemory, MEMORY_LOG_FIRST_DELAY_MS);
     setInterval(logProcessMemory, MEMORY_LOG_INTERVAL_MS);
+    // 最后一个窗口消失（含主窗口被闲置销毁）不触发退出：Electron 在没有监听者时会默认结束进程，
+    // 这里用空监听保住常驻托盘，退出只由托盘菜单与渲染端的 app.quit() 发起
+    app.on("window-all-closed", () => {});
     app.on("activate", () => {
       if (isMac) {
         if (getMainWindow()) focusMainWindow();
@@ -141,12 +146,6 @@ export const initApp = (): void => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
     coreLog.info("应用初始化完成");
-  });
-  // 所有窗口关闭时退出应用
-  app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-      app.quit();
-    }
   });
   // 退出前清理
   app.on("before-quit", () => {

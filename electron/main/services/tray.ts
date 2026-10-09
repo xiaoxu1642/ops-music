@@ -129,8 +129,9 @@ export const refreshTray = (): void => {
   tray.setToolTip(songName || appName);
 };
 
-/** 初始化系统托盘 */
+/** 初始化系统托盘（主窗口被闲置销毁后重建时复用同一个托盘，不重复注册监听） */
 export const initTray = (): void => {
+  if (tray) return;
   const isMac = process.platform === "darwin";
   let icon: string | Electron.NativeImage;
   if (isWin) {

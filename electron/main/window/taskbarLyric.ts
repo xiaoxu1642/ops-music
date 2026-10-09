@@ -2,6 +2,7 @@ import { BrowserWindow, screen } from "electron";
 import { join } from "path";
 import { is } from "@electron-toolkit/utils";
 import { createWindow } from "./create";
+import { isTaskbarLyricPresentationShown } from "./taskbarLyricPresentation";
 import { loadNativeModule } from "@main/utils/nativeLoader";
 import { broadcast } from "@main/utils/broadcast";
 import { setTrayTaskbarLyric } from "@main/services/tray";
@@ -80,6 +81,20 @@ export const getTaskbarLyricWindow = (): BrowserWindow | null =>
   taskbarLyricWindow && !taskbarLyricWindow.isDestroyed() ? taskbarLyricWindow : null;
 
 /**
+ * 任务栏歌词此刻是否真的呈现在屏幕上，高频推送用它代替 isVisible 过滤
+ * @returns 用户开关开启、窗口存在、未最小化且未被空间不足隐藏时返回 true
+ */
+export const isTaskbarLyricPresented = (): boolean => {
+  const win = getTaskbarLyricWindow();
+  return isTaskbarLyricPresentationShown({
+    enabled: store.get("windowStates.taskbarLyric.visible"),
+    windowExists: win !== null,
+    minimized: !!win?.isMinimized(),
+    shownByModule,
+  });
+};
+
+/**
  * 根据内容宽度裁切窗口有效区域
  *
  * 窗口本体始终保持 region 全宽，只在 applyLayout 布局真变时 setBounds——维持
@@ -145,8 +160,15 @@ const pickSpace = (layout: JsTaskbarLayout): PickedSpace | null => {
 /** 首次 applyLayout 成功后才 show 窗口——避免初始 3000x200 大窗口闪现 */
 let firstLayoutDone = false;
 
+/**
+ * 本模块是否已把窗口显示出来。窗口是嵌进任务栏的子窗口，Electron 的 isVisible()
+ * 对其恒为真，显隐只能由这里的 show/hide 调用记账
+ */
+let shownByModule = false;
+
 /** 空间不足时安静隐藏窗口，避免残留旧位置的歌词残影 */
 const hideIfVisible = (win: BrowserWindow): void => {
+  shownByModule = false;
   if (win.isVisible()) win.hide();
 };
 
@@ -197,11 +219,10 @@ const applyLayout = (layout: JsTaskbarLayout): void => {
   win.setBounds({ x: windowX, y: availY, width: windowWidth, height: availHeight });
   applyContentShape();
 
-  if (!firstLayoutDone) {
+  if (!firstLayoutDone || !win.isVisible()) {
     firstLayoutDone = true;
     win.showInactive();
-  } else if (!win.isVisible()) {
-    win.showInactive();
+    shownByModule = true;
   }
 
   win.webContents.send("taskbarLyric:layout", {
@@ -276,6 +297,7 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
 
   if (taskbarLyricWindow && !taskbarLyricWindow.isDestroyed()) {
     taskbarLyricWindow.show();
+    shownByModule = true;
     return taskbarLyricWindow;
   }
 
@@ -350,6 +372,7 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
   taskbarLyricWindow.on("closed", () => {
     taskbarLyricWindow = null;
     firstLayoutDone = false;
+    shownByModule = false;
     activeWindowRegion = null;
     contentWidth = null;
     cleanupWatchers();
