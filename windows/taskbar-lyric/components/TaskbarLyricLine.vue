@@ -37,7 +37,7 @@ const measure = (): void => {
   overflowPx.value = diff > 0.5 ? diff : 0;
 };
 
-/** 根据进度计算平移量——溢出时始终向左滚（与桌面歌词一致），不做来回 */
+/** 根据进度计算平移量——溢出时始终向左滚，不做来回 */
 const getScrollTransform = (currentMs: number): string => {
   const overflow = overflowPx.value;
   if (overflow <= 0 || !props.line) return "translateX(0)";

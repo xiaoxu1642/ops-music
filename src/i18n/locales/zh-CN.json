@@ -12,7 +12,7 @@
         "local": { "title": "本地音乐库", "desc": "扫描本地目录，自动整理音乐库" },
         "quality": { "title": "无损音质", "desc": "原生音频引擎，支持多种无损格式" },
         "streaming": { "title": "流媒体服务器", "desc": "Subsonic / Jellyfin / Emby 等" },
-        "lyrics": { "title": "丰富歌词体验", "desc": "AMLL 逐字歌词，桌面歌词、灵动岛、任务栏歌词" }
+        "lyrics": { "title": "丰富歌词体验", "desc": "AMLL 逐字歌词，任务栏歌词" }
       }
     },
     "agreement": {
@@ -704,8 +704,6 @@
       "lyricAMLLOptimize": "歌词优化",
       "lyricSpring": "弹簧动画",
       "lyricLayout": "布局与透明度",
-      "desktopLyric": "桌面歌词",
-      "dynamicIsland": "灵动岛歌词",
       "taskbarLyric": "任务栏歌词",
       "theme": "主题与颜色",
       "appearanceStyle": "外观风格",
@@ -1019,8 +1017,6 @@
         "volumeDown": "音量减小",
         "cycleRepeat": "切换循环模式",
         "toggleShuffle": "切换随机播放",
-        "toggleDesktopLyric": "切换桌面歌词",
-        "toggleDynamicIsland": "切换灵动岛",
         "toggleTaskbarLyric": "切换任务栏歌词",
         "openPlayer": "打开播放界面",
         "closePlayer": "关闭播放界面",
@@ -1214,148 +1210,6 @@
     "inactiveAlpha": {
       "label": "非激活行透明度",
       "description": "非当前行的基础透明度"
-    },
-    "desktopLyricEnabled": {
-      "label": "开启桌面歌词",
-      "description": "在桌面显示一个独立的歌词悬浮窗口"
-    },
-    "desktopLyricFontSize": {
-      "label": "字号",
-      "description": "桌面歌词的文字大小（像素）"
-    },
-    "desktopLyricFontWeight": {
-      "label": "字重",
-      "description": "桌面歌词的文字粗细"
-    },
-    "desktopLyricShowTranslation": {
-      "label": "显示翻译",
-      "description": "在桌面歌词中显示翻译文本"
-    },
-    "desktopLyricDoubleLine": {
-      "label": "双行显示",
-      "description": "同时显示当前行与下一行"
-    },
-    "desktopLyricAlign": {
-      "label": "对齐方式",
-      "description": "歌词文本的水平对齐",
-      "left": "居左",
-      "center": "居中",
-      "right": "居右",
-      "justify": "两端对齐"
-    },
-    "desktopLyricWordByWord": {
-      "label": "逐字高亮",
-      "description": "按单词进度逐字渲染高亮"
-    },
-    "desktopLyricAutoGenerateWordByWord": {
-      "label": "自动生成逐字效果",
-      "description": "关闭后仅真正的逐字歌词生效"
-    },
-    "desktopLyricPlayedColor": {
-      "label": "已播放颜色",
-      "description": "已播放的歌词文字颜色"
-    },
-    "desktopLyricUnplayedColor": {
-      "label": "未播放颜色",
-      "description": "未播放的歌词文字颜色"
-    },
-    "desktopLyricStrokeColor": {
-      "label": "描边颜色",
-      "description": "歌词文字的描边颜色，透明则视为关闭描边"
-    },
-    "desktopLyricBackgroundMask": {
-      "label": "文本背景遮罩",
-      "description": "为每行歌词文字加半透明背景色块，提升弱对比下的可读性"
-    },
-    "desktopLyricBackgroundMaskColor": {
-      "label": "遮罩颜色",
-      "description": "文本背景遮罩的颜色与透明度"
-    },
-    "desktopLyricAlwaysShowSongInfo": {
-      "label": "常驻显示歌曲信息",
-      "description": "始终显示歌曲名与艺术家，关闭后仅悬停时显示"
-    },
-    "desktopLyricAnimation": {
-      "label": "切换动画",
-      "description": "歌词行切换时的滑入 / 滑出过渡动画"
-    },
-    "desktopLyricLimitBounds": {
-      "label": "限制在屏幕内",
-      "description": "拖拽时把窗口边界限制在当前屏幕的工作区范围内"
-    },
-    "desktopLyricAlwaysOnTop": {
-      "label": "窗口置顶",
-      "description": "桌面歌词窗口始终保持在最前"
-    },
-    "desktopLyricLocked": {
-      "label": "锁定窗口",
-      "description": "锁定后鼠标点击将穿透到下层窗口，无法拖动"
-    },
-    "desktopLyricUseCSSDrag": {
-      "label": "使用 CSS 拖拽",
-      "description": "使用 CSS -webkit-app-region 拖拽，在 Wayland 环境建议启用"
-    },
-    "dynamicIslandEnabled": {
-      "label": "开启灵动岛",
-      "description": "在屏幕顶部显示一个简洁的悬浮歌词窗口，可拖离至任意位置"
-    },
-    "dynamicIslandScale": {
-      "label": "缩放比例",
-      "description": "窗口高度与字号同步缩放，100% 为默认大小"
-    },
-    "dynamicIslandFontWeight": {
-      "label": "字重",
-      "description": "灵动岛歌词的文字粗细"
-    },
-    "dynamicIslandWordByWord": {
-      "label": "逐字高亮",
-      "description": "按单词进度逐字渲染高亮"
-    },
-    "dynamicIslandTransition": {
-      "label": "切换动画",
-      "description": "选择灵动岛宽度与歌词行的切换方式",
-      "bounce": "灵动回弹",
-      "smooth": "平滑过渡"
-    },
-    "dynamicIslandDoubleLine": {
-      "label": "总是显示双行",
-      "description": "即使没有翻译可用也保持双行布局"
-    },
-    "dynamicIslandShowTranslation": {
-      "label": "显示翻译",
-      "description": "有翻译的句子在副行显示翻译"
-    },
-    "dynamicIslandPlayedColor": {
-      "label": "已播放颜色",
-      "description": "当前已唱到部分的文字颜色"
-    },
-    "dynamicIslandUnplayedColor": {
-      "label": "未播放颜色",
-      "description": "尚未唱到部分及艺术家名的文字颜色"
-    },
-    "dynamicIslandBackgroundColor": {
-      "label": "背景颜色",
-      "description": "窗口背板的颜色与透明度"
-    },
-    "dynamicIslandAlwaysOnTop": {
-      "label": "窗口置顶",
-      "description": "灵动岛窗口始终保持在最前"
-    },
-    "dynamicIslandNotchFusion": {
-      "label": "刘海融合",
-      "description": "在 MacBook 刘海屏上让灵动岛从物理刘海向下扩展"
-    },
-    "dynamicIslandSnapCentered": {
-      "label": "吸附时居中",
-      "description": "关闭后吸附到顶部时保留拖动到的水平位置"
-    },
-    "dynamicIslandNonOcclusive": {
-      "label": "非遮挡模式",
-      "description": "鼠标穿透窗口，悬停时隐藏内容"
-    },
-    "dynamicIslandUseCSSDrag": {
-      "label": "使用 CSS 拖拽",
-      "description": "使用 CSS -webkit-app-region 拖拽，在 Wayland 环境建议启用"
     },
     "taskbarLyricEnabled": {
       "label": "开启任务栏歌词",

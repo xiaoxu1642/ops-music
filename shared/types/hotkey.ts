@@ -13,8 +13,6 @@ export type HotkeyActionId =
   | "player.volumeDown"
   | "player.cycleRepeat"
   | "player.toggleShuffle"
-  | "window.toggleDesktopLyric"
-  | "window.toggleDynamicIsland"
   | "window.toggleTaskbarLyric"
   | "view.openPlayer"
   | "view.closePlayer"

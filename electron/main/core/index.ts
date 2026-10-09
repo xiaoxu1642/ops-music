@@ -5,8 +5,6 @@ import {
   restoreLyricWindows,
   getMainWindow,
   focusMainWindow,
-  getDesktopLyricWindow,
-  getDynamicIslandWindow,
   getTaskbarLyricWindow,
 } from "@main/window";
 import { isMac } from "@main/utils/config";
@@ -50,8 +48,6 @@ const logProcessMemory = (): void => {
   const windowPids = new Map<number, string>();
   const namedWindows: Array<[string, Electron.BrowserWindow | null]> = [
     ["main", getMainWindow()],
-    ["desktop-lyric", getDesktopLyricWindow()],
-    ["dynamic-island", getDynamicIslandWindow()],
     ["taskbar-lyric", getTaskbarLyricWindow()],
   ];
   for (const [name, win] of namedWindows) {

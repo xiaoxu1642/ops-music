@@ -13,12 +13,7 @@ import { PluginsApi } from "@shared/types/plugin";
 import { ApisApi } from "@shared/types/apis";
 import { LyricsApi } from "@shared/types/lyrics";
 import { DownloadApi } from "@shared/types/download";
-import {
-  WindowApi,
-  DesktopLyricApi,
-  DynamicIslandApi,
-  TaskbarLyricApi,
-} from "@shared/types/window";
+import { WindowApi, TaskbarLyricApi } from "@shared/types/window";
 import { HotkeyApi } from "@shared/types/hotkey";
 import { StreamingApi } from "@shared/types/streaming";
 import { IpcResponse } from "@shared/types/player";
@@ -66,8 +61,6 @@ declare global {
       library: LibraryApi;
       playlist: PlaylistApi;
       window: WindowApi;
-      desktopLyric: DesktopLyricApi;
-      dynamicIsland: DynamicIslandApi;
       taskbarLyric: TaskbarLyricApi;
       nowPlaying: NowPlayingApi;
       plugins: PluginsApi;

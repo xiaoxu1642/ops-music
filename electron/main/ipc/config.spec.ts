@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   set: vi.fn(),
   clear: vi.fn(),
   replaceAll: vi.fn(),
+  broadcast: vi.fn(),
+  applyTaskbarLyricLayout: vi.fn(),
 }));
 vi.mock("electron", () => ({
   dialog: {},
@@ -24,10 +26,10 @@ vi.mock("@main/store", () => ({
 }));
 vi.mock("@main/utils/logger", () => ({ systemLog: {} }));
 vi.mock("@main/utils/config", () => ({ isWin: true }));
-vi.mock("@main/utils/broadcast", () => ({}));
+vi.mock("@main/utils/broadcast", () => ({ broadcast: mocks.broadcast }));
 vi.mock("@main/services/media", () => ({}));
 vi.mock("@main/services/engine", () => ({}));
-vi.mock("@main/window", () => ({}));
+vi.mock("@main/window", () => ({ applyTaskbarLyricLayout: mocks.applyTaskbarLyricLayout }));
 vi.mock("@main/services/mcp/http", () => ({}));
 vi.mock("@main/services/orpheus", () => ({}));
 vi.mock("@main/services/thumbnail", () => ({}));
@@ -56,5 +58,13 @@ describe("配置 IPC 入口", () => {
     const payload = { player: { volume: 0.8 } };
     mocks.handlers.get("config:replaceAll")!(null, payload);
     expect(mocks.replaceAll).toHaveBeenCalledWith(payload);
+  });
+
+  it("任务栏歌词配置变更重算布局并广播", () => {
+    const config = { position: "left" };
+    mocks.get.mockReturnValue(config);
+    mocks.handlers.get("config:set")!(null, "taskbarLyric.position", "left");
+    expect(mocks.applyTaskbarLyricLayout).toHaveBeenCalledOnce();
+    expect(mocks.broadcast).toHaveBeenCalledWith("taskbarLyric:configChange", config);
   });
 });

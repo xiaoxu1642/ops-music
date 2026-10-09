@@ -5,12 +5,7 @@ import { appName, isWin } from "@main/utils/config";
 import { loadIcon, loadThemedIcon } from "@main/utils/icon";
 import { t } from "@main/utils/i18n";
 import { trayLog } from "@main/utils/logger";
-import {
-  toggleDesktopLyricWindow,
-  toggleDynamicIslandWindow,
-  toggleTaskbarLyricWindow,
-  focusMainWindow,
-} from "@main/window";
+import { toggleTaskbarLyricWindow, focusMainWindow } from "@main/window";
 
 type PlayState = "playing" | "paused";
 
@@ -20,8 +15,6 @@ let songName = "";
 let liked = false;
 let repeatMode: RepeatMode = "list";
 let shuffleMode: ShuffleMode = "off";
-let desktopLyricOpen = false;
-let dynamicIslandOpen = false;
 let taskbarLyricOpen = false;
 
 const repeatLabel = (mode: RepeatMode): string =>
@@ -109,16 +102,6 @@ const buildMenu = (): Menu => {
       ],
     },
     { type: "separator" },
-    {
-      label: desktopLyricOpen ? t("closeDesktopLyric") : t("openDesktopLyric"),
-      icon: menuIcon("lyric"),
-      click: () => toggleDesktopLyricWindow(),
-    },
-    {
-      label: dynamicIslandOpen ? t("closeDynamicIsland") : t("openDynamicIsland"),
-      icon: menuIcon("lyric"),
-      click: () => toggleDynamicIslandWindow(),
-    },
     // 任务栏歌词
     ...(isWin
       ? [
@@ -211,20 +194,6 @@ export const getTrayPlayMode = (): { repeat: RepeatMode; shuffle: ShuffleMode } 
 export const setTrayLikeState = (value: boolean): void => {
   if (liked === value) return;
   liked = value;
-  refreshTray();
-};
-
-/** 同步桌面歌词窗口开关状态到托盘 */
-export const setTrayDesktopLyric = (open: boolean): void => {
-  if (desktopLyricOpen === open) return;
-  desktopLyricOpen = open;
-  refreshTray();
-};
-
-/** 同步灵动岛窗口开关状态到托盘 */
-export const setTrayDynamicIsland = (open: boolean): void => {
-  if (dynamicIslandOpen === open) return;
-  dynamicIslandOpen = open;
   refreshTray();
 };
 

@@ -11,17 +11,7 @@ import {
   setPreampGain,
   setExclusiveMode,
 } from "@main/services/engine";
-import {
-  setTaskbarProgress,
-  applyMainWindowZoom,
-  applyDesktopLyricLock,
-  applyDesktopLyricAlwaysOnTop,
-  applyDynamicIslandAlwaysOnTop,
-  applyDynamicIslandSnapCentered,
-  applyDynamicIslandNotchFusion,
-  applyDynamicIslandNonOcclusive,
-  applyTaskbarLyricLayout,
-} from "@main/window";
+import { setTaskbarProgress, applyMainWindowZoom, applyTaskbarLyricLayout } from "@main/window";
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
@@ -71,24 +61,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
     case "system.uiZoom":
       applyMainWindowZoom();
       break;
-    case "desktopLyric.locked":
-      applyDesktopLyricLock(value as boolean);
-      break;
-    case "desktopLyric.alwaysOnTop":
-      applyDesktopLyricAlwaysOnTop(value as boolean);
-      break;
-    case "dynamicIsland.alwaysOnTop":
-      applyDynamicIslandAlwaysOnTop(value as boolean);
-      break;
-    case "dynamicIsland.snapCentered":
-      applyDynamicIslandSnapCentered(value as boolean);
-      break;
-    case "dynamicIsland.notchFusion":
-      applyDynamicIslandNotchFusion(value as boolean);
-      break;
-    case "dynamicIsland.nonOcclusive":
-      applyDynamicIslandNonOcclusive(value as boolean);
-      break;
     case "taskbarLyric.position":
     case "taskbarLyric.autoMaxWidth":
     case "taskbarLyric.autoAdjustOccupiedSpace":
@@ -97,14 +69,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
     case "taskbarLyric.rightMargin":
       if (isWin) applyTaskbarLyricLayout();
       break;
-  }
-  // 桌面歌词配置变更广播到所有窗口
-  if (keyPath.startsWith("desktopLyric.")) {
-    broadcast("desktopLyric:configChange", store.get("desktopLyric"));
-  }
-  // 灵动岛配置变更广播到所有窗口
-  if (keyPath.startsWith("dynamicIsland.")) {
-    broadcast("dynamicIsland:configChange", store.get("dynamicIsland"));
   }
   // 任务栏歌词配置变更广播到所有窗口（仅 Windows）
   if (isWin && keyPath.startsWith("taskbarLyric.")) {

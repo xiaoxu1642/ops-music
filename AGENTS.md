@@ -33,7 +33,7 @@ The development shell is Git Bash on Windows. Write all terminal commands in bas
 - **Main** (`electron/main/`) — windows, IPC, native modules
 - **Preload** (`electron/preload/`) — `contextBridge` exposing `window.api` (player/config/system/library/streaming/lyrics)
 - **Renderer** (`src/`) — Vue 3 SPA
-- **Lyric windows** (`windows/desktop-lyric`, `dynamic-island`, `taskbar-lyric`) — independent Vue entries sharing `windows/shared/`
+- **Lyric windows** (`windows/taskbar-lyric`) — independent Vue entries sharing `windows/shared/`
 
 ### Native Modules (Rust + NAPI-RS)
 
@@ -76,11 +76,11 @@ Server protocol clients live in the main process (`electron/main/services/stream
 
 ### Lyric Windows
 
-`windows/desktop-lyric`, `dynamic-island`, `taskbar-lyric` are independent Vue entries. Always use shared composables from `@windows/shared/`:
+`windows/taskbar-lyric` is an independent Vue entry. Always use shared composables from `@windows/shared/`:
 
 - `useNowPlayingSync` — playback sync, lyric index, anchor interpolation
 - `getNowPlayingCurrentMs()` — non-reactive current time for RAF char highlight
-- Line selection: `pickPrimaryIndex` (desktop, considers overlap) vs. `pickLatestStartedIndex` (dynamic island, immediate switch)
+- Line selection: `pickPrimaryIndex` (taskbar lyric, considers overlap)
 
 Don't reimplement these inside individual windows.
 

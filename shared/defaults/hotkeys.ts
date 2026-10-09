@@ -92,18 +92,6 @@ export const HOTKEY_ACTIONS: HotkeyActionMeta[] = [
     allowGlobal: true,
   },
   {
-    id: "window.toggleDesktopLyric",
-    labelKey: "settings.hotkeys.actions.toggleDesktopLyric",
-    defaultBinding: { inApp: "CommandOrControl+L", global: null },
-    allowGlobal: true,
-  },
-  {
-    id: "window.toggleDynamicIsland",
-    labelKey: "settings.hotkeys.actions.toggleDynamicIsland",
-    defaultBinding: { inApp: "CommandOrControl+I", global: null },
-    allowGlobal: true,
-  },
-  {
     id: "window.toggleTaskbarLyric",
     labelKey: "settings.hotkeys.actions.toggleTaskbarLyric",
     defaultBinding: { inApp: "CommandOrControl+B", global: null },

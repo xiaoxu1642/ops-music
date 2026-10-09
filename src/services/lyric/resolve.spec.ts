@@ -12,15 +12,9 @@ vi.mock("./request", () => ({
 }));
 
 const mockWindowApi = {
-  desktopLyric: { onConfigChange: vi.fn(() => () => {}) },
   taskbarLyric: { onConfigChange: vi.fn(() => () => {}) },
-  dynamicIsland: { onConfigChange: vi.fn(() => () => {}) },
   window: {
-    onDesktopLyricVisibilityChange: vi.fn(() => () => {}),
-    onDynamicIslandVisibilityChange: vi.fn(() => () => {}),
     onTaskbarLyricVisibilityChange: vi.fn(() => () => {}),
-    isDesktopLyricOpen: vi.fn().mockResolvedValue(false),
-    isDynamicIslandOpen: vi.fn().mockResolvedValue(false),
     isTaskbarLyricOpen: vi.fn().mockResolvedValue(false),
   },
 };

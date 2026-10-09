@@ -2,14 +2,6 @@ import type { SystemConfig } from "../types/settings";
 import { defaultPluginsConfig } from "./plugin-api";
 import { defaultHotkeyConfig } from "./hotkeys";
 
-/**
- * 灵动岛基准高度（缩放比例 = 1 时的物理像素，等于"主行高度")
- * 主行高度 = DYNAMIC_ISLAND_BASE_HEIGHT * scale
- * 双行模式下窗口最终高度 = 主行高度 + 副行高度
- * 主进程按渲染端上报的最终高度 setBounds
- */
-export const DYNAMIC_ISLAND_BASE_HEIGHT = 40;
-
 /** 默认配置 */
 export const defaultSystemConfig: SystemConfig = {
   player: {
@@ -34,44 +26,6 @@ export const defaultSystemConfig: SystemConfig = {
   },
   library: {
     scanDirs: [],
-  },
-  desktopLyric: {
-    fontSize: 24,
-    fontWeight: 600,
-    fontFamily: "",
-    showTranslation: true,
-    doubleLine: true,
-    align: "center",
-    wordByWord: true,
-    autoGenerateWordByWord: true,
-    playedColor: "rgb(254, 121, 113)",
-    unplayedColor: "rgb(255, 255, 255)",
-    strokeColor: "rgba(0, 0, 0, 0.5)",
-    backgroundMask: false,
-    backgroundMaskColor: "rgba(0, 0, 0, 0.3)",
-    alwaysShowSongInfo: false,
-    limitBounds: false,
-    animation: true,
-    alwaysOnTop: true,
-    locked: false,
-    useCSSDrag: false,
-  },
-  dynamicIsland: {
-    scale: 1,
-    fontWeight: 500,
-    fontFamily: "",
-    wordByWord: true,
-    transition: "bounce",
-    playedColor: "rgba(255, 255, 255, 1)",
-    unplayedColor: "rgba(255, 255, 255, 0.5)",
-    backgroundColor: "rgba(0, 0, 0, 1)",
-    alwaysOnTop: true,
-    snapCentered: true,
-    notchFusion: false,
-    nonOcclusive: false,
-    doubleLine: false,
-    showTranslation: false,
-    useCSSDrag: false,
   },
   taskbarLyric: {
     position: "auto",
@@ -148,19 +102,6 @@ export const defaultSystemConfig: SystemConfig = {
       x: null,
       y: null,
       maximized: false,
-    },
-    desktopLyric: {
-      width: 800,
-      height: 200,
-      x: null,
-      y: null,
-      visible: false,
-    },
-    dynamicIsland: {
-      mode: "snapped",
-      x: null,
-      y: null,
-      visible: false,
     },
     taskbarLyric: {
       visible: false,
