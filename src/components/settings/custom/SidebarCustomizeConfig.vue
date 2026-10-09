@@ -181,6 +181,19 @@ watch([groupsEl, myListEl, subscribedListEl], () => {
   else destroySortables();
 });
 
+/**
+ * 展开「收藏的歌单」卡片时补齐分页
+ * 排序存档按整段顺序落盘，只拖到已加载的部分会把未加载歌单的键挤掉
+ */
+watch(expandedSubscribed, async (expanded) => {
+  if (!expanded) return;
+  let loaded = -1;
+  while (userStore.subscribedHasMore && userStore.playlists.length > loaded) {
+    loaded = userStore.playlists.length;
+    await userStore.loadMoreSubscribedPlaylists();
+  }
+});
+
 onBeforeUnmount(destroySortables);
 
 interface EditorRow {

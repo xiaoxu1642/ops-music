@@ -26,14 +26,31 @@ const fetchAllPages = async <Item>(
   return all;
 };
 
-/** 用户全部歌单 */
-export const fetchUserPlaylists = async (uid: number, total?: number): Promise<Playlist[]> => {
-  const body = await neteaseApi.user_playlist({
-    uid,
-    limit: total && total > 0 ? total : 1000,
-    offset: 0,
-  });
-  return (body?.playlist ?? []).map(toPlaylist);
+/** 用户歌单分页结果 */
+export interface UserPlaylistPage {
+  /** 该页歌单 */
+  playlists: Playlist[];
+  /** 该页已满，可能还有下一页 */
+  hasMore: boolean;
+}
+
+/**
+ * 分页拉取用户歌单
+ * 接口把「我喜欢 + 自建 + 收藏」放在同一条连续列表里返回，offset 即已加载条数
+ * @param uid 用户 ID
+ * @param offset 已加载条数
+ * @param createdCount 自建歌单数，首页把它整段覆盖，否则自建被截断后收藏段落没有触底入口
+ * @returns 该页歌单与是否还有下一页
+ */
+export const fetchUserPlaylistPage = async (
+  uid: number,
+  offset = 0,
+  createdCount = 0,
+): Promise<UserPlaylistPage> => {
+  const limit = PAGE_SIZE + Math.max(0, createdCount);
+  const body = await neteaseApi.user_playlist({ uid, limit, offset });
+  const playlists = (body?.playlist ?? []).map(toPlaylist);
+  return { playlists, hasMore: playlists.length >= limit };
 };
 
 /** 用户订阅计数 */

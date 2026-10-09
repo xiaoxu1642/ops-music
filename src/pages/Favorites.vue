@@ -74,7 +74,10 @@ const countMeta = computed(() => {
     default:
       return {
         icon: IconLucideListMusic,
-        text: t("common.totalPlaylists", { count: playlistItems.value.length }),
+        // 列表按分页加载，计数取服务端的收藏总数
+        text: t("common.totalPlaylists", {
+          count: user.subcount.subPlaylistCount || playlistItems.value.length,
+        }),
       };
   }
 });
@@ -85,6 +88,11 @@ const handleClick = (item: CoverItem): void => {
   } else {
     router.push(`/collection/netease/${activeTab.value}/${encodeURIComponent(item.id)}`);
   }
+};
+
+/** 歌单 tab 触底续拉下一页收藏歌单 */
+const onReachBottom = (): void => {
+  if (activeTab.value === "playlist") void user.loadMoreSubscribedPlaylists();
 };
 </script>
 
@@ -126,7 +134,10 @@ const handleClick = (item: CoverItem): void => {
           :padding-x="20"
           :padding-top="8"
           :padding-bottom="20"
+          :has-more="activeTab === 'playlist' && user.subscribedHasMore"
+          :loading-more="user.subscribedLoading"
           @click="handleClick"
+          @reach-bottom="onReachBottom"
         />
       </div>
       <div v-else key="empty" class="flex-1 flex items-center justify-center">

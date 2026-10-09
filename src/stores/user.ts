@@ -1,6 +1,8 @@
 import localforage from "localforage";
 import type { Album, Artist, Playlist, Track } from "@shared/types/player";
 import type { UserProfile, UserSubcount } from "@/types/user";
+import type { PlaylistPageState } from "@/utils/playlistPaging";
+import { emptyPlaylistPage, reducePlaylistPages } from "@/utils/playlistPaging";
 import { clearNeteaseSession, NeteaseApiError, onNeteaseAuthFailure } from "@/apis/netease";
 import { isExplicitNeteaseAuthFailure } from "@/apis/neteaseAuth";
 import {
@@ -14,7 +16,7 @@ import {
   fetchUserAlbums,
   fetchUserArtists,
   fetchUserLevel,
-  fetchUserPlaylists,
+  fetchUserPlaylistPage,
   toggleLikeSong,
 } from "@/apis/user/netease";
 import {
@@ -57,6 +59,7 @@ interface LikedSongIdsCache {
 
 interface PlaylistsCache {
   userId: number;
+  /** 仅缓存首页，收藏部分由分页续拉 */
   playlists: Playlist[];
   cachedAt: number;
 }
@@ -91,8 +94,18 @@ export const useUserStore = defineStore(
     let invalidationPromise: Promise<void> | null = null;
     /** 是否已登录 */
     const isLoggedIn = computed(() => profile.value !== null);
-    /** 全部歌单 */
-    const playlists = shallowRef<Playlist[]>([]);
+    /** 用户歌单分页状态：收藏部分随侧边栏/收藏页触底续拉 */
+    const playlistPage = shallowRef<PlaylistPageState>(emptyPlaylistPage);
+    /** 全部歌单（我喜欢 + 自建 + 已加载的收藏） */
+    const playlists = computed<Playlist[]>(() => playlistPage.value.items);
+    /** 歌单列表是否可能还有下一页 */
+    const subscribedHasMore = computed(() => playlistPage.value.hasMore);
+    /** 正在拉取下一页歌单 */
+    const subscribedLoading = ref(false);
+    /** 首屏歌单是否已落地，未落地的列表不能作为存档收敛依据 */
+    const playlistsLoaded = ref(false);
+    /** 分页会话令牌：刷新或换账号后丢弃在途的分页响应 */
+    let playlistsToken = 0;
     /** 红心歌曲 id 集合 */
     const likedSongIds = shallowRef<Set<string>>(new Set());
     /** 收藏专辑 */
@@ -186,7 +199,10 @@ export const useUserStore = defineStore(
 
     /** 清空所有用户内容 */
     const clearContent = (): void => {
-      playlists.value = [];
+      playlistsToken += 1;
+      playlistPage.value = emptyPlaylistPage;
+      subscribedLoading.value = false;
+      playlistsLoaded.value = false;
       likedSongIds.value = new Set();
       albums.value = [];
       artists.value = [];
@@ -202,6 +218,20 @@ export const useUserStore = defineStore(
       cloudSize.value = 0;
       cloudMaxSize.value = 0;
       cloudLoading.value = false;
+    };
+
+    /**
+     * 把一页歌单并入分页状态
+     * @param type - replace 重置为首页，append 续接下一页
+     * @param page - 该页歌单
+     * @param hasMore - 是否可能还有下一页
+     */
+    const applyPlaylistPage = (
+      type: "replace" | "append",
+      page: Playlist[],
+      hasMore: boolean,
+    ): void => {
+      playlistPage.value = reducePlaylistPages(playlistPage.value, { type, page, hasMore });
     };
 
     /** 清除渲染端账号状态 */
@@ -392,7 +422,12 @@ export const useUserStore = defineStore(
           likedSongIds.value = new Set(cachedIds.ids);
         }
         if (cachedPlaylists?.userId === userId) {
-          playlists.value = cachedPlaylists.playlists;
+          // 缓存只当预览用上屏，是否还有下一页由触底时向服务端确认
+          applyPlaylistPage(
+            "replace",
+            cachedPlaylists.playlists,
+            cachedPlaylists.playlists.length > 0,
+          );
         }
       } catch {
         console.error("[user] hydrate content from cache failed");
@@ -400,21 +435,46 @@ export const useUserStore = defineStore(
     };
 
     /**
-     * 拉取并应用用户歌单
+     * 拉取并应用用户歌单首页
+     * 收藏歌单不一次性拉全，交给触底分页续拉
      * @param uid 用户 ID
      */
     const fetchAndApplyPlaylists = async (uid: number): Promise<void> => {
+      const token = ++playlistsToken;
       const sub = await fetchSubcount();
+      const { playlists: page, hasMore } = await fetchUserPlaylistPage(
+        uid,
+        0,
+        sub.createdPlaylistCount,
+      );
+      if (token !== playlistsToken) return;
       subcount.value = sub;
-      const total = (sub.createdPlaylistCount || 0) + (sub.subPlaylistCount || 0) || 50;
-      const list = await fetchUserPlaylists(uid, total);
-      playlists.value = list;
+      applyPlaylistPage("replace", page, hasMore);
+      playlistsLoaded.value = true;
       const payload: PlaylistsCache = {
         userId: uid,
-        playlists: list,
+        playlists: page,
         cachedAt: Date.now(),
       };
       cacheDb.setItem(PLAYLISTS_CACHE_KEY, payload).catch(() => {});
+    };
+
+    /** 触底续拉下一页收藏歌单，重复 id 由分页归约丢弃 */
+    const loadMoreSubscribedPlaylists = async (): Promise<void> => {
+      const uid = profile.value?.userId;
+      if (!uid || !subscribedHasMore.value || subscribedLoading.value) return;
+      const token = playlistsToken;
+      const offset = playlists.value.length;
+      subscribedLoading.value = true;
+      try {
+        const { playlists: page, hasMore } = await fetchUserPlaylistPage(uid, offset);
+        if (token !== playlistsToken) return;
+        applyPlaylistPage("append", page, hasMore);
+      } catch (err) {
+        console.warn("[user] subscribed playlists page load failed:", err);
+      } finally {
+        subscribedLoading.value = false;
+      }
     };
 
     /**
@@ -680,6 +740,10 @@ export const useUserStore = defineStore(
       logout,
 
       playlists,
+      subscribedHasMore,
+      subscribedLoading,
+      playlistsLoaded,
+      loadMoreSubscribedPlaylists,
       likedSongIds,
       albums,
       artists,

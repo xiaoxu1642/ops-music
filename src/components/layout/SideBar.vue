@@ -146,6 +146,9 @@ const subscribedItems = computed<SMenuItem[]>(() => {
   );
 });
 
+/** SMenu medium 尺寸行高：普通 42px / 封面 52px，另加 gap-1 的 4px 行距 */
+const subscribedRowHeight = computed(() => (appearance.sidebarPlaylistCover ? 52 : 42) + 4);
+
 /** 「我喜欢」行尾的心动模式按钮 */
 const renderHeartModeTrailing = () =>
   h(
@@ -213,25 +216,33 @@ const navItems = computed<SMenuItem[]>(() => {
   return merged;
 });
 
-const menuItems = computed<SMenuItem[]>(() => {
-  const hidden = hiddenKeys.value;
-  const items = [...navItems.value];
-  const showMy = !hidden.has(SIDEBAR_GROUP_MY_PLAYLISTS);
-  const showSubscribed =
-    !hidden.has(SIDEBAR_GROUP_SUBSCRIBED) &&
+const showMy = computed(() => !hiddenKeys.value.has(SIDEBAR_GROUP_MY_PLAYLISTS));
+
+/** 收藏分组沿用原逻辑：仅在线歌单来源、未被隐藏且列表非空时才渲染 */
+const showSubscribed = computed(
+  () =>
+    !hiddenKeys.value.has(SIDEBAR_GROUP_SUBSCRIBED) &&
     status.myPlaylistSource === "online" &&
-    subscribedItems.value.length > 0;
-  if ((showMy || showSubscribed) && items[items.length - 1]?.type !== "divider")
+    subscribedItems.value.length > 0,
+);
+
+/** 固定导航 + 我的歌单：数量有界，保持普通渲染 */
+const fixedMenuItems = computed<SMenuItem[]>(() => {
+  const items = [...navItems.value];
+  if ((showMy.value || showSubscribed.value) && items[items.length - 1]?.type !== "divider")
     items.push({ key: "divider-playlist", type: "divider" });
-  if (showMy) {
+  if (showMy.value) {
     items.push({ key: "my-playlist-group", type: "group", render: renderMyHeader });
     items.push(...myPlaylistItems.value);
   }
-  if (showSubscribed) {
-    if (showMy) items.push({ key: "divider-subscribed", type: "divider" });
-    items.push({ key: "subscribed-group", type: "group", render: renderSubscribedHeader });
-    items.push(...subscribedItems.value);
-  }
+  return items;
+});
+
+/** 收藏分组头：沿用 SMenu 的 group/divider 渲染，保留折叠时的收起动画 */
+const subscribedHeaderItems = computed<SMenuItem[]>(() => {
+  const items: SMenuItem[] = [];
+  if (showMy.value) items.push({ key: "divider-subscribed", type: "divider" });
+  items.push({ key: "subscribed-group", type: "group", render: renderSubscribedHeader });
   return items;
 });
 
@@ -282,7 +293,9 @@ const activeKey = computed(() => {
     return "/library";
   // 歌手详情页归属歌手列表
   if (route.path.startsWith("/artist/local/")) return "/artists/local";
-  const items = menuItems.value.filter((item) => !item.type || item.type === "item");
+  const items = [...fixedMenuItems.value, ...subscribedItems.value].filter(
+    (item) => !item.type || item.type === "item",
+  );
   return (
     items.find((item) => route.path === item.key || route.path.startsWith(item.key + "/"))?.key ??
     "/"
@@ -296,10 +309,9 @@ const onSelect = (key: string) => {
 /**
  * 歌单存档收敛：删除歌单或在线列表刷新后，剔除不再存在的歌单键，
  * 防止隐藏/顺序存档随时间无限累积残留
- * @param existing - 当前存在的歌单路由键集合
+ * @param isStale - 判定歌单路由键对应的歌单是否已不存在
  */
-const prunePlaylistArchive = (existing: ReadonlySet<string>): void => {
-  const isStale = (key: string): boolean => key.startsWith("/collection/") && !existing.has(key);
+const prunePlaylistArchive = (isStale: (key: string) => boolean): void => {
   const hiddenKeysNext = appearance.sidebarHiddenKeys.filter((key) => !isStale(key));
   if (hiddenKeysNext.length !== appearance.sidebarHiddenKeys.length)
     appearance.sidebarHiddenKeys = hiddenKeysNext;
@@ -328,7 +340,14 @@ watch(
       for (const pl of onlineLists) existing.add(`/collection/netease/playlist/${pl.id}`);
     }
     if (existing.size === 0) return;
-    prunePlaylistArchive(existing);
+    // 在线列表按分页加载，首页未落地或还有下一页时不能把未加载的歌单当作已删除
+    const onlineSettled =
+      onlineLists === null || (userStore.playlistsLoaded && !userStore.subscribedHasMore);
+    const isStale = (key: string): boolean =>
+      key.startsWith("/collection/") &&
+      !existing.has(key) &&
+      (onlineSettled || !key.startsWith("/collection/netease/"));
+    prunePlaylistArchive(isStale);
   },
   { deep: false },
 );
@@ -344,20 +363,57 @@ onMounted(() => {
     <SideBarLogo :collapsed="appearance.sidebarCollapsed" />
     <SContextMenu :items="contextMenuItems" @select="onContextMenuSelect">
       <div
-        class="flex-1 min-h-0 pb-3 overflow-y-auto transition-[padding] duration-300"
-        :class="
-          appearance.sidebarCollapsed
-            ? 'px-2 [&::-webkit-scrollbar]:hidden'
-            : 'px-3 [scrollbar-gutter:stable]'
-        "
+        class="flex-1 min-h-0 flex flex-col pb-3 transition-[padding] duration-300"
+        :class="appearance.sidebarCollapsed ? 'px-2' : 'px-3'"
         @contextmenu.capture="onMenuContextMenu"
       >
-        <SMenu
-          :items="menuItems"
-          :model-value="activeKey"
-          :collapsed="appearance.sidebarCollapsed"
-          @select="onSelect"
-        />
+        <div
+          class="shrink-0 max-h-[60%] overflow-y-auto"
+          :class="
+            appearance.sidebarCollapsed
+              ? '[&::-webkit-scrollbar]:hidden'
+              : '[scrollbar-gutter:stable]'
+          "
+        >
+          <SMenu
+            :items="fixedMenuItems"
+            :model-value="activeKey"
+            :collapsed="appearance.sidebarCollapsed"
+            @select="onSelect"
+          />
+        </div>
+        <!-- 收藏歌单随订阅数无限增长，只渲染可视行并在触底时续拉下一页 -->
+        <SVirtualList
+          v-if="showSubscribed"
+          class="min-h-0 flex-1"
+          :items="subscribedItems"
+          :item-height="subscribedRowHeight"
+          item-fixed
+          :hide-scrollbar="appearance.sidebarCollapsed"
+          :get-item-key="(item: SMenuItem) => item.key"
+          @reach-bottom="void userStore.loadMoreSubscribedPlaylists()"
+        >
+          <template #header>
+            <SMenu :items="subscribedHeaderItems" :collapsed="appearance.sidebarCollapsed" />
+          </template>
+          <template #default="{ item }: { item: SMenuItem }">
+            <SMenu
+              :items="[item]"
+              :model-value="activeKey"
+              :collapsed="appearance.sidebarCollapsed"
+              @select="onSelect"
+            />
+          </template>
+          <template #footer>
+            <div
+              v-if="userStore.subscribedLoading"
+              class="flex items-center justify-center gap-2 py-2 text-xs text-on-surface-variant/50"
+            >
+              <SLoading class="size-3.5 shrink-0 text-primary/70" />
+              <span>{{ t("common.loading") }}</span>
+            </div>
+          </template>
+        </SVirtualList>
       </div>
     </SContextMenu>
     <!-- 新建歌单 -->
