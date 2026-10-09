@@ -1,21 +1,27 @@
 <div align="center">
 
-<img alt="SPlayer-Next logo" width="120" height="120" src="public/icons/favicon.png" />
+<img alt="Ops Music logo" width="120" height="120" src="public/icons/favicon.png" />
 
-<h2>SPlayer-Next</h2>
+<h2>Ops Music</h2>
 
-<p>🎵 Cross-platform desktop music player with rich lyric support and wide audio format compatibility.</p>
+<p>🎵 Windows desktop music player: Netease Cloud Music, local library and taskbar lyrics.</p>
 
-<p>Successor to <a href="https://github.com/SPlayer-Dev/SPlayer">SPlayer</a>.</p>
+<p>This project is a derivative of <a href="https://github.com/SPlayer-Dev/SPlayer-Next">SPlayer-Next</a>, not the same product.</p>
 
-[![Stars](https://img.shields.io/github/stars/SPlayer-Dev/SPlayer-Next?style=flat)](https://github.com/SPlayer-Dev/SPlayer-Next/stargazers)
-[![Release](https://img.shields.io/github/v/release/SPlayer-Dev/SPlayer-Next)](https://github.com/SPlayer-Dev/SPlayer-Next/releases)
-[![License](https://img.shields.io/github/license/SPlayer-Dev/SPlayer-Next)](https://github.com/SPlayer-Dev/SPlayer-Next/blob/main/LICENSE)
-[![Issues](https://img.shields.io/github/issues/SPlayer-Dev/SPlayer-Next)](https://github.com/SPlayer-Dev/SPlayer-Next/issues)
+[![License](https://img.shields.io/github/license/xiaoxu1642/ops-music)](./LICENSE)
 
 **English** | [简体中文](./README.zh-CN.md)
 
 </div>
+
+---
+
+## Upstream & License
+
+- **Baseline project**: [SPlayer-Next](https://github.com/SPlayer-Dev/SPlayer-Next) (by imsyy, AGPL-3.0). SPlayer-Next itself is the successor of [SPlayer](https://github.com/SPlayer-Dev/SPlayer). This project stays AGPL-3.0 and keeps the original `LICENSE`.
+- **What changed**: renamed to Ops Music, Windows-only; song recognition, font configuration, desktop lyric, dynamic island, external HTTP/WS API, Last.fm, Discord RPC, update checking and streaming servers were removed; taskbar lyrics, online word-by-word lyrics and system media controls (SMTC) are kept.
+- **Native modules**: decoding, tags and covers come from SPlayer-Next's Rust `audio-engine` (FFmpeg + lofty); system media controls come from its `media-ctrl` (WinRT SMTC).
+- **Planned addition**: a Bilibili source ported from my other project Otter Music (a Capacitor Android player). The matching entry will be added here once it lands.
 
 ---
 

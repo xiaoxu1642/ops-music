@@ -1,21 +1,27 @@
 <div align="center">
 
-<img alt="SPlayer-Next logo" width="120" height="120" src="public/icons/favicon.png" />
+<img alt="Ops Music logo" width="120" height="120" src="public/icons/favicon.png" />
 
-<h2>SPlayer-Next</h2>
+<h2>Ops Music</h2>
 
-<p>🎵 跨平台桌面音乐播放器，支持丰富的歌词展现形式与广泛的音频格式</p>
+<p>🎵 Windows 桌面音乐播放器：网易云 + 本地曲库 + 任务栏歌词</p>
 
-<p>「<a href="https://github.com/SPlayer-Dev/SPlayer">SPlayer</a>」的继任版本</p>
+<p>本项目是 <a href="https://github.com/SPlayer-Dev/SPlayer-Next">SPlayer-Next</a> 的二次开发分支，不是同一产品。</p>
 
-[![Stars](https://img.shields.io/github/stars/SPlayer-Dev/SPlayer-Next?style=flat)](https://github.com/SPlayer-Dev/SPlayer-Next/stargazers)
-[![Release](https://img.shields.io/github/v/release/SPlayer-Dev/SPlayer-Next)](https://github.com/SPlayer-Dev/SPlayer-Next/releases)
-[![License](https://img.shields.io/github/license/SPlayer-Dev/SPlayer-Next)](https://github.com/SPlayer-Dev/SPlayer-Next/blob/main/LICENSE)
-[![Issues](https://img.shields.io/github/issues/SPlayer-Dev/SPlayer-Next)](https://github.com/SPlayer-Dev/SPlayer-Next/issues)
+[![License](https://img.shields.io/github/license/xiaoxu1642/ops-music)](./LICENSE)
 
-[English](./README.md) | **简体中文**
+**简体中文** | [English](./README.md)
 
 </div>
+
+---
+
+## 来源与许可
+
+- **基线项目**：[SPlayer-Next](https://github.com/SPlayer-Dev/SPlayer-Next)（作者 imsyy，AGPL-3.0）。SPlayer-Next 本身是 [SPlayer](https://github.com/SPlayer-Dev/SPlayer) 的继任版本。本项目沿用 AGPL-3.0，`LICENSE` 未改动。
+- **二改内容**：更名为 Ops Music，只面向 Windows；移除听歌识曲、字体配置、桌面歌词、灵动岛、外部 HTTP/WS API、Last.fm、Discord RPC、检查更新、流媒体服务器等功能；保留任务栏歌词、在线逐字歌词与系统媒体控制（SMTC）。
+- **原生模块**：音频解码/标签/封面由 SPlayer-Next 的 Rust `audio-engine`（FFmpeg + lofty）提供，系统媒体控件由其 `media-ctrl`（WinRT SMTC）提供。
+- **计划新增**：B 站音源，实现来自本人另一项目 Otter Music（Capacitor Android 播放器）。接入完成后会在本节列出对应项目与许可。
 
 ---
 
