@@ -1,0 +1,27 @@
+node_modules
+dist
+out
+build
+.DS_Store
+.eslintcache
+.claude
+.agents
+docs/superpowers
+docs/.vitepress/cache
+docs/.vitepress/dist
+skills-lock.json
+*.log*
+.vscode/settings.json
+.idea
+
+# Rust build artifacts
+**/target
+native/*/*.node
+native/*/*.tmp
+native/*/*.swp
+# native/*/index.d.ts
+package-lock.json
+
+# Code signing certificates
+*.pfx
+*.p12
