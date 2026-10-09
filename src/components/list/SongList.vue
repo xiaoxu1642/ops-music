@@ -14,6 +14,7 @@ import { useFloatingPlayerBar } from "@/composables/useFloatingPlayerBar";
 import { formatTime } from "@/utils/time";
 import { formatFileSize } from "@/utils/format";
 import { isLosslessQuality, getQualityLabel } from "@/utils/quality";
+import { withPicSize } from "@/utils/format/netease";
 import { navigateToAlbum, navigateToArtist } from "@/utils/navigate";
 import type { SVirtualListExposed } from "@/components/ui/SVirtualList.vue";
 import * as player from "@/core/player";
@@ -304,7 +305,7 @@ defineExpose({
       <template #header>
         <div v-if="contextTrack">
           <div class="flex items-center gap-1.5 px-1 py-1">
-            <SImg :src="contextTrack.cover" class="size-9 rounded-md shrink-0" />
+            <SImg :src="withPicSize(contextTrack.cover, 150)" class="size-9 rounded-md shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="text-xs font-medium truncate">
                 {{ contextTrack.title }}
@@ -581,7 +582,7 @@ defineExpose({
               </div>
               <!-- 信息 -->
               <div class="flex-1 min-w-0 flex items-center gap-3">
-                <SImg :src="item.cover" class="size-12 rounded-lg shrink-0" />
+                <SImg :src="withPicSize(item.cover, 150)" class="size-12 rounded-lg shrink-0" />
                 <div class="flex-1 min-w-0">
                   <div class="flex items-baseline gap-1.5 min-w-0">
                     <span

@@ -21,14 +21,16 @@ export const ensureOk = <T>(body: T): T => {
 };
 
 /**
- * 给封面 URL 拼尺寸
- * @param url - 封面原始 URL
+ * 给网易云封面 URL 拼尺寸，已带档位的 URL 改写为目标档位
+ * 非 http 的本地封面（cache:// cover:// 等）原样返回
+ * @param url - 封面 URL
  * @param size - 期望像素边长，默认 300
  */
 export const withPicSize = (url: string | undefined, size = 300): string | undefined => {
-  if (!url) return undefined;
-  if (url.includes("?param=")) return url;
-  return `${url}?param=${size}y${size}`;
+  if (!url || !url.startsWith("http")) return url;
+  const tier = `param=${size}y${size}`;
+  if (url.includes("?param=")) return url.replace(/param=\d+y\d+/, tier);
+  return `${url}?${tier}`;
 };
 
 /**

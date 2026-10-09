@@ -4,6 +4,7 @@ import type { ContentScope } from "@/types/collection";
 import { usePlaylistStore } from "@/stores/playlist";
 import { useUserStore } from "@/stores/user";
 import { toast } from "@/composables/useToast";
+import { withPicSize } from "@/utils/format/netease";
 import PlaylistCreateDialog from "./PlaylistCreateDialog.vue";
 import IconLucidePlus from "~icons/lucide/plus";
 
@@ -115,7 +116,11 @@ const handlePick = async (playlistId: string): Promise<void> => {
         :class="submitting ? 'pointer-events-none opacity-50' : ''"
         @click="handlePick(entry.id)"
       >
-        <SImg :src="entry.cover" :alt="entry.name" class="size-12 rounded-md shrink-0" />
+        <SImg
+          :src="withPicSize(entry.cover, 150)"
+          :alt="entry.name"
+          class="size-12 rounded-md shrink-0"
+        />
         <div class="flex-1 min-w-0 flex flex-col gap-0.5">
           <span class="text-sm text-on-surface truncate">{{ entry.name }}</span>
           <span class="text-xs text-on-surface-variant/60 tabular-nums">

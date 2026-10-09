@@ -135,7 +135,7 @@ const playerBarInnerClass = computed(() => {
       <main ref="mainContainerRef" class="flex-1 overflow-y-auto overflow-x-hidden">
         <RouterView v-slot="{ Component }">
           <Transition :name="routeTransitionName" mode="out-in" @after-enter="handleAfterEnter">
-            <KeepAlive :max="10" :include="cachedViews">
+            <KeepAlive :max="3" :include="cachedViews">
               <component :is="Component" :key="routeKey" />
             </KeepAlive>
           </Transition>

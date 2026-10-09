@@ -10,6 +10,7 @@ import { toast } from "@/composables/useToast";
 import { handleError } from "@/utils/errors";
 import { formatFileSize } from "@/utils/format";
 import { formatTime } from "@/utils/time";
+import { withPicSize } from "@/utils/format/netease";
 import IconWandSparkles from "~icons/lucide/wand-sparkles";
 
 const props = defineProps<{ open: boolean; track: Track | null }>();
@@ -283,7 +284,7 @@ const handleSave = async (): Promise<void> => {
             @keydown.enter="applyCandidate(candidate)"
           >
             <SImg
-              :src="candidate.track.cover"
+              :src="withPicSize(candidate.track.cover, 150)"
               class="size-10 shrink-0 rounded-md overflow-hidden"
             />
             <div class="flex flex-col min-w-0 flex-1">

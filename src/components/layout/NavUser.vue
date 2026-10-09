@@ -2,6 +2,7 @@
 import { useUserStore } from "@/stores/user";
 import { dialog } from "@/composables/useDialog";
 import { toast } from "@/composables/useToast";
+import { withPicSize } from "@/utils/format/netease";
 import vipImg from "@/assets/images/vip.png";
 import IconLucideListMusic from "~icons/lucide/list-music";
 import IconLucideDisc3 from "~icons/lucide/disc-3";
@@ -84,9 +85,10 @@ const handleLogout = async (): Promise<void> => {
         >
           <img
             v-if="user.profile?.avatarUrl"
-            :src="user.profile.avatarUrl"
+            :src="withPicSize(user.profile.avatarUrl, 96)"
             alt="avatar"
             class="size-full object-cover"
+            decoding="async"
             referrerpolicy="no-referrer"
           />
           <IconLucideUserRound v-else class="size-4 text-on-surface-variant" />
@@ -110,9 +112,10 @@ const handleLogout = async (): Promise<void> => {
       >
         <img
           v-if="user.profile?.avatarUrl"
-          :src="user.profile.avatarUrl"
+          :src="withPicSize(user.profile.avatarUrl, 96)"
           alt="avatar"
           class="size-full object-cover"
+          decoding="async"
           referrerpolicy="no-referrer"
         />
         <IconLucideUserRound v-else class="size-5 text-on-surface-variant" />

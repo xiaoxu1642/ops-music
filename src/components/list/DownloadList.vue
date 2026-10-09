@@ -9,6 +9,7 @@ import { dialog } from "@/composables/useDialog";
 import { isLosslessQuality, getQualityLabel } from "@/utils/quality";
 import { formatTime } from "@/utils/time";
 import { formatFileSize } from "@/utils/format";
+import { withPicSize } from "@/utils/format/netease";
 import * as player from "@/core/player";
 import IconLucideLoaderCircle from "~icons/lucide/loader-circle";
 import IconLucideDownload from "~icons/lucide/download";
@@ -185,7 +186,7 @@ defineExpose({ playAll });
           </div>
           <!-- 信息 -->
           <div class="flex-1 min-w-0 flex items-center gap-3">
-            <SImg :src="item.track.cover" class="size-12 rounded-lg shrink-0" />
+            <SImg :src="withPicSize(item.track.cover, 150)" class="size-12 rounded-lg shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="flex items-baseline gap-1.5 min-w-0">
                 <span

@@ -5,6 +5,7 @@ import type { TopAlbum, TopArtist, TopTrack } from "@shared/types/stats";
 import * as player from "@/core/player";
 import { navigateToAlbum, navigateToArtist } from "@/utils/navigate";
 import { formatCompact } from "@/utils/format";
+import { withPicSize } from "@/utils/format/netease";
 import { useLibraryStore } from "@/stores/library";
 import IconLucideMusic from "~icons/lucide/music";
 import IconLucideDisc3 from "~icons/lucide/disc-3";
@@ -223,7 +224,7 @@ const playSong = (track: Track): void => {
               {{ String(index + 2).padStart(2, "0") }}
             </span>
             <SImg
-              :src="item.cover"
+              :src="withPicSize(item.cover, 150)"
               :alt="item.title"
               class="size-11 ring-1 ring-inset ring-black/10 dark:ring-white/10"
               :class="section.circle ? 'rounded-full' : 'rounded-lg'"

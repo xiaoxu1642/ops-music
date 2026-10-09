@@ -3,6 +3,7 @@ import type { Track } from "@shared/types/player";
 import type { SVirtualListExposed } from "@/components/ui/SVirtualList.vue";
 import { useQueuePanel } from "@/composables/useQueuePanel";
 import { useDragSort } from "@/composables/useDragSort";
+import { withPicSize } from "@/utils/format/netease";
 import * as player from "@/core/player";
 
 const emit = defineEmits<{ close: [] }>();
@@ -119,7 +120,7 @@ const onClear = (): void => {
               @mousedown="handlePointerDown($event, index, item.title)"
               @touchstart.passive="handlePointerDown($event, index, item.title)"
             >
-              <SImg :src="item.cover" class="size-9 rounded shrink-0" />
+              <SImg :src="withPicSize(item.cover, 150)" class="size-9 rounded shrink-0" />
               <div class="flex-1 min-w-0">
                 <div class="text-xs truncate font-medium leading-tight">{{ item.title }}</div>
                 <div

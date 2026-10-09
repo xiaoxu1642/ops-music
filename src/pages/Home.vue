@@ -10,6 +10,7 @@ import { useQuickActions } from "@/composables/home/useQuickActions";
 import { useHomeDiscover } from "@/composables/home/useHomeDiscover";
 import { useFloatingPlayerBar } from "@/composables/useFloatingPlayerBar";
 import { navigateToPlaylist, navigateToArtist, navigateToAlbum } from "@/utils/navigate";
+import { withPicSize } from "@/utils/format/netease";
 import * as player from "@/core/player";
 
 const { t } = useI18n();
@@ -189,7 +190,11 @@ const openAlbum = (item: CoverItem): void => {
               {{ trackNo(index) }}
             </span>
             <div class="relative size-12 shrink-0">
-              <SImg :src="item.track.cover" :alt="item.track.title" class="size-12 rounded-lg" />
+              <SImg
+                :src="withPicSize(item.track.cover, 150)"
+                :alt="item.track.title"
+                class="size-12 rounded-lg"
+              />
               <div
                 class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/45 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               >
