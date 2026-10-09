@@ -105,4 +105,3 @@ export const pluginLog = log.scope("plugin");
 export const lastfmLog = log.scope("lastfm");
 export const neteaseLog = log.scope("netease");
 export const cloudLog = log.scope("cloud");
-export const recognitionLog = log.scope("recognition");

@@ -49,7 +49,6 @@ import search_match from "./search_match";
 import search_multimatch from "./search_multimatch";
 import search_suggest from "./search_suggest";
 import search_suggest_pc from "./search_suggest_pc";
-import audio_match from "./audio_match";
 
 // 歌词
 import lyric from "./lyric";
@@ -146,7 +145,6 @@ export const modules: Record<string, NeteaseModule> = {
   search_multimatch,
   search_suggest,
   search_suggest_pc,
-  audio_match,
 
   lyric,
   lyric_new,

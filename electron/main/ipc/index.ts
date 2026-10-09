@@ -19,7 +19,6 @@ import { registerStatsIpc } from "./stats";
 import { registerCloudIpc } from "./cloud";
 import { registerCommentsIpc } from "./comments";
 import { registerPlaylistIpc } from "./playlist";
-import { registerRecognitionIpc } from "./recognition";
 import { registerOpenccIpc } from "./opencc";
 
 /** 注册所有 IPC 处理 */
@@ -40,7 +39,6 @@ export const registerIpcHandlers = (): void => {
   registerThemeIpc();
   registerStreamingIpc();
   registerPlaylistIpc();
-  registerRecognitionIpc();
   registerLastfmIpc();
   registerCacheIpc();
   registerDownloadIpc();

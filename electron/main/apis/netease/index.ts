@@ -38,7 +38,6 @@ const SESSION_MUTATING: ReadonlySet<string> = new Set([
 
 /** 不采用缓存的实时接口 */
 const NON_CACHEABLE: ReadonlySet<string> = new Set([
-  "audio_match",
   "captcha_sent",
   "captcha_verify",
   "login",
@@ -80,9 +79,6 @@ const NON_CACHEABLE: ReadonlySet<string> = new Set([
   "fm_trash",
   "recommend_songs",
 ]);
-
-/** 无需初始化网易云匿名登录态的公开接口 */
-const SESSIONLESS: ReadonlySet<string> = new Set(["audio_match"]);
 
 /** 国内 IP 前缀池 */
 const CN_IP_PREFIXES = [
@@ -217,7 +213,7 @@ export const callNetease = async (
     name.startsWith("captcha") ||
     name === "logout" ||
     name === "register_anonimous";
-  if (!isSessionEndpoint && !SESSIONLESS.has(name) && params.cookie === undefined) {
+  if (!isSessionEndpoint && params.cookie === undefined) {
     await ensureNeteaseAnonymousSession();
   }
   const session = loadSession();

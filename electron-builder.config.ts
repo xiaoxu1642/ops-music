@@ -49,16 +49,6 @@ const config: Configuration = {
       filter: ["*.node"],
     },
     {
-      from: "native/audio-capture",
-      to: "native",
-      filter: ["*.node"],
-    },
-    {
-      from: "resources/afp",
-      to: "afp",
-      filter: ["afp.mjs", "afp.wasm.mjs"],
-    },
-    {
       from: "native/media-ctrl",
       to: "native",
       filter: ["*.node"],
@@ -121,7 +111,6 @@ const config: Configuration = {
     entitlementsInherit: "public/entitlements.mac.plist",
     extendInfo: {
       NSCameraUsageDescription: "Application requests access to the device's camera.",
-      NSMicrophoneUsageDescription: "Application requests access to the device's microphone.",
       NSDocumentsFolderUsageDescription:
         "Application requests access to the user's Documents folder.",
       NSDownloadsFolderUsageDescription:

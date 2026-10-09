@@ -13,7 +13,6 @@ import IconLucideMusic from "~icons/lucide/music";
 import IconLucideUser from "~icons/lucide/user";
 import IconLucideDisc from "~icons/lucide/disc";
 import IconLucideListMusic from "~icons/lucide/list-music";
-import IconLucideAudioWaveform from "~icons/lucide/audio-waveform";
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -26,7 +25,6 @@ const dialogOpen = computed({
   set: (value: boolean) => (status.searchOpen = value),
 });
 const searchQuery = ref("");
-const recognitionOpen = ref(false);
 
 const trimmedQuery = computed(() => searchQuery.value.trim());
 
@@ -275,7 +273,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- 搜索框触发器与听歌识曲 -->
+  <!-- 搜索框触发器 -->
   <div class="flex items-center gap-2 shrink-0">
     <div
       role="button"
@@ -290,19 +288,7 @@ onMounted(() => {
         {{ t("nav.searchPlaceholder") }}
       </span>
     </div>
-    <SButton
-      class="app-no-drag shrink-0"
-      variant="tertiary"
-      circle
-      :size="40"
-      :icon-size="20"
-      @click="recognitionOpen = true"
-    >
-      <template #icon><IconLucideAudioWaveform /></template>
-    </SButton>
   </div>
-  <!-- 听歌识曲 -->
-  <RecognitionDialog v-model:open="recognitionOpen" />
   <!-- 搜索 -->
   <SDialog
     v-model:open="dialogOpen"
