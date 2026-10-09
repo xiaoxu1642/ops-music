@@ -15,7 +15,6 @@ import {
   resolveLocalRepoLyric,
   resolveOnlineByPreference,
   resolvePluginLyric,
-  resolveStreamingByPreference,
   resolveTTMLOverlay,
   type LocalLyric,
   type OnlineResult,
@@ -265,39 +264,6 @@ const withPluginPrefer = async (
 };
 
 /**
- * 流媒体歌词加载：按来源偏好解析，失败后使用插件和内嵌歌词兜底
- * @param token - 竞态 token
- * @param track - 歌曲信息
- * @param detail - 歌曲详细信息
- */
-const loadStreamingLyric = (
-  token: number,
-  track: Track,
-  detail: TrackDetail | null,
-): Promise<void> =>
-  withPluginPrefer(token, track, async () => {
-    const resolved = await resolveStreamingByPreference(track, () => token === currentToken);
-    if (token !== currentToken) return;
-    const embeddedFallback = embeddedLyricFromDetail(detail);
-    if (resolved && commitIfBetter(token, resolved.source, resolved.input)) {
-      if (resolved.source.source === "online") {
-        tryApplyTTMLOverlay(token, track, {
-          source: resolved.source as OnlineResult["source"],
-          input: resolved.input,
-        });
-      }
-      return;
-    }
-    if (token !== currentToken) return;
-    if (await tryPluginFallback(token, track)) return;
-    if (embeddedFallback) {
-      commitIfBetter(token, embeddedFallback.source, { content: embeddedFallback.content });
-    } else if (useMediaStore().parsedLyric.length === 0) {
-      commit(token, null, null);
-    }
-  });
-
-/**
  * 在线平台歌曲歌词加载
  * @param token - 竞态 token
  * @param track - 歌曲信息
@@ -370,11 +336,6 @@ export const loadForTrack = async (detail: TrackDetail | null): Promise<void> =>
       await loadPlatformLyric(token, track);
       return;
     }
-    // 流媒体服务器
-    if (track.source === "streaming") {
-      await loadStreamingLyric(token, track, detail);
-      return;
-    }
     // 本地文件
     const local = detail ? await readLocal(detail) : null;
     if (token !== currentToken) return;
@@ -425,10 +386,6 @@ const refreshPreference = async (): Promise<void> => {
   // 本地 TTML 歌词库最高优先
   if (await tryLocalRepo(token, track)) return;
   if (token !== currentToken) return;
-  if (track.source === "streaming") {
-    await loadStreamingLyric(token, track, media.detail);
-    return;
-  }
   // 在线歌曲（任一在线平台）
   if (isPlatform(track.source)) {
     await loadPlatformLyric(token, track);

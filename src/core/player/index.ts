@@ -7,7 +7,6 @@ import type { RepeatMode, ShuffleMode } from "@/stores/status";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
 import { useStatusStore } from "@/stores/status";
-import { useStreamingStore } from "@/stores/streaming";
 import { usePluginsStore } from "@/stores/plugins";
 import { useHistoryStore } from "@/stores/history";
 import { useLibraryStore } from "@/stores/library";
@@ -1320,8 +1319,6 @@ export const initPlayer = async (): Promise<void> => {
   // 先从主进程同步后端配置，确保 system 设置可用
   const settings = useSettingsStore();
   await settings.syncSystem();
-  // 流媒体 store 必须在恢复队列前就绪，否则队列里的 streaming track 拿不到 cfg
-  await useStreamingStore().init();
   // 插件 store 同理：在线歌曲 URL 兜底走插件，列表必须在 loadTrack 前就绪
   void usePluginsStore().load();
   await queue.restoreQueue();

@@ -13,7 +13,6 @@ vi.mock("@/stores/settings", () => ({
 }));
 vi.mock("@/stores/plugins", () => ({ usePluginsStore: () => ({ list: [] }) }));
 vi.mock("@/stores/user", () => ({ useUserStore: () => ({ isLoggedIn: false }) }));
-vi.mock("@/stores/streaming", () => ({ useStreamingStore: vi.fn() }));
 vi.mock("@/apis/song/netease", () => ({ resolveNeteaseUrl: mocks.netease }));
 vi.mock("@/apis/song/qqmusic", () => ({ resolveQQMusicUrl: mocks.qqmusic }));
 vi.mock("@/apis/song/kugou", () => ({ resolveKugouUrl: mocks.kugou }));

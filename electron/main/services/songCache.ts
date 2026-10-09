@@ -368,8 +368,6 @@ export const fetchAsync = (
   preloadId?: string,
 ): Promise<string | null> => {
   if (!isCacheEnabled()) return Promise.resolve(null);
-  if (source === "streaming" && !store.get("cache.songCache.cacheStreaming"))
-    return Promise.resolve(null);
   if (preloadId) preloadPin = { id: preloadId, filename: filenameFor(cacheKey) };
   const owner = preloadId ?? "background";
   const existing = inFlight.get(cacheKey);

@@ -10,8 +10,8 @@ export type RepeatMode = "list" | "one";
 /** 随机模式 */
 export type ShuffleMode = "off" | "on";
 
-/** 歌曲来源：本地 / 流媒体 / 在线平台 */
-export type TrackSource = "local" | "streaming" | Platform;
+/** 歌曲来源：本地 / 在线平台 */
+export type TrackSource = "local" | Platform;
 
 /** 播放来源类型 */
 export type PlaybackOriginType = "track" | "playlist" | "album" | "artist" | "radio" | "page";
@@ -100,10 +100,6 @@ export interface Track {
   cueStartMs?: number;
   /** CUE 分轨结束时间（毫秒） */
   cueEndMs?: number;
-  /** 流媒体服务器实例 ID（仅 source==='streaming'） */
-  serverId?: string;
-  /** 流媒体服务器原生 ID（仅 source==='streaming'） */
-  originalId?: string;
   /** 标题 */
   title: string;
   /** 注释/副标题 */
@@ -181,7 +177,7 @@ export interface LoadOptions {
   autoPlay?: boolean;
   /**
    * 渲染层下发的权威 Track 元数据，用于 SMTC/托盘/窗口标题
-   * streaming/online 源应当下发；本地源缺省时主进程回退到引擎解析的 tag
+   * 在线源应当下发；本地源缺省时主进程回退到引擎解析的 tag
    */
   meta?: Track;
   /** 本次播放的来源上下文 */

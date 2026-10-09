@@ -22,7 +22,6 @@ const mockResolveOnlineByPreference = vi.fn();
 const mockResolveTTMLOverlay = vi.fn();
 const mockResolveLocalRepoLyric = vi.fn();
 const mockResolvePluginLyric = vi.fn();
-const mockResolveStreamingByPreference = vi.fn();
 
 vi.mock("@/services/lyric/resolve", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/services/lyric/resolve")>();
@@ -32,7 +31,6 @@ vi.mock("@/services/lyric/resolve", async (importOriginal) => {
     resolveTTMLOverlay: (...args: unknown[]) => mockResolveTTMLOverlay(...args),
     resolveLocalRepoLyric: (...args: unknown[]) => mockResolveLocalRepoLyric(...args),
     resolvePluginLyric: (...args: unknown[]) => mockResolvePluginLyric(...args),
-    resolveStreamingByPreference: (...args: unknown[]) => mockResolveStreamingByPreference(...args),
   };
 });
 
@@ -81,7 +79,6 @@ describe("lyric loader", () => {
     mockResolveTTMLOverlay.mockResolvedValue(null);
     mockResolveLocalRepoLyric.mockResolvedValue(null);
     mockResolvePluginLyric.mockResolvedValue(null);
-    mockResolveStreamingByPreference.mockResolvedValue(null);
 
     // @ts-expect-error test mock
     window.api = mockWindowApi;

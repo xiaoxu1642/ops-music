@@ -6,7 +6,7 @@ import { detectFormat } from "lyric-kit";
 import { useSettingsStore } from "@/stores/settings";
 import { usePluginsStore } from "@/stores/plugins";
 import { DEFAULT_LYRIC_FORMAT_ORDER, DEFAULT_LYRIC_SOURCE_ORDER } from "@/types/settings";
-import { requestPlatformLyric, requestStreamingLyric, requestTTMLOverlay } from "./request";
+import { requestPlatformLyric, requestTTMLOverlay } from "./request";
 
 /** 支持 AMLL TTML DB 的平台列表 */
 const TTML_PLATFORMS = ["netease", "qqmusic"] as const;
@@ -45,17 +45,6 @@ const resolvePlatformLyric = async (
 ): Promise<OnlineResult | null> => {
   const result = await requestPlatformLyric(platform, track);
   return result ? toOnlineResult(result) : null;
-};
-
-/**
- * 请求并解析流媒体服务端歌词
- * @param track - 歌曲信息
- * @returns 服务端歌词，不存在则返回 null
- */
-export const resolveStreamingLyric = async (track: Track): Promise<ResolvedLyric | null> => {
-  const text = await requestStreamingLyric(track);
-  if (!text?.trim()) return null;
-  return { source: { source: "external", format: detectFormat(text) }, input: { content: text } };
 };
 
 /** 提取内嵌歌词兜底 */
@@ -233,39 +222,6 @@ export const resolveTTMLOverlay = async (
 };
 
 /**
- * 按歌词来源偏好解析流媒体歌词
- * @param track - 流媒体歌曲
- * @param shouldContinue - 竞态检查
- * @returns 最终歌词候选，不存在则返回 null
- */
-export const resolveStreamingByPreference = async (
-  track: Track,
-  shouldContinue: () => boolean = () => true,
-): Promise<ResolvedLyric | null> => {
-  const preference = useSettingsStore().lyric.lyricSourcePreference;
-  let serverLyric: ResolvedLyric | null = null;
-
-  if (preference === "self" || preference === "auto") {
-    serverLyric = await resolveStreamingLyric(track);
-    if (!shouldContinue()) return null;
-    if (preference === "self") return serverLyric;
-  }
-
-  const online = await resolveOnlineByPreference(track, {
-    hasLocal: !!serverLyric,
-    localFormat: serverLyric?.source.format ?? null,
-    shouldContinue,
-  });
-  if (!shouldContinue()) return null;
-  if (online) {
-    return { source: online.source, input: online.input };
-  }
-  if (serverLyric || preference === "auto") return serverLyric;
-
-  return resolveStreamingLyric(track);
-};
-
-/**
  * 从本地 TTML 仓库解析歌词
  * @param track - 歌曲信息
  * @returns 本地仓库歌词，不存在则返回 null
@@ -334,22 +290,6 @@ export const resolveLyricForPreload = async (
 
   // 插件优选：请求先行发出，与下方正常解析并发
   const pluginTask = isPluginLyricPreferred() ? resolvePluginLyric(track) : null;
-
-  if (track.source === "streaming") {
-    const streaming = await resolveStreamingByPreference(track, shouldContinue);
-    if (!shouldContinue()) return null;
-    if (pluginTask) {
-      const plugin = await pluginTask;
-      if (!shouldContinue()) return null;
-      if (plugin && isBetterFormat(plugin.source.format, streaming?.source.format ?? null)) {
-        return plugin;
-      }
-      return streaming ?? plugin ?? null;
-    }
-    if (streaming) return streaming;
-    const plugin = await resolvePluginLyric(track);
-    return shouldContinue() ? plugin : null;
-  }
 
   const online = await resolveOnlineByPreference(track, {
     hasLocal: false,

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import IconMusic from "~icons/lucide/music";
 import IconFolder from "~icons/lucide/folder";
-import IconServer from "~icons/lucide/server";
 import IconSparkles from "~icons/lucide/sparkles";
 import IconArrowRight from "~icons/lucide/arrow-right";
 
@@ -11,7 +10,6 @@ const emit = defineEmits<{ (e: "next"): void }>();
 const FEATURES = [
   { icon: IconFolder, key: "local" },
   { icon: IconMusic, key: "quality" },
-  { icon: IconServer, key: "streaming" },
   { icon: IconSparkles, key: "lyrics" },
 ];
 </script>

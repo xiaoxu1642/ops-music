@@ -9,7 +9,6 @@ import { getNextTrackCandidate } from "@/core/player/candidate";
 import { invalidatePreloadedLyric, preloadLyricForTrack } from "@/services/lyric/preload";
 import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
-import { useStreamingStore } from "@/stores/streaming";
 import { usePluginsStore } from "@/stores/plugins";
 import { useMediaStore } from "@/stores/media";
 import * as queue from "@/stores/queue";
@@ -39,14 +38,11 @@ let stopContextWatch: (() => void) | null = null;
  */
 const buildContextKey = (track: Track): string => {
   const settings = useSettingsStore();
-  const streaming = useStreamingStore();
   const plugins = usePluginsStore();
 
   const parts = [
     track.id,
     track.source,
-    track.serverId ?? "",
-    track.originalId ?? "",
     track.path ?? "",
     track.cueAudioPath ?? "",
     track.cueStartMs ?? "",
@@ -55,7 +51,6 @@ const buildContextKey = (track: Track): string => {
     settings.player.transitionMode,
     settings.player.transitionPreference,
     settings.player.allowTrialPlay,
-    streaming.activeServerId ?? "",
     plugins.list
       .map((plugin) =>
         JSON.stringify([
@@ -220,10 +215,7 @@ export const scheduleNextTrackPreload = (): void => {
   }
 
   const candidateTrack = candidateResult.track;
-  if (
-    candidateTrack.source !== "local" &&
-    (!settings.system.cache.songCache.enabled || !settings.system.cache.songCache.cacheStreaming)
-  ) {
+  if (candidateTrack.source !== "local" && !settings.system.cache.songCache.enabled) {
     invalidateNextTrackPreload();
     return;
   }
@@ -262,7 +254,6 @@ export const scheduleNextTrackPreload = (): void => {
       // 音源预拉取
       let source = await resolveTrackSource(candidateTrack, {
         silent: true,
-        streamingPlaySessionId: crypto.randomUUID(),
       });
       if (token !== currentToken) return;
       if (!source) {
@@ -321,7 +312,6 @@ export const installNextTrackPreloadWatchers = (): void => {
   if (stopContextWatch) return;
   const settings = useSettingsStore();
   const status = useStatusStore();
-  const streaming = useStreamingStore();
   const plugins = usePluginsStore();
   stopContextWatch = watch(
     () => [
@@ -329,7 +319,6 @@ export const installNextTrackPreloadWatchers = (): void => {
       settings.player.transitionMode,
       settings.player.transitionPreference,
       settings.system.cache.songCache.enabled,
-      settings.system.cache.songCache.cacheStreaming,
       settings.player.songLevel,
       settings.player.allowTrialPlay,
       status.playIndex,
@@ -339,7 +328,6 @@ export const installNextTrackPreloadWatchers = (): void => {
       settings.preset.skipKeywordsSongs,
       settings.preset.skipTrackKeywords.join(","),
       queue.queue.value,
-      streaming.activeServerId,
       settings.lyric.lyricSourcePreference,
       settings.lyric.lyricSourceOrder.join(","),
       settings.lyric.lyricFormatOrder.join(","),

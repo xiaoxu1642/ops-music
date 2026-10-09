@@ -5,7 +5,6 @@ import IconLucideUser from "~icons/lucide/user";
 import IconLucideDisc3 from "~icons/lucide/disc-3";
 import IconLucideFolder from "~icons/lucide/folder";
 import IconLucideChartPie from "~icons/lucide/chart-pie";
-import IconLucideLibrary from "~icons/lucide/library";
 import IconMaterialSymbolsFavoriteOutline from "~icons/material-symbols/favorite-outline-rounded";
 import IconLucideStar from "~icons/lucide/star";
 import IconLucideHistory from "~icons/lucide/history";
@@ -39,7 +38,6 @@ const SIDEBAR_NAV_ENTRIES: SidebarNavEntry[] = [
   { key: "/favorites", labelKey: "nav.favorites", icon: IconLucideStar, hideable: true },
   { key: "/cloud", labelKey: "nav.cloud", icon: IconLucideCloud, hideable: true },
   { key: "/download", labelKey: "nav.download", icon: IconLucideDownload, hideable: true },
-  { key: "/streaming", labelKey: "nav.streaming", icon: IconLucideLibrary, hideable: true },
   { key: "/history", labelKey: "nav.history", icon: IconLucideHistory, hideable: true },
 ];
 

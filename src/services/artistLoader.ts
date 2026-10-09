@@ -5,7 +5,6 @@
 import type { TrackSource } from "@shared/types/player";
 import type { ArtistProfile } from "@/types/artist";
 import { useLibraryStore } from "@/stores/library";
-import { useStreamingStore } from "@/stores/streaming";
 import { fetchArtist } from "@/apis/artist/netease";
 import { fetchQQMusicArtist } from "@/apis/artist/qqmusic";
 import { fetchKugouArtist } from "@/apis/artist/kugou";
@@ -22,7 +21,7 @@ export interface LoadArtistOptions {
 
 /**
  * 加载指定歌手
- * @param source 来源：local / streaming / netease / qqmusic / kugou
+ * @param source 来源：local / netease / qqmusic / kugou
  * @param id     歌手 id（route 原始字符串）
  * @param options 回调与中断信号
  */
@@ -33,10 +32,6 @@ export const loadArtist = async (
 ): Promise<void> => {
   if (source === "local") {
     await loadLocal(id, options);
-    return;
-  }
-  if (source === "streaming") {
-    await loadStreaming(id, options);
     return;
   }
   if (source === "netease") {
@@ -74,25 +69,6 @@ const loadLocal = async (id: string, options: LoadArtistOptions): Promise<void> 
       options.onUpdate({ ...profile, avatar: res.data });
     }
   }
-};
-
-const loadStreaming = async (id: string, options: LoadArtistOptions): Promise<void> => {
-  const streamingStore = useStreamingStore();
-  const artistId = decodeURIComponent(id);
-  const cached = streamingStore.artists.find((a) => a.id === artistId);
-  const fallbackName = options.fallbackName ?? artistId;
-  const tracks = await streamingStore.fetchArtistSongs(artistId);
-  if (options.signal?.aborted) return;
-  options.onUpdate({
-    id: artistId,
-    name: cached?.name ?? fallbackName,
-    avatar: cached?.avatar,
-    source: "streaming",
-    tracks,
-    albums: [],
-    trackCount: tracks.length,
-    albumCount: 0,
-  });
 };
 
 const loadNetease = async (id: string, options: LoadArtistOptions): Promise<void> => {

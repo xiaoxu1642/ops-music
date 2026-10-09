@@ -92,33 +92,6 @@ const router = createRouter({
           name: "search",
           component: () => import("@/pages/Search.vue"),
         },
-        {
-          path: "streaming",
-          component: () => import("@/pages/Streaming/Index.vue"),
-          redirect: "/streaming/songs",
-          children: [
-            {
-              path: "songs",
-              name: "streaming-songs",
-              component: () => import("@/pages/Streaming/Songs.vue"),
-            },
-            {
-              path: "albums",
-              name: "streaming-albums",
-              component: () => import("@/pages/Streaming/Albums.vue"),
-            },
-            {
-              path: "artists",
-              name: "streaming-artists",
-              component: () => import("@/pages/Streaming/Artists.vue"),
-            },
-            {
-              path: "playlists",
-              name: "streaming-playlists",
-              component: () => import("@/pages/Streaming/Playlists.vue"),
-            },
-          ],
-        },
       ],
     },
   ],

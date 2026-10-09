@@ -165,7 +165,6 @@ export const getTopTracks = (limit: number): TopTrack[] => {
       .prepare(
         `SELECT track_json, COUNT(*) AS plays
          FROM play_history
-         WHERE source != 'streaming'
          GROUP BY source, track_id
          ORDER BY plays DESC, MAX(started_at) DESC
          LIMIT ?`,
@@ -243,8 +242,7 @@ export const getTopAlbums = (limit: number): TopAlbum[] => {
       .prepare(
         `SELECT track_json, COUNT(*) AS plays
          FROM play_history
-         WHERE source != 'streaming'
-           AND TRIM(COALESCE(json_extract(track_json, '$.album.name'), '')) != ''
+         WHERE TRIM(COALESCE(json_extract(track_json, '$.album.name'), '')) != ''
          GROUP BY source,
                   COALESCE(
                     json_extract(track_json, '$.album.id'),
@@ -278,8 +276,7 @@ export const getTopArtists = (limit: number): TopArtist[] => {
       .prepare(
         `SELECT track_json, artist.value AS artist_json, COUNT(*) AS plays
          FROM play_history, json_each(play_history.track_json, '$.artists') artist
-         WHERE play_history.source != 'streaming'
-           AND TRIM(COALESCE(json_extract(artist.value, '$.name'), '')) != ''
+         WHERE TRIM(COALESCE(json_extract(artist.value, '$.name'), '')) != ''
          GROUP BY play_history.source,
                   COALESCE(
                     json_extract(artist.value, '$.id'),

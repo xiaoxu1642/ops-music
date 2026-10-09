@@ -203,9 +203,7 @@ const editorGroups = computed(() =>
         label: entry ? t(entry.labelKey) : key,
         icon: entry?.icon,
         hideable: entry?.hideable ?? true,
-        featureOff:
-          (key === "/download" && !settings.system.download.enabled) ||
-          (key === "/streaming" && !settings.system.streaming.enabled),
+        featureOff: key === "/download" && !settings.system.download.enabled,
       };
     }),
   })),

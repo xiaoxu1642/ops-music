@@ -1,6 +1,5 @@
 import type { Track } from "@shared/types/player";
 import { useSettingsStore } from "@/stores/settings";
-import { useStreamingStore } from "@/stores/streaming";
 import { usePluginsStore } from "@/stores/plugins";
 import { resolveLyricForPreload, type ResolvedLyric } from "./resolve";
 
@@ -19,8 +18,6 @@ let preloaded: PreloadedLyric | null = null;
 const buildTrackKey = (track: Track): string =>
   JSON.stringify([
     track.source,
-    track.serverId ?? "",
-    track.originalId ?? "",
     track.id,
     track.extId ?? "",
     track.title,
@@ -30,7 +27,6 @@ const buildTrackKey = (track: Track): string =>
 /** 生成影响歌词解析结果的上下文键 */
 const buildContextKey = (): string => {
   const settings = useSettingsStore();
-  const streaming = useStreamingStore();
   const plugins = usePluginsStore();
   return JSON.stringify([
     settings.lyric.lyricSourcePreference,
@@ -41,7 +37,6 @@ const buildContextKey = (): string => {
     settings.system.lyric.enableOnlineTTMLLyric,
     settings.system.localLyric.enableLocalTTMLOverride,
     settings.system.localLyric.repoDir,
-    streaming.activeServerId ?? "",
     plugins.list.map((plugin) => [
       plugin.manifest.id,
       plugin.enabled,

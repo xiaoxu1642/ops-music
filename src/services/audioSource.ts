@@ -1,7 +1,6 @@
 import type { Track, TrackSource } from "@shared/types/player";
 import type { Platform } from "@shared/types/platform";
 import type { QualityLevel } from "@/utils/quality";
-import { useStreamingStore } from "@/stores/streaming";
 import { useSettingsStore } from "@/stores/settings";
 import { usePluginsStore } from "@/stores/plugins";
 import { useUserStore } from "@/stores/user";
@@ -28,8 +27,6 @@ export interface ResolveTrackSourceOptions {
   skipOfficialOnline?: boolean;
   /** 是否静默解析 */
   silent?: boolean;
-  /** 流媒体 PlaySessionId，用于预载时隔离当前播放会话 */
-  streamingPlaySessionId?: string;
 }
 
 /**
@@ -47,9 +44,6 @@ const isOnlinePlatform = (source: TrackSource): source is Platform =>
  * @returns 派生缓存键，如果该 track 不参与歌曲缓存则返回 null
  */
 const cacheKeyForTrack = (track: Track, songLevel: QualityLevel): string | null => {
-  if (track.source === "streaming" && track.serverId && track.originalId) {
-    return `s:${track.serverId}:${track.originalId}:`;
-  }
   if (track.source === "kugou" && track.id) {
     return `o:kugou:${track.id}:${track.extId ?? ""}:${songLevel}`;
   }
@@ -226,7 +220,7 @@ const resolveOnlineUrl = async (
 export interface ResolvedTrackSource {
   source: string;
   fromCache: boolean;
-  provider: "local" | "cache" | "streaming" | "official" | "plugin" | "trial";
+  provider: "local" | "cache" | "official" | "plugin" | "trial";
   pluginId?: string;
   /**
    * 下载音源并返回可供原生预载使用的缓存路径
@@ -250,7 +244,7 @@ const reportLoadError = (err: ErrorCode | string, options: ResolveTrackSourceOpt
 /**
  * 解析歌曲的可播放音源及缓存下载入口
  * @param track - 要解析的歌曲
- * @param options - 错误提示、流媒体会话及在线来源重试选项
+ * @param options - 错误提示与在线来源重试选项
  * @returns 本地路径或远端地址及缓存入口，无法解析时返回 null
  */
 export const resolveTrackSource = async (
@@ -270,42 +264,6 @@ export const resolveTrackSource = async (
   if (cacheEnabled) {
     const cached = await window.api.cache.song.lookup(cacheKey!);
     if (cached) return { source: cached, fromCache: true, provider: "cache" };
-  }
-  // 流媒体
-  if (track.source === "streaming") {
-    try {
-      const store = useStreamingStore();
-      const streamUrl = await store.getStreamUrl(
-        track,
-        options.streamingPlaySessionId
-          ? { playSessionId: options.streamingPlaySessionId }
-          : undefined,
-      );
-      const result: ResolvedTrackSource = {
-        source: streamUrl,
-        fromCache: false,
-        provider: "streaming",
-      };
-      if (cacheEnabled && settings.system.cache.songCache.cacheStreaming) {
-        // 缓存下载用独立 PlaySessionId
-        result.cacheRequest = async (preloadId, signal) => {
-          try {
-            const cacheUrl = await store.getStreamUrl(track, {
-              playSessionId: crypto.randomUUID(),
-            });
-            if (signal?.aborted) return null;
-            return await window.api.cache.song.fetch(cacheKey, "streaming", cacheUrl, preloadId);
-          } catch (err) {
-            console.warn("[cache] streaming getStreamUrl failed", err);
-            return null;
-          }
-        };
-      }
-      return result;
-    } catch (err) {
-      reportLoadError(err instanceof Error ? err.message : String(err), options);
-      return null;
-    }
   }
   // 在线源（netease / qqmusic / kugou）
   if (isOnlinePlatform(track.source)) {

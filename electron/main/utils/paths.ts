@@ -23,7 +23,7 @@ if (process.env.PORTABLE_EXECUTABLE_DIR) {
  */
 export const dataRoot = path.join(app.getPath("userData"), "app-data");
 
-/** 配置目录：settings.json / streaming.json */
+/** 配置目录：settings.json */
 export const configDir = path.join(dataRoot, "config");
 
 /** 数据库目录：library.db */

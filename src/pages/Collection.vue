@@ -169,7 +169,7 @@ const manage = usePlaylistManage(collection, {
 const editLabel = computed(() => t("collection.edit", { type: typeLabel.value }));
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => {
-  const isOnline = source !== "local" && source !== "streaming";
+  const isOnline = source !== "local";
   const isLocal = source === "local";
   const list: DropdownMenuItem[] = [
     { key: "batchManage", label: t("songList.batch.manage"), icon: IconLucideListChecks },

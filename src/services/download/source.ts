@@ -1,7 +1,6 @@
 import type { Track } from "@shared/types/player";
 import type { QualityLevel } from "@/utils/quality";
 import { isPlatform } from "@shared/types/platform";
-import { useStreamingStore } from "@/stores/streaming";
 import { resolveByPlugin } from "@/services/audioSource";
 import { resolveNeteaseDownloadUrl } from "@/apis/song/netease";
 import { resolveQQMusicUrl } from "@/apis/song/qqmusic";
@@ -20,24 +19,13 @@ export interface DownloadSource {
  * 按下载音质解析歌曲下载地址
  * @param track - 要下载的歌曲
  * @param level - 下载音质档位
- * @returns 下载源；无法下载（VIP/试听/无插件/流媒体失败）返回 null
+ * @returns 下载源；无法下载（VIP/试听/无插件）返回 null
  */
 export const resolveDownloadSource = async (
   track: Track,
   level: QualityLevel,
   usePlaybackForDownload: boolean,
 ): Promise<DownloadSource | null> => {
-  // 流媒体
-  if (track.source === "streaming") {
-    try {
-      const url = await useStreamingStore().getStreamUrl(track, {
-        playSessionId: crypto.randomUUID(),
-      });
-      return { url };
-    } catch {
-      return null;
-    }
-  }
   // 官方接口
   if (track.source === "netease") {
     try {

@@ -44,7 +44,6 @@ const cachedViews = [
   "Folders",
   "SearchPage",
   "Stats",
-  "StreamingIndex",
 ];
 
 const mainContainerRef = shallowRef<HTMLElement | null>(null);

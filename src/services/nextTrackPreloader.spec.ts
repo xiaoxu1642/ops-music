@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
       transitionPreference: "standard",
     },
     system: {
-      cache: { songCache: { enabled: true, cacheStreaming: true } },
+      cache: { songCache: { enabled: true } },
       lyric: { enableOnlineTTMLLyric: false },
       localLyric: { enableLocalTTMLOverride: false, repoDir: "" },
     },
@@ -43,7 +43,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/stores/settings", () => ({ useSettingsStore: () => mocks.settings }));
 vi.mock("@/stores/status", () => ({ useStatusStore: () => mocks.status }));
 vi.mock("@/stores/media", () => ({ useMediaStore: () => ({ track: { id: "current" } }) }));
-vi.mock("@/stores/streaming", () => ({ useStreamingStore: () => ({ activeServerId: "server" }) }));
 vi.mock("@/stores/plugins", () => ({ usePluginsStore: () => ({ list: [] }) }));
 vi.mock("@/stores/queue", () => ({ queue: { value: [] } }));
 vi.mock("@/core/player/candidate", () => ({ getNextTrackCandidate: () => mocks.candidate }));
@@ -63,7 +62,7 @@ describe("下一曲真实预载", () => {
     mocks.settings.player.preloadNextTrack = true;
     mocks.settings.player.transitionMode = "crossfade";
     mocks.settings.player.transitionPreference = "standard";
-    mocks.settings.system.cache.songCache = { enabled: true, cacheStreaming: true };
+    mocks.settings.system.cache.songCache = { enabled: true };
     mocks.candidate.track = { id: "next", source: "netease" };
     mocks.prepare.mockResolvedValue(true);
     mocks.cancel.mockResolvedValue(undefined);
@@ -236,32 +235,31 @@ describe("下一曲真实预载", () => {
     expect(preloader.peekPreparedTrack(mocks.candidate.track as Track)?.preparedId).toBeDefined();
   });
 
-  it.each([
-    { enabled: false, cacheStreaming: false },
-    { enabled: true, cacheStreaming: false },
-    { enabled: false, cacheStreaming: true },
-  ])("本地歌曲不依赖网络缓存开关：%j", async (cache) => {
-    mocks.settings.system.cache.songCache = cache;
-    mocks.candidate.track.source = "local";
-    mocks.resolve.mockResolvedValue({
-      source: "C:/music/next.flac",
-      provider: "local",
-      fromCache: false,
-    });
-    const preloader = await import("./nextTrackPreloader");
-    preloader.scheduleNextTrackPreload();
-    await flushPromises();
-    expect(mocks.prepare).toHaveBeenCalledWith(
-      expect.any(String),
-      "C:/music/next.flac",
-      undefined,
-      "standard",
-    );
-    expect(preloader.peekPreparedTrack(mocks.candidate.track as Track)?.preparedId).toBeDefined();
-  });
+  it.each([{ enabled: false }, { enabled: true }])(
+    "本地歌曲不依赖网络缓存开关：%j",
+    async (cache) => {
+      mocks.settings.system.cache.songCache = cache;
+      mocks.candidate.track.source = "local";
+      mocks.resolve.mockResolvedValue({
+        source: "C:/music/next.flac",
+        provider: "local",
+        fromCache: false,
+      });
+      const preloader = await import("./nextTrackPreloader");
+      preloader.scheduleNextTrackPreload();
+      await flushPromises();
+      expect(mocks.prepare).toHaveBeenCalledWith(
+        expect.any(String),
+        "C:/music/next.flac",
+        undefined,
+        "standard",
+      );
+      expect(preloader.peekPreparedTrack(mocks.candidate.track as Track)?.preparedId).toBeDefined();
+    },
+  );
 
   it("关闭缓存时本地 CUE 仍按片段起点准备", async () => {
-    mocks.settings.system.cache.songCache = { enabled: false, cacheStreaming: false };
+    mocks.settings.system.cache.songCache = { enabled: false };
     Object.assign(mocks.candidate.track, {
       source: "local",
       cueAudioPath: "C:/music/album.flac",

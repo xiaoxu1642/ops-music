@@ -11,7 +11,6 @@
       "features": {
         "local": { "title": "本地音乐库", "desc": "扫描本地目录，自动整理音乐库" },
         "quality": { "title": "无损音质", "desc": "原生音频引擎，支持多种无损格式" },
-        "streaming": { "title": "流媒体服务器", "desc": "Subsonic / Jellyfin / Emby 等" },
         "lyrics": { "title": "丰富歌词体验", "desc": "AMLL 逐字歌词，任务栏歌词" }
       }
     },
@@ -25,17 +24,6 @@
     "library": {
       "title": "本地音乐库",
       "subtitle": "添加要扫描的音乐文件夹，Ops Music 会自动建立曲库索引。可以添加多个目录，也可以之后再添加"
-    },
-    "streaming": {
-      "title": "流媒体服务器",
-      "subtitle": "Ops Music 支持连接 Subsonic 兼容服务和 Jellyfin / Emby，让你的家庭音乐服务器与播放器无缝集成",
-      "hint": "完成引导后，前往「设置 → 媒体源配置 → 流媒体管理」即可添加服务器并测试连接",
-      "servers": {
-        "subsonic": "Subsonic 兼容",
-        "navidrome": "Navidrome",
-        "jellyfin": "Jellyfin",
-        "emby": "Emby"
-      }
     },
     "preferences": {
       "title": "语言与主题",
@@ -177,7 +165,6 @@
     "download": "下载管理",
     "favorites": "我的收藏",
     "cloud": "我的云盘",
-    "streaming": "媒体源",
     "stats": "统计",
     "reload": "热重载",
     "devtools": "开发者工具",
@@ -342,63 +329,6 @@
       "albums": "专辑",
       "artists": "歌手",
       "playlists": "歌单"
-    }
-  },
-  "streaming": {
-    "hint": "连接到媒体源",
-    "hintDetail": "添加个人流媒体服务器，配置内容全程加密",
-    "errorCode": {
-      "auth": "鉴权失败",
-      "network": "网络错误",
-      "protocol": "协议错误",
-      "unknown": "未知错误"
-    },
-    "tabs": {
-      "songs": "歌曲",
-      "albums": "专辑",
-      "artists": "歌手",
-      "playlists": "歌单"
-    },
-    "empty": {
-      "noServer": "尚未配置流媒体服务器",
-      "addHint": "点击右上角添加一个开始使用",
-      "goToSettings": "前往设置添加",
-      "notConnected": "未连接到服务器",
-      "noResults": "没有找到内容"
-    },
-    "server": {
-      "type": "类型",
-      "name": "名称",
-      "namePlaceholder": "用于识别的别名",
-      "url": "服务器地址",
-      "username": "用户名",
-      "password": "密码",
-      "test": "测试连接",
-      "testOk": "连接成功",
-      "testFail": "连接失败",
-      "add": "添加媒体源",
-      "edit": "编辑服务器",
-      "added": "服务器已添加",
-      "updated": "服务器已更新",
-      "removed": "服务器已删除",
-      "deleteConfirmTitle": "删除服务器",
-      "deleteConfirm": "确定删除服务器「{name}」吗？此操作不可撤销。",
-      "connect": "连接",
-      "connected": "已连接",
-      "connectFailed": "连接失败",
-      "disconnect": "断开",
-      "disconnected": "已断开",
-      "active": "当前激活",
-      "lastConnected": "最近连接",
-      "errors": {
-        "nameEmpty": "请输入服务器名称",
-        "urlInvalid": "请输入合法的 URL（http:// 或 https://）",
-        "usernameEmpty": "请输入用户名",
-        "passwordEmpty": "请输入密码"
-      }
-    },
-    "actions": {
-      "settings": "流媒体配置"
     }
   },
   "player": {
@@ -677,7 +607,6 @@
       "hotkeys": "快捷键配置",
       "services": "网络与服务",
       "aiIntegration": "AI 集成",
-      "mediaSource": "媒体源配置",
       "download": "下载配置",
       "localCache": "本地与缓存",
       "plugins": "插件管理",
@@ -718,8 +647,6 @@
       "systemConfig": "系统配置",
       "pluginManage": "导入插件",
       "pluginsList": "插件管理",
-      "streaming": "媒体源配置",
-      "mediaServerManagement": "媒体源管理",
       "songCache": "歌曲缓存",
       "cache": "缓存管理",
       "database": "数据库管理",
@@ -1043,7 +970,7 @@
       "exclusiveModeTitle": "切换到独占模式",
       "exclusiveModeContent": "独占模式绕过系统混音器，优先使用音源采样率与位深，适合外接 DAC / Hi-Fi 设备。播放器的音量、均衡器等处理仍然生效，不保证逐位无损输出。独占期间其他应用可能无法播放声音；独占不可用时会尝试共享模式，若设备被其他应用独占，共享模式也可能无法播放。确定切换吗？",
       "preloadCacheTitle": "开启预载所需的缓存？",
-      "preloadCacheContent": "歌曲预载需要缓存下一首音频。继续将同时开启歌曲缓存和流媒体缓存，可能增加网络流量和磁盘占用"
+      "preloadCacheContent": "歌曲预载需要缓存下一首音频。继续将开启歌曲缓存，可能增加网络流量和磁盘占用"
     },
     "useAMSpring": {
       "label": "弹簧动画调试开关",
@@ -1480,10 +1407,6 @@
       "label": "通过 Orpheus 协议唤起本应用",
       "description": "该协议通常用于官方网页端唤起官方客户端，启用后可能导致官方客户端无法被唤起"
     },
-    "streamingEnabled": {
-      "label": "启用流媒体",
-      "description": "关闭后将隐藏侧边栏的媒体源入口"
-    },
     "mcpEnabled": {
       "label": "启用 MCP 服务",
       "description": "启用本地 MCP 服务，让 AI Agent 接入应用生态，按需扩展能力"
@@ -1692,10 +1615,6 @@
     "enableSongCache": {
       "label": "歌曲缓存",
       "description": "播放在线歌曲时缓存至本地，提升加载速度"
-    },
-    "cacheStreaming": {
-      "label": "缓存流媒体",
-      "description": "播放个人流媒体服务器歌曲时缓存至本地"
     },
     "songCacheSizeLimit": {
       "label": "缓存上限",

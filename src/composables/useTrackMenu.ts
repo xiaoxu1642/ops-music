@@ -76,7 +76,7 @@ export const useTrackMenu = (
     const isCue = !!track.value?.cuePath;
     const showCloudRemove = isCloudView && track.value?.cloud === true;
     const canAddToPlaylist = source === "local" || source === "netease";
-    const isOnline = source !== "local" && source !== "streaming";
+    const isOnline = source !== "local";
     const base: DropdownMenuItem[] = [
       { key: "play", label: t("songList.context.play"), icon: markRaw(IconPlay), show: showPlay },
       {

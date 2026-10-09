@@ -31,7 +31,7 @@ The development shell is Git Bash on Windows. Write all terminal commands in bas
 ### Process Model
 
 - **Main** (`electron/main/`) — windows, IPC, native modules
-- **Preload** (`electron/preload/`) — `contextBridge` exposing `window.api` (player/config/system/library/streaming/lyrics)
+- **Preload** (`electron/preload/`) — `contextBridge` exposing `window.api` (player/config/system/library/lyrics)
 - **Renderer** (`src/`) — Vue 3 SPA
 - **Lyric windows** (`windows/taskbar-lyric`) — independent Vue entries sharing `windows/shared/`
 
@@ -62,18 +62,6 @@ Two-tier position tracking — high-frequency animation vs. low-frequency UI:
 - `src/services/playback.ts` — Non-reactive plain vars. `getCurrentTime()` interpolates between pushes; `usePlaybackTime()` reads in RAF loop for 60fps lyrics/spectrum without Vue reactivity.
 - `src/stores/media.ts` — Pinia + shallowRef. Current `Track` (lightweight) + `TrackDetail` (lyrics, quality). Only `track + activeLyric` persisted to sessionStorage; never persist `TrackDetail` (large lyric strings cause memory issues).
 
-### Streaming Subsystem
-
-Server protocol clients live in the main process (`electron/main/services/streaming/`): Subsonic / Jellyfin / Emby adapters, safeStorage-backed config, Jellyfin/Emby session management, SQLite synchronization, and the authenticated cover protocol. Subsonic family (Navidrome / OpenSubsonic / Airsonic / Gonic / LMS) shares one adapter; types differ only as UI labels.
-
-- `electron/main/services/streaming/config.ts` — encrypted config and secret-free renderer views.
-- `electron/main/services/streaming/connection.ts` — connection tests, connect, and authenticated adapter requests.
-- `electron/main/services/streaming/coverProtocol.ts` — `streaming-cover://` proxy registered for the default and `persist:main` sessions.
-- `electron/main/services/streaming/adapters/` — Server response → unified `Track / Album / Artist / Playlist`. Trusts server's artist field; no client-side splitting.
-- `services/streaming/session.ts` — Jellyfin/Emby `/Sessions/Playing` heartbeat + PlaySessionId state machine; called from `core/player.ts`.
-- `stores/streaming.ts` — Server list, active state, and complete shallowRef arrays; main-process update events trigger SQLite snapshot reloads, with no polling or direct media-server access.
-- Credentials — `electron/main/services/streaming/config.ts` encrypts via Electron `safeStorage` to `{userData}/app-data/config/streaming.json`. `accessToken / userId` remain in the bounded main-process session cache and are re-acquired on connect.
-
 ### Lyric Windows
 
 `windows/taskbar-lyric` is an independent Vue entry. Always use shared composables from `@windows/shared/`:
@@ -89,7 +77,6 @@ Don't reimplement these inside individual windows.
 - `shared/types/player.ts` — `Track`, `TrackDetail`, `Artist`, `Album`, `AudioQuality`, `PlayerState`, `PlayerStatus`, `PlayerEvent`, `LoadOptions`, `LoadResult`, `IpcResponse`
 - `shared/types/lyrics.ts` — `LyricFormat`, `LyricSource (external | embedded | online)`, `LyricData`, `LyricLine`, `LyricWord`, `LyricSpan`
 - `shared/types/platform.ts` — `Platform (netease | qqmusic | kugou)`
-- `shared/types/streaming.ts` — `StreamingServerType`, `StreamingServerConfig`, `StreamingPingResult`, `StreamingAuthResult`, etc.
 
 `Track` is for queue storage (no heavy data); `TrackDetail` loads on demand.
 
@@ -102,8 +89,7 @@ Declarative — defined in `src/settings/schema.ts`, types in `src/types/setting
 ```
 {userData}/app-data/        # Unified data directory, separate from Chromium cache data
 ├── config/
-│   ├── settings.json       # Main config (electron/main/store/)
-│   └── streaming.json      # Streaming credentials (safeStorage encrypted)
+│   └── settings.json       # Main config (electron/main/store/)
 ├── database/library.db     # Music library (better-sqlite3, WAL)
 ├── cache/                  # covers/ (cover:// protocol) + artists/ backgrounds/ songs/
 ├── logs/                   # App logs + native/
@@ -117,7 +103,7 @@ SQLite through the main-process playlist service; the old `splayer/playlists` st
 
 ### Cover Image
 
-Rust extracts 300x300 JPEG thumbnail to `{userData}/app-data/cache/covers/` during decode; renderer reads via `cover://{filename}` protocol. Original via `getCoverRaw()` for SMTC, never cached. Authenticated streaming covers use the main-process `streaming-cover://` proxy.
+Rust extracts 300x300 JPEG thumbnail to `{userData}/app-data/cache/covers/` during decode; renderer reads via `cover://{filename}` protocol. Original via `getCoverRaw()` for SMTC, never cached.
 
 ### Config Store (Main)
 
@@ -169,7 +155,7 @@ IPC, verify before and after with these samples.
 - **Images by display size** — anything blurred, sampled, or rendered small uses the 300px `cover` thumbnail (player blur background, color extraction, lists). `coverOriginal` only for the visible large cover and poster export. Large `<img>`: add `decoding="async"`; preload with `img.decode()` before fading in.
 - **Compositing layers are budgeted** — never put `will-change` in CSS on unbounded element collections; promote dynamically and only near the viewport (lyric engine `lineWillChange` pattern). New full-screen `filter: blur` / `backdrop-filter` layers need justification.
 - **Hidden = silent** — high-frequency pushes (`position` / `fftData` / `position-sync`) must not reach hidden windows: `broadcast(channel, data, true)` or an `isVisible()` gate; consumers recover from the next push (≤200ms), no resync needed. Low-frequency state events (`stateChanged` / `ended` / track-change) always go through. RAF loops and canvases must stop when their surface is hidden (engine `freeze()` / `visibilitychange` pattern).
-- **In-memory caches must be bounded** — every module-level Map/array cache needs an eviction rule (subsonic `viewAuthCache` evicts per-server). Never retain `TrackDetail`-sized data beyond the current track.
+- **In-memory caches must be bounded** — every module-level Map/array cache needs an eviction rule (the netease API response cache caps at 200 entries with a 2-minute TTL). Never retain `TrackDetail`-sized data beyond the current track.
 
 ### Units
 
@@ -203,7 +189,7 @@ outside the commit.
 
 ### Shared Types
 
-Put cross-process types (`LocaleCode / SystemConfig / StreamingServerType`, etc.) in `shared/types/`.
+Put cross-process types (`LocaleCode / SystemConfig`, etc.) in `shared/types/`.
 
 ### Commit Messages
 

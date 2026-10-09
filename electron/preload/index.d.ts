@@ -15,7 +15,6 @@ import { LyricsApi } from "@shared/types/lyrics";
 import { DownloadApi } from "@shared/types/download";
 import { WindowApi, TaskbarLyricApi } from "@shared/types/window";
 import { HotkeyApi } from "@shared/types/hotkey";
-import { StreamingApi } from "@shared/types/streaming";
 import { IpcResponse } from "@shared/types/player";
 import { StatsApi } from "@shared/types/stats";
 import { CloudUploadApi } from "@shared/types/cloudUpload";
@@ -102,7 +101,6 @@ declare global {
       };
       stats: StatsApi;
       hotkey: HotkeyApi;
-      streaming: StreamingApi;
       mcp: {
         restart: () => Promise<McpStatus>;
         getStatus: () => Promise<McpStatus>;

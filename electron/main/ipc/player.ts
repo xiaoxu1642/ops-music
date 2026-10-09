@@ -268,9 +268,7 @@ const completeTrackLoad = (
   const autoPlay = options.autoPlay ?? true;
   const isRemote = authoritative != null && authoritative.source !== "local";
   const remoteCover = isRemote ? (authoritative.coverOriginal ?? authoritative.cover) : undefined;
-  const coverFetchUrl =
-    remoteCover && /^(https?|streaming-cover):\/\//i.test(remoteCover) ? remoteCover : undefined;
-  const coverUrl = coverFetchUrl && /^https?:\/\//i.test(coverFetchUrl) ? coverFetchUrl : undefined;
+  const coverUrl = remoteCover && /^https?:\/\//i.test(remoteCover) ? remoteCover : undefined;
   const durationMs = toDisplayDurationMs(toMs(meta.duration));
   const startMs = activeCueRange?.startMs ?? 0;
   setCurrentTransitionRange(startMs, startMs + durationMs);
@@ -297,8 +295,8 @@ const completeTrackLoad = (
   setTrayPlayState(autoPlay ? "playing" : "paused");
   if (!isRemote) setTaskbarThumbnailCover(meta.cover);
   neteaseScrobble.onTrackLoaded(authoritative, options.context, durationMs, autoPlay);
-  if (coverFetchUrl) {
-    void fetchBytes(coverFetchUrl).then((buf) => {
+  if (coverUrl) {
+    void fetchBytes(coverUrl).then((buf) => {
       if (!buf || seq !== loadSeq) return;
       mediaService.setMetadata({
         title: displayTitle,
@@ -464,12 +462,7 @@ export const registerPlayerIpc = (): void => {
         authoritative && authoritative.source !== "local"
           ? (authoritative.coverOriginal ?? authoritative.cover)
           : undefined;
-      const coverFetchUrl =
-        remoteCover && /^(https?|streaming-cover):\/\//i.test(remoteCover)
-          ? remoteCover
-          : undefined;
-      const coverUrl =
-        coverFetchUrl && /^https?:\/\//i.test(coverFetchUrl) ? coverFetchUrl : undefined;
+      const coverUrl = remoteCover && /^https?:\/\//i.test(remoteCover) ? remoteCover : undefined;
       // 写一次 SMTC/托盘/标题
       const applyDisplay = (
         title: string,

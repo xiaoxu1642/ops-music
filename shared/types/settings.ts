@@ -115,12 +115,6 @@ export interface LibrarySettings {
   scanDirs: string[];
 }
 
-/** 流媒体总开关 */
-export interface StreamingSettings {
-  /** 启用流媒体；关闭后侧边栏隐藏入口 */
-  enabled: boolean;
-}
-
 /** MCP 服务配置 */
 export interface McpSettings {
   /** 服务开关 */
@@ -183,8 +177,6 @@ export interface LocalLyricSettings {
 export interface SongCacheSettings {
   /** 歌曲缓存总开关 */
   enabled: boolean;
-  /** 是否缓存个人流媒体服务器歌曲 */
-  cacheStreaming: boolean;
   /** 上限（GB），0 表示不限制；超限按 LRU 淘汰 */
   sizeLimitGb: number;
 }
@@ -269,8 +261,6 @@ export interface SystemConfig {
   cache: CacheSettings;
   /** 下载配置 */
   download: DownloadSettings;
-  /** 流媒体总开关 */
-  streaming: StreamingSettings;
   /** AI 集成使用的 MCP 服务 */
   mcp: McpSettings;
   /** 系统配置 */

@@ -17,10 +17,6 @@
           "title": "Lossless Audio",
           "desc": "Native audio engine with broad lossless format support"
         },
-        "streaming": {
-          "title": "Streaming Servers",
-          "desc": "Subsonic / Jellyfin / Emby and more"
-        },
         "lyrics": {
           "title": "Rich Lyrics",
           "desc": "AMLL word-by-word lyrics, plus taskbar lyrics"
@@ -37,17 +33,6 @@
     "library": {
       "title": "Local Music Library",
       "subtitle": "Add folders to scan and Ops Music will index them automatically. You can add more later."
-    },
-    "streaming": {
-      "title": "Streaming Servers",
-      "subtitle": "Connect to Subsonic-compatible services, Jellyfin or Emby for seamless access to your home music server.",
-      "hint": "After finishing setup, head to Settings → Media Sources → Streaming to add a server and test the connection.",
-      "servers": {
-        "subsonic": "Subsonic",
-        "navidrome": "Navidrome",
-        "jellyfin": "Jellyfin",
-        "emby": "Emby"
-      }
     },
     "preferences": {
       "title": "Language & Theme",
@@ -189,7 +174,6 @@
     "download": "Downloads",
     "favorites": "Favorites",
     "cloud": "My Cloud",
-    "streaming": "Media Sources",
     "stats": "Stats",
     "reload": "Reload",
     "devtools": "Developer Tools",
@@ -354,63 +338,6 @@
       "albums": "Albums",
       "artists": "Artists",
       "playlists": "Playlists"
-    }
-  },
-  "streaming": {
-    "hint": "Connect to Media Source",
-    "hintDetail": "Add a personal streaming server with encrypted configuration",
-    "errorCode": {
-      "auth": "Authentication failed",
-      "network": "Network error",
-      "protocol": "Protocol error",
-      "unknown": "Unknown error"
-    },
-    "tabs": {
-      "songs": "Songs",
-      "albums": "Albums",
-      "artists": "Artists",
-      "playlists": "Playlists"
-    },
-    "empty": {
-      "noServer": "No streaming server configured",
-      "addHint": "Click the button at the top right to add one",
-      "goToSettings": "Go to settings",
-      "notConnected": "Not connected to any server",
-      "noResults": "No results"
-    },
-    "server": {
-      "type": "Type",
-      "name": "Name",
-      "namePlaceholder": "Friendly name for this server",
-      "url": "Server URL",
-      "username": "Username",
-      "password": "Password",
-      "test": "Test connection",
-      "testOk": "Connection succeeded",
-      "testFail": "Connection failed",
-      "add": "Add media source",
-      "edit": "Edit server",
-      "added": "Server added",
-      "updated": "Server updated",
-      "removed": "Server removed",
-      "deleteConfirmTitle": "Delete server",
-      "deleteConfirm": "Delete server \"{name}\"? This cannot be undone.",
-      "connect": "Connect",
-      "connected": "Connected",
-      "connectFailed": "Connection failed",
-      "disconnect": "Disconnect",
-      "disconnected": "Disconnected",
-      "active": "Active",
-      "lastConnected": "Last connected",
-      "errors": {
-        "nameEmpty": "Please enter a server name",
-        "urlInvalid": "Please enter a valid URL (http:// or https://)",
-        "usernameEmpty": "Please enter a username",
-        "passwordEmpty": "Please enter a password"
-      }
-    },
-    "actions": {
-      "settings": "Streaming settings"
     }
   },
   "player": {
@@ -689,7 +616,6 @@
       "hotkeys": "Hotkey Settings",
       "services": "Services",
       "aiIntegration": "AI Integration",
-      "mediaSource": "Media Sources",
       "download": "Downloads",
       "localCache": "Local & Cache",
       "plugins": "Plugin Manager",
@@ -730,8 +656,6 @@
       "systemConfig": "System",
       "pluginManage": "Import Plugins",
       "pluginsList": "Plugin Management",
-      "streaming": "Media Source Config",
-      "mediaServerManagement": "Media Source Management",
       "songCache": "Song Cache",
       "downloadLocation": "Download Settings",
       "downloadGeneral": "Download Options",
@@ -1055,7 +979,7 @@
       "exclusiveModeTitle": "Switch to Exclusive Mode",
       "exclusiveModeContent": "Exclusive mode bypasses the system mixer and prefers the source sample rate and bit depth, making it suitable for external DACs / Hi-Fi gear. Player volume, EQ and other processing still apply, so bit-perfect output is not guaranteed. Other apps may be unable to play audio while exclusive. If exclusive mode is unavailable, shared mode will be attempted; it may also fail if another app holds the device exclusively. Switch anyway?",
       "preloadCacheTitle": "Enable the caches required for preloading?",
-      "preloadCacheContent": "Preloading requires caching the next track's audio. Continuing will enable both song caching and streaming caching, which may increase network traffic and disk usage"
+      "preloadCacheContent": "Preloading requires caching the next track's audio. Continuing will enable song caching, which may increase network traffic and disk usage"
     },
     "useAMSpring": {
       "label": "Spring Animation Debug Switch",
@@ -1492,10 +1416,6 @@
       "label": "Wake this app via the Orpheus protocol",
       "description": "This protocol is normally used by the web player to launch the official client; enabling it may prevent the official client from being launched"
     },
-    "streamingEnabled": {
-      "label": "Enable streaming",
-      "description": "When disabled, the media sources entry is hidden from the sidebar"
-    },
     "mcpEnabled": {
       "label": "Enable MCP server",
       "description": "Enable the local MCP server so AI Agents can join the app ecosystem and extend capabilities on demand"
@@ -1704,10 +1624,6 @@
     "enableSongCache": {
       "label": "Song Cache",
       "description": "Cache online tracks locally to improve loading speed"
-    },
-    "cacheStreaming": {
-      "label": "Cache Streaming Tracks",
-      "description": "Cache tracks from personal media servers locally during playback"
     },
     "songCacheSizeLimit": {
       "label": "Size Limit",

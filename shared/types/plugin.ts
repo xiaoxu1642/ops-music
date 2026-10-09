@@ -77,7 +77,7 @@ export interface PluginMenuItem {
   id: string;
   /** 展示名 */
   label: string;
-  /** 仅对这些来源（如 local/streaming）的歌曲显示；缺省对所有歌曲显示 */
+  /** 仅对这些来源（如 local/netease）的歌曲显示；缺省对所有歌曲显示 */
   sources?: string[];
 }
 

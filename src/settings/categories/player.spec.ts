@@ -7,7 +7,7 @@ import playerCategory from "./player";
 
 const mocks = vi.hoisted(() => ({
   enabled: false as boolean | string,
-  cache: { enabled: false, cacheStreaming: false },
+  cache: { enabled: false },
   player: { preloadNextTrack: false, transitionMode: "none" },
   confirm: vi.fn(),
   setSystem: vi.fn(),
@@ -63,14 +63,14 @@ describe("开启预载的缓存确认", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.enabled = false;
-    mocks.cache = { enabled: false, cacheStreaming: false };
+    mocks.cache = { enabled: false };
     mocks.player.preloadNextTrack = false;
     mocks.player.transitionMode = "none";
     mocks.setSystem.mockResolvedValue(undefined);
   });
 
   for (const confirmed of [false, true]) {
-    it(confirmed ? "确认后开启预载及两项缓存" : "取消后不改变预载和缓存设置", async () => {
+    it(confirmed ? "确认后开启预载及歌曲缓存" : "取消后不改变预载和缓存设置", async () => {
       mocks.confirm.mockResolvedValue(confirmed);
       const wrapper = mount(SettingsItem, {
         props: { item },
@@ -86,10 +86,7 @@ describe("开启预载的缓存确认", () => {
       expect(mocks.confirm).toHaveBeenCalledOnce();
       expect(mocks.enabled).toBe(confirmed);
       if (confirmed) {
-        expect(mocks.setSystem.mock.calls).toEqual([
-          ["cache.songCache.enabled", true],
-          ["cache.songCache.cacheStreaming", true],
-        ]);
+        expect(mocks.setSystem.mock.calls).toEqual([["cache.songCache.enabled", true]]);
       } else {
         expect(mocks.setSystem).not.toHaveBeenCalled();
       }
@@ -97,8 +94,8 @@ describe("开启预载的缓存确认", () => {
     });
   }
 
-  it("两项缓存已经开启时无需再次确认", () => {
-    mocks.cache = { enabled: true, cacheStreaming: true };
+  it("歌曲缓存已经开启时无需再次确认", () => {
+    mocks.cache = { enabled: true };
     expect(item.confirm!.when!(true)).toBe(false);
     expect(item.confirm!.when!(false)).toBe(false);
   });
@@ -108,7 +105,7 @@ describe("播放过渡设置", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.enabled = "none";
-    mocks.cache = { enabled: false, cacheStreaming: false };
+    mocks.cache = { enabled: false };
     mocks.player.preloadNextTrack = false;
     mocks.player.transitionMode = "none";
     mocks.setSystem.mockResolvedValue(undefined);
@@ -130,7 +127,7 @@ describe("播放过渡设置", () => {
       await flushPromises();
       expect(mocks.enabled).toBe(confirmed ? "crossfade" : "none");
       expect(mocks.player.preloadNextTrack).toBe(confirmed);
-      expect(mocks.setSystem).toHaveBeenCalledTimes(confirmed ? 2 : 0);
+      expect(mocks.setSystem).toHaveBeenCalledTimes(confirmed ? 1 : 0);
       wrapper.unmount();
     });
   }

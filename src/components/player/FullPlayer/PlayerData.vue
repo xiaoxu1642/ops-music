@@ -83,7 +83,6 @@ const sourceLabel = computed(() => {
   const source = displayTrack.value?.source;
   if (!source) return "LOCAL";
   if (source === "local") return "LOCAL";
-  if (source === "streaming") return "STREAMING";
   return source.toUpperCase();
 });
 

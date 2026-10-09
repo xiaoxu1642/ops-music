@@ -91,10 +91,7 @@ const playerCategory: SettingCategory = {
           binding: { store: "settings", path: "player.preloadNextTrack" },
           defaultValue: false,
           confirm: {
-            when: (next) =>
-              Boolean(next) &&
-              (!useSettingsStore().system.cache.songCache.enabled ||
-                !useSettingsStore().system.cache.songCache.cacheStreaming),
+            when: (next) => Boolean(next) && !useSettingsStore().system.cache.songCache.enabled,
             titleKey: "settings.confirm.preloadCacheTitle",
             contentKey: "settings.confirm.preloadCacheContent",
             type: "warning",
@@ -106,7 +103,6 @@ const playerCategory: SettingCategory = {
             }
             const settings = useSettingsStore();
             await settings.setSystem("cache.songCache.enabled", true);
-            await settings.setSystem("cache.songCache.cacheStreaming", true);
           },
         },
       ],
@@ -125,9 +121,7 @@ const playerCategory: SettingCategory = {
           defaultValue: "none",
           confirm: {
             when: (next) =>
-              next === "crossfade" &&
-              (!useSettingsStore().system.cache.songCache.enabled ||
-                !useSettingsStore().system.cache.songCache.cacheStreaming),
+              next === "crossfade" && !useSettingsStore().system.cache.songCache.enabled,
             titleKey: "settings.confirm.preloadCacheTitle",
             contentKey: "settings.confirm.preloadCacheContent",
             type: "warning",
@@ -138,9 +132,6 @@ const playerCategory: SettingCategory = {
             settings.player.preloadNextTrack = true;
             if (!settings.system.cache.songCache.enabled) {
               await settings.setSystem("cache.songCache.enabled", true);
-            }
-            if (!settings.system.cache.songCache.cacheStreaming) {
-              await settings.setSystem("cache.songCache.cacheStreaming", true);
             }
           },
           children: [

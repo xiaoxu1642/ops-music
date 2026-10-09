@@ -7,7 +7,6 @@ const mockRequestPlatformLyric = vi.fn();
 
 vi.mock("./request", () => ({
   requestPlatformLyric: (...args: unknown[]) => mockRequestPlatformLyric(...args),
-  requestStreamingLyric: vi.fn(),
   requestTTMLOverlay: vi.fn(),
 }));
 

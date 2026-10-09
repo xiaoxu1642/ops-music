@@ -6,7 +6,6 @@ import StepWelcome from "@/components/onboarding/StepWelcome.vue";
 import StepPreferences from "@/components/onboarding/StepPreferences.vue";
 import StepAgreement from "@/components/onboarding/StepAgreement.vue";
 import StepLibrary from "@/components/onboarding/StepLibrary.vue";
-import StepStreaming from "@/components/onboarding/StepStreaming.vue";
 import StepHotkeys from "@/components/onboarding/StepHotkeys.vue";
 
 const { t } = useI18n();
@@ -18,7 +17,6 @@ const STEPS = [
   { key: "agreement", component: StepAgreement },
   { key: "preferences", component: StepPreferences },
   { key: "library", component: StepLibrary },
-  { key: "streaming", component: StepStreaming },
   { key: "hotkeys", component: StepHotkeys },
 ] as const;
 

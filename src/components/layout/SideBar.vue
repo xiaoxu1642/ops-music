@@ -184,7 +184,6 @@ const navItems = computed<SMenuItem[]>(() => {
       const entry = SIDEBAR_NAV_META[key];
       if (!entry) continue;
       if (key === "/download" && !systemSettings.download.enabled) continue;
-      if (key === "/streaming" && !systemSettings.streaming.enabled) continue;
       const item: SMenuItem = { key, label: t(entry.labelKey), icon: markRaw(entry.icon) };
       if (key === "/liked") item.trailing = renderHeartModeTrailing;
       if (key === "/download" && downloadStore.activeCount > 0)
@@ -276,10 +275,6 @@ const onContextMenuSelect = (key: string): void => {
 };
 
 const activeKey = computed(() => {
-  // 媒体源
-  if (route.path.startsWith("/streaming")) return "/streaming";
-  if (route.path.startsWith("/collection/streaming/")) return "/streaming";
-  if (route.path.startsWith("/artist/streaming/")) return "/streaming";
   // 专辑详情页归属专辑列表
   if (route.path.startsWith("/collection/local/album/")) return "/albums/local";
   // 音乐库子页面

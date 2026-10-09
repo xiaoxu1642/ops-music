@@ -56,7 +56,6 @@ export const defaultSystemConfig: SystemConfig = {
     dir: null,
     songCache: {
       enabled: false,
-      cacheStreaming: false,
       sizeLimitGb: 10,
     },
   },
@@ -73,9 +72,6 @@ export const defaultSystemConfig: SystemConfig = {
     embedLyric: true,
     writeLrc: false,
     lyricFileFormat: "enhanced-lrc",
-  },
-  streaming: {
-    enabled: true,
   },
   mcp: {
     enabled: false,
