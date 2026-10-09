@@ -8,28 +8,23 @@
  * - 8s 超时，复用现有 AbortSignal.timeout pattern
  * - inflight Map 做并发去重：同 (platform, id) 的并发抓取共享同一个 Promise，
  *   这样后端 prefetchTTML 提前发出的请求和渲染端 fetchTTMLOverlay 的请求会合并
- * - 缓存策略见 lyricTtmlCache.ts：正缓存永久 / 负缓存 72h
+ * - 不做磁盘缓存：每次调用按需抓取，miss 就是真的没有
  */
 
 import { coreLog } from "@main/utils/logger";
 import { store } from "@main/store";
-import {
-  getCachedTTML,
-  setCachedTTML,
-  type Platform as TtmlPlatform,
-} from "@main/database/lyricTtmlCache";
+
+/** AMLL TTML DB 支持的平台 */
+export type TtmlPlatform = "netease" | "qqmusic";
 
 const TIMEOUT_MS = 8000;
 
 const inflight = new Map<string, Promise<string | null>>();
 
-/** 真正发起一次抓取，处理缓存读写、URL 拼装、错误分类 */
+/** 真正发起一次抓取，处理 URL 拼装、错误分类 */
 const doFetch = async (platform: TtmlPlatform, id: string): Promise<string | null> => {
   // 开关关闭时短路，让预热调用零成本
   if (!store.get("lyric.enableOnlineTTMLLyric")) return null;
-
-  const cached = getCachedTTML(platform, id);
-  if (cached !== "miss") return cached;
 
   const tmpl = store.get("lyric.amllDbServer");
   if (!tmpl || !tmpl.includes("%p") || !tmpl.includes("%s")) return null;
@@ -41,19 +36,11 @@ const doFetch = async (platform: TtmlPlatform, id: string): Promise<string | nul
     const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
     if (res.status === 200) {
       const content = await res.text();
-      // 接口偶尔会返回 200 但 body 为空，按负缓存处理
-      if (!content.trim()) {
-        setCachedTTML(platform, id, null);
-        return null;
-      }
-      setCachedTTML(platform, id, content);
+      // 接口偶尔会返回 200 但 body 为空
+      if (!content.trim()) return null;
       return content;
     }
-    if (res.status === 404) {
-      setCachedTTML(platform, id, null);
-      return null;
-    }
-    // 其它状态码（5xx 等）不写缓存，下次重试
+    if (res.status === 404) return null;
     coreLog.warn(`[ttml] ${platform}:${id} HTTP ${res.status}`);
     return null;
   } catch (err) {
@@ -76,7 +63,6 @@ const fetchOne = (platform: TtmlPlatform, id: string): Promise<string | null> =>
  * 依次尝试多个候选 id，命中即停。
  * - NCM 通常只传 [id]
  * - QM 传 [mid, id]：AMLL DB 里两种 key 都可能存在，逐一回落
- * 失败的 id 会被写入负缓存，后续重试零网络。
  */
 export const fetchTTML = async (
   platform: TtmlPlatform,

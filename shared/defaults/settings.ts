@@ -118,7 +118,6 @@ export const defaultSystemConfig: SystemConfig = {
     embedMeta: true,
     embedLyric: true,
     writeLrc: false,
-    saveTtml: false,
     lyricFileFormat: "enhanced-lrc",
   },
   streaming: {

@@ -26,8 +26,6 @@ export interface DownloadTagOptions {
   embedLyric: boolean;
   /** 额外保存同名歌词文件 */
   writeLrc: boolean;
-  /** 额外保存完整 TTML */
-  saveTtml: boolean;
 }
 
 /** 渲染层 → 主进程的下载请求 */
@@ -46,8 +44,6 @@ export interface DownloadRequest {
   coverUrl?: string;
   /** 歌词文本 */
   lyricText?: string;
-  /** 完整 TTML 文本 */
-  ttmlText?: string;
   tagOptions: DownloadTagOptions;
   /** 是否复用当前播放链接下载 */
   usePlaybackForDownload: boolean;
@@ -84,7 +80,7 @@ export interface DownloadProgress {
 
 /** 渲染层回传的解析结果（补全 DownloadRequest 缺省的网络字段，url 必填） */
 export type DownloadResolution = Required<Pick<DownloadRequest, "url">> &
-  Pick<DownloadRequest, "declaredFormat" | "declaredSize" | "lyricText" | "ttmlText">;
+  Pick<DownloadRequest, "declaredFormat" | "declaredSize" | "lyricText">;
 
 /** 主进程 → 渲染层的解析请求载荷（轮到下载但缺少 URL 时下发） */
 export type DownloadResolvePayload = Pick<

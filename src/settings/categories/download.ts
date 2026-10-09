@@ -119,12 +119,6 @@ const downloadCategory: SettingCategory = {
           binding: { store: "settings", path: "system.download.writeLrc" },
           defaultValue: false,
         },
-        {
-          key: "downloadSaveTtml",
-          type: "switch",
-          binding: { store: "settings", path: "system.download.saveTtml" },
-          defaultValue: false,
-        },
       ],
     },
   ],

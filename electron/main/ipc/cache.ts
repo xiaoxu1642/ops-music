@@ -14,7 +14,6 @@ import {
 import { syncCoverCacheDir } from "@main/services/engine";
 import { getDb } from "@main/database";
 import { clearLyricCache } from "@main/database/lyricCache";
-import { clearLyricTtmlCache } from "@main/database/lyricTtmlCache";
 import { clearLyricMatchCache } from "@main/database/lyricMatchCache";
 import * as songCache from "@main/services/songCache";
 import type { TrackSource } from "@shared/types/player";
@@ -22,8 +21,7 @@ import { systemLog } from "@main/utils/logger";
 import { defaultCacheDir } from "@main/utils/paths";
 
 /** 已知的缓存类别 */
-export type CacheCategory =
-  "covers" | "artists" | "backgrounds" | "songs" | "lyric" | "lyricTTML" | "lyricMatch";
+export type CacheCategory = "covers" | "artists" | "backgrounds" | "songs" | "lyric" | "lyricMatch";
 
 /** 缓存介质 */
 export type CacheKind = "file" | "db";
@@ -148,12 +146,6 @@ const categoryHandlers: Record<
     path: () => "lyric_cache",
     size: () => tableSize("lyric_cache", ["data"]),
     clear: clearLyricCache,
-  },
-  lyricTTML: {
-    kind: "db",
-    path: () => "lyric_ttml_cache",
-    size: () => tableSize("lyric_ttml_cache", ["content"]),
-    clear: clearLyricTtmlCache,
   },
   lyricMatch: {
     kind: "db",

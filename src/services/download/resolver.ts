@@ -21,8 +21,7 @@ const resolvePayload = async (payload: DownloadResolvePayload): Promise<Download
   if (!source) throw new Error("no download source");
   const { tagOptions } = payload;
   let lyricText: string | undefined;
-  let ttmlText: string | undefined;
-  if (tagOptions.embedLyric || tagOptions.writeLrc || tagOptions.saveTtml) {
+  if (tagOptions.embedLyric || tagOptions.writeLrc) {
     const lyric = await resolveDownloadLyric(payload.track);
     if (lyric) {
       const input = {
@@ -33,13 +32,7 @@ const resolvePayload = async (payload: DownloadResolvePayload): Promise<Download
         romajiFormat: lyric.romajiFormat,
       };
       // 内嵌与 .lrc 文件共用所选格式（lrc/增强 LRC）
-      if (tagOptions.embedLyric || tagOptions.writeLrc) {
-        lyricText = buildDownloadLyric(input, lyric.format, payload.lyricFileFormat) ?? undefined;
-      }
-      // 完整 TTML 单独导出
-      if (tagOptions.saveTtml) {
-        ttmlText = buildDownloadLyric(input, lyric.format, "ttml") ?? undefined;
-      }
+      lyricText = buildDownloadLyric(input, lyric.format, payload.lyricFileFormat) ?? undefined;
     }
   }
   return {
@@ -47,7 +40,6 @@ const resolvePayload = async (payload: DownloadResolvePayload): Promise<Download
     declaredFormat: source.format,
     declaredSize: source.size,
     lyricText,
-    ttmlText,
   };
 };
 

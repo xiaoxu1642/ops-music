@@ -1,7 +1,7 @@
 import type Database from "better-sqlite3";
 
 /** 当前 schema 版本 */
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 type TableInfoRow = { name: string };
 
@@ -50,6 +50,14 @@ export const migrate = (d: Database.Database): void => {
       d.exec("ALTER TABLE tracks ADD COLUMN cue_end_ms INTEGER");
     }
     v = 4;
+  }
+
+  // v4 → v5: 移除 TTML 磁盘缓存表
+  // 该表是纯缓存（无外键/触发器/被 JOIN），老配置文件可能残留数百 MB，直接丢弃
+  // TTML 改为按需从 AMLL TTML DB 抓取，不再落库
+  if (v < 5) {
+    d.exec("DROP TABLE IF EXISTS lyric_ttml_cache");
+    v = 5;
   }
 
   // 版本无关部分

@@ -190,11 +190,10 @@ const writeSidecar = async (filePath: string, text: string): Promise<void> => {
   }
 };
 
-/** 按开关写 .lrc（所选格式）与 .ttml（完整） */
+/** 按开关写 .lrc（所选格式） */
 const writeLyricFiles = async (req: DownloadRequest, audioPath: string): Promise<void> => {
   const base = audioPath.slice(0, audioPath.length - path.extname(audioPath).length);
   if (req.tagOptions.writeLrc && req.lyricText) await writeSidecar(`${base}.lrc`, req.lyricText);
-  if (req.tagOptions.saveTtml && req.ttmlText) await writeSidecar(`${base}.ttml`, req.ttmlText);
 };
 
 /** 等待渲染层补全解析；任务被取消/删除时经中断信号立即拒绝 */

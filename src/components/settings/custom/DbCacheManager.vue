@@ -5,7 +5,6 @@ import type { Component } from "vue";
 import IconLucideTrash2 from "~icons/lucide/trash-2";
 import IconLucideRefreshCw from "~icons/lucide/refresh-cw";
 import IconLucideMic2 from "~icons/lucide/mic-2";
-import IconLucideFileText from "~icons/lucide/file-text";
 import IconLucideSearch from "~icons/lucide/search";
 import IconLucideDatabase from "~icons/lucide/database";
 import { useCacheStats } from "@/composables/useCacheStats";
@@ -17,7 +16,6 @@ const { stats, loading, clearingId, clearingKind, load, refresh } = useCacheStat
 
 const iconMap: Record<string, Component> = {
   lyric: IconLucideMic2,
-  lyricTTML: IconLucideFileText,
   lyricMatch: IconLucideSearch,
 };
 

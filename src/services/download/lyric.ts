@@ -15,8 +15,6 @@ import {
   resolveOnlineByPreference,
   resolvePluginLyric,
   resolveStreamingByPreference,
-  resolveTTMLOverlay,
-  type OnlineResult,
   type ResolvedLyric,
 } from "@/services/lyric/resolve";
 
@@ -35,23 +33,7 @@ const toDownloadLyric = (lyric: ResolvedLyric): DownloadLyric => ({
 const toUsableDownloadLyric = (lyric: ResolvedLyric | null): DownloadLyric | null => {
   if (!lyric) return null;
   const downloadLyric = toDownloadLyric(lyric);
-  const hasContent =
-    buildDownloadLyric(downloadLyric, downloadLyric.format, "lrc") ||
-    buildDownloadLyric(downloadLyric, downloadLyric.format, "ttml");
-  return hasContent ? downloadLyric : null;
-};
-
-/** 在线歌词优先尝试 TTML，失败再回落原结果 */
-const resolveOnlineDownloadLyric = async (
-  track: Track,
-  online: OnlineResult | null,
-): Promise<DownloadLyric | null> => {
-  if (!online) return null;
-  const ttml = await resolveTTMLOverlay(track, online);
-  return (
-    toUsableDownloadLyric(ttml) ??
-    toUsableDownloadLyric({ source: online.source, input: online.input })
-  );
+  return buildDownloadLyric(downloadLyric, downloadLyric.format, "lrc") ? downloadLyric : null;
 };
 
 /**
@@ -81,7 +63,7 @@ export const resolveDownloadLyric = async (track: Track): Promise<DownloadLyric 
     // 插件优选：请求先行发出，与正常来源并发
     const pluginTask = isPluginLyricPreferred() ? resolvePluginLyric(track) : null;
     const online = await resolveOnlineByPreference(track, { hasLocal: false, localFormat: null });
-    const onlineLyric = await resolveOnlineDownloadLyric(track, online);
+    const onlineLyric = toUsableDownloadLyric(online);
     if (pluginTask) {
       const plugin = toUsableDownloadLyric(await pluginTask);
       if (plugin && isBetterFormat(plugin.format, onlineLyric?.format ?? null)) return plugin;

@@ -1845,7 +1845,6 @@
       "backgrounds": "Backgrounds",
       "songs": "Song Files",
       "lyric": "Lyric Content Cache",
-      "lyricTTML": "TTML Lyric Cache",
       "lyricMatch": "Lyric Match Cache"
     },
     "enableSongCache": {
@@ -1917,10 +1916,6 @@
       "description": "Format for saved and embedded lyrics",
       "lrc": "LRC (line)",
       "enhanced": "Enhanced LRC (word)"
-    },
-    "downloadSaveTtml": {
-      "label": "Also Save as TTML",
-      "description": "Export an extra TTML file containing original, translation and romanization in one file"
     },
     "cacheCategoryClear": {
       "label": "Clear",

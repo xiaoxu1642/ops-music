@@ -1833,7 +1833,6 @@
       "backgrounds": "背景图",
       "songs": "歌曲文件",
       "lyric": "歌词内容缓存",
-      "lyricTTML": "TTML 歌词缓存",
       "lyricMatch": "歌词匹配缓存"
     },
     "enableSongCache": {
@@ -1905,10 +1904,6 @@
       "description": "保存及内嵌到标签的歌词格式",
       "lrc": "LRC（逐行）",
       "enhanced": "增强 LRC（逐字）"
-    },
-    "downloadSaveTtml": {
-      "label": "同时保存为 TTML",
-      "description": "额外导出一份 TTML，单文件含原文、翻译与音译"
     },
     "cacheCategoryClear": {
       "label": "清除",

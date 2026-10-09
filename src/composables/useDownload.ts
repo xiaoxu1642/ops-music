@@ -47,7 +47,6 @@ export const useDownload = () => {
       embedMeta: download.embedMeta,
       embedLyric: download.embedLyric,
       writeLrc: download.writeLrc,
-      saveTtml: download.saveTtml,
     };
     return {
       taskId: opts.taskId ?? crypto.randomUUID(),

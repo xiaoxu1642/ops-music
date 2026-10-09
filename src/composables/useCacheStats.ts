@@ -13,7 +13,6 @@ const stats = ref<CacheStat[]>([
   { id: "backgrounds", kind: "file", path: "", size: 0 },
   { id: "songs", kind: "file", path: "", size: 0 },
   { id: "lyric", kind: "db", path: "", size: 0 },
-  { id: "lyricTTML", kind: "db", path: "", size: 0 },
   { id: "lyricMatch", kind: "db", path: "", size: 0 },
 ]);
 const cacheDir = ref<string>("");

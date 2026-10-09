@@ -303,8 +303,6 @@ export interface DownloadSettings {
   embedLyric: boolean;
   /** 额外保存同名歌词文件 */
   writeLrc: boolean;
-  /** 额外保存完整 TTML */
-  saveTtml: boolean;
   /** 保存 / 内嵌的歌词格式 */
   lyricFileFormat: DownloadLyricFormat;
 }

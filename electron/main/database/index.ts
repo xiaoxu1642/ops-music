@@ -81,14 +81,6 @@ export const initDatabase = (): void => {
       PRIMARY KEY (fingerprint, platform)
     );
 
-    CREATE TABLE IF NOT EXISTS lyric_ttml_cache (
-      platform TEXT NOT NULL,
-      id TEXT NOT NULL,
-      content TEXT,
-      fetched_at INTEGER NOT NULL,
-      PRIMARY KEY (platform, id)
-    );
-
     CREATE TABLE IF NOT EXISTS song_cache (
       cache_key TEXT PRIMARY KEY,
       source TEXT NOT NULL,
