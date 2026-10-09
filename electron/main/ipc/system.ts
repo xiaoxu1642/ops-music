@@ -12,7 +12,6 @@ import { fetchBytes } from "@main/utils/fetchBytes";
 import { logsDir } from "@main/utils/paths";
 import { consumePendingOrpheusUrl } from "@main/services/orpheus";
 import { consumePendingAudioFiles } from "@main/services/externalFile";
-import { testNetworkProxy } from "@main/utils/proxy";
 import { store } from "@main/store";
 
 /**
@@ -67,9 +66,6 @@ export const registerSystemIpc = (): void => {
     app.relaunch();
     app.exit(0);
   });
-
-  // 测试当前网络代理
-  ipcMain.handle("system:testNetworkProxy", () => testNetworkProxy());
 
   // 把封面图 URL 拉成字节回渲染层
   // 用于 canvas 取色等需要绕过跨域 tainted 的场景；限定 image/* 响应

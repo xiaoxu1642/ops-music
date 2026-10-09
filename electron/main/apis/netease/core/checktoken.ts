@@ -6,7 +6,7 @@
  */
 
 import { DUN_DOMAIN_V3 } from "./config";
-import { fetchWithProxy } from "@main/utils/proxy";
+import { fetchWithLegacySsl } from "@main/utils/proxy";
 import { neteaseLog } from "@main/utils/logger";
 
 const PRODUCT_NUMBER = "YD00000558929251";
@@ -18,7 +18,7 @@ const PRODUCT_NUMBER = "YD00000558929251";
 export const getAntiCheatTokenV3 = async (): Promise<string> => {
   const url = `${DUN_DOMAIN_V3}/v3/b?pn=${PRODUCT_NUMBER}`;
   try {
-    const res = await fetchWithProxy(url, { signal: AbortSignal.timeout(8000) });
+    const res = await fetchWithLegacySsl(url, { signal: AbortSignal.timeout(8000) });
     const text = await res.text();
     const match = text.match(/null\(\[(\d+),\d+,"([^"]+)"\]\)/);
     if (match && match[1] === "200") {

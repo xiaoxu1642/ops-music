@@ -59,7 +59,6 @@ declare global {
           fileName: string,
         ) => Promise<{ success: boolean; path?: string; error?: string }>;
         relaunch: () => Promise<void>;
-        testNetworkProxy: () => Promise<boolean>;
         onProtocolUrl: (callback: (url: string) => void) => () => void;
         consumePendingProtocolUrl: () => Promise<string | null>;
         onOpenFiles: (callback: (files: string[]) => void) => () => void;

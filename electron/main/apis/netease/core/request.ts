@@ -22,7 +22,7 @@ import * as encrypt from "./crypto";
 import { getAnonymousToken, getDeviceId } from "./device";
 import { ensureXeapiKey, getXeapiSession, updateXeapiSession } from "./xeapi";
 import { getAntiCheatTokenV3 } from "./checktoken";
-import { fetchWithProxy } from "@main/utils/proxy";
+import { fetchWithLegacySsl } from "@main/utils/proxy";
 
 /** 调用方传入的可选参数 */
 export interface RequestOptions {
@@ -301,7 +301,7 @@ export const createRequest = async (
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      res = await fetchWithProxy(url, {
+      res = await fetchWithLegacySsl(url, {
         method: "POST",
         headers,
         body,

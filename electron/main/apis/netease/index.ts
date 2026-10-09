@@ -16,7 +16,6 @@ import {
   getSessionCookies,
   saveSessionCookies,
 } from "@main/database/sessions";
-import { store } from "@main/store";
 import { buildCacheKey, cacheClear, cacheGet, cacheSet } from "./core/cache";
 import { cookieToJson } from "./core/cookie";
 import { getAnonymousToken, getDeviceId, setAnonymousToken, setDeviceId } from "./core/device";
@@ -79,30 +78,6 @@ const NON_CACHEABLE: ReadonlySet<string> = new Set([
   "fm_trash",
   "recommend_songs",
 ]);
-
-/** 国内 IP 前缀池 */
-const CN_IP_PREFIXES = [
-  "116.25",
-  "121.8",
-  "120.36",
-  "39.144",
-  "117.136",
-  "223.104",
-  "171.8",
-  "182.140",
-];
-
-/** 本会话的国内 IP */
-let cachedRealIp = "";
-const sessionRealIp = (): string => {
-  if (!cachedRealIp) {
-    const prefix = CN_IP_PREFIXES[Math.floor(Math.random() * CN_IP_PREFIXES.length)];
-    const third = Math.floor(Math.random() * 256);
-    const fourth = 1 + Math.floor(Math.random() * 254);
-    cachedRealIp = `${prefix}.${third}.${fourth}`;
-  }
-  return cachedRealIp;
-};
 
 /** 内存缓存 */
 let sessionCache: Record<string, string> | null = null;
@@ -233,11 +208,6 @@ export const callNetease = async (
         ? cookieToJson(params.cookie)
         : (params.cookie as Record<string, string> | undefined) || { ...session },
   };
-
-  // 注入国内 IP
-  if (store.get("system.neteaseRealIp") && query.realIP === undefined) {
-    query.realIP = sessionRealIp();
-  }
 
   const res = await fn(query, createRequest);
 
