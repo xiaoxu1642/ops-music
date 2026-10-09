@@ -20,7 +20,11 @@ export const useSettingsDialog = () => ({
    * @param highlight - 需高亮定位的设置项 key
    */
   show: (category?: string, highlight?: string) => {
-    initialCategory.value = category ?? (useStatusStore().settingsCategory || settingsSchema[0].id);
+    const remembered = useStatusStore().settingsCategory;
+    // 记忆的分类可能已随功能退役从 schema 移除，回退到首个分类避免空白面板
+    initialCategory.value =
+      category ??
+      (settingsSchema.some((c) => c.id === remembered) ? remembered : settingsSchema[0].id);
     initialHighlight.value = highlight;
     open.value = true;
   },
