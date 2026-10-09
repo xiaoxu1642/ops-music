@@ -2,7 +2,6 @@ import type { LyricFormat } from "@shared/types/lyrics";
 import { DEFAULT_LYRIC_FORMAT_ORDER as DEFAULT_LYRIC_FORMAT_ORDER_SHARED } from "@shared/types/lyrics";
 import type { Platform } from "@shared/types/platform";
 import type { TransitionPreference } from "@shared/types/player";
-import { ALL_PLATFORMS } from "@shared/types/platform";
 import type { CjkTransformMode } from "@shared/types/opencc";
 import type { QualityLevel } from "@/utils/quality";
 
@@ -67,8 +66,15 @@ export type LyricSourceOrder = Platform[];
 /** 歌词格式优先级：决定多种格式可用时的选择，以及 TTML 是否覆盖平台主格式 */
 export type LyricFormatOrder = LyricFormat[];
 
+/**
+ * 歌词链路（lyrics IPC）已实现的平台。
+ * B 站的歌词接口已在主进程就绪，但还没接进 `lyrics:matchById/ByQuery`，
+ * 混进来只会让每次匹配多一次必然失败的 IPC；接入后加回这里即可。
+ */
+export const LYRIC_SUPPORTED_PLATFORMS: Platform[] = ["netease"];
+
 /** 默认音源顺序 */
-export const DEFAULT_LYRIC_SOURCE_ORDER: LyricSourceOrder = [...ALL_PLATFORMS];
+export const DEFAULT_LYRIC_SOURCE_ORDER: LyricSourceOrder = [...LYRIC_SUPPORTED_PLATFORMS];
 
 /** 默认格式优先级 */
 export const DEFAULT_LYRIC_FORMAT_ORDER: LyricFormatOrder = [...DEFAULT_LYRIC_FORMAT_ORDER_SHARED];

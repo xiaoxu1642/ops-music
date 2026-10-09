@@ -16,6 +16,12 @@ export interface SearchResult<T> {
   hasMore: boolean;
 }
 
+/**
+ * 上面几个 fetcher 已实现分发的平台。搜索标签页只列这些：
+ * `ALL_PLATFORMS` 里已有 B 站，但取流/解析还没接，混进标签会拿到网易云的结果。
+ */
+export const SEARCHABLE_PLATFORMS: Platform[] = ["netease"];
+
 /** 搜索单曲 */
 export const searchSongs = (
   _platform: Platform,

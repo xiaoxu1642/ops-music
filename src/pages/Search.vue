@@ -2,9 +2,15 @@
 defineOptions({ name: "SearchPage" });
 
 import type { PlaybackContext, Track } from "@shared/types/player";
-import { ALL_PLATFORMS, PLATFORM_SHORT_NAME, type Platform } from "@shared/types/platform";
+import { PLATFORM_SHORT_NAME, type Platform } from "@shared/types/platform";
 import type { CoverItem } from "@/types/artist";
-import { searchSongs, searchAlbums, searchArtists, searchPlaylists } from "@/apis/search";
+import {
+  SEARCHABLE_PLATFORMS,
+  searchSongs,
+  searchAlbums,
+  searchArtists,
+  searchPlaylists,
+} from "@/apis/search";
 import SongList from "@/components/list/SongList.vue";
 import CoverList from "@/components/list/CoverList.vue";
 import { useStatusStore } from "@/stores/status";
@@ -34,7 +40,7 @@ const tabs = computed(() => [
   { key: "playlists", label: t("search.tabs.playlists") },
 ]);
 
-const platformTabs = ALL_PLATFORMS.map((key) => ({ key, label: PLATFORM_SHORT_NAME[key] }));
+const platformTabs = SEARCHABLE_PLATFORMS.map((key) => ({ key, label: PLATFORM_SHORT_NAME[key] }));
 
 interface TabState<T> {
   items: T[];

@@ -9,6 +9,7 @@
 
 import { BrowserWindow, session, type Session } from "electron";
 import { getMainWindow } from "./main";
+import { hasBilibiliSession, pickSessionCookies } from "@main/apis/bilibili/core/credential";
 import { coreLog } from "@main/utils/logger";
 
 /**
@@ -147,4 +148,41 @@ const NETEASE_CONFIG: LoginPlatformConfig = {
  */
 export const openNeteaseLoginWindow = async (): Promise<Record<string, string> | null> => {
   return await openLoginWindow(NETEASE_CONFIG);
+};
+
+/**
+ * B 站把 SESSDATA 种在 `.bilibili.com` 顶级域、把 buvid 设备指纹种在 www / passport 子域，
+ * 只按单个 URL 取会漏掉其中一部分，逐个域取完再合并（同 Otter 的 WebViewLoginPlugin）
+ */
+const BILIBILI_COOKIE_URLS = [
+  "https://www.bilibili.com/",
+  "https://passport.bilibili.com/",
+  "https://bilibili.com/",
+];
+
+/** B 站网页登录配置 */
+const BILIBILI_CONFIG: LoginPlatformConfig = {
+  title: "登录哔哩哔哩",
+  url: "https://passport.bilibili.com/login",
+  partition: "persist:bilibili-login",
+  logTag: "[login:bilibili]",
+  collectCookies: async (ses) => {
+    const merged: Record<string, string> = {};
+    for (const url of BILIBILI_COOKIE_URLS) {
+      for (const cookie of await ses.cookies.get({ url })) {
+        if (cookie.value && !(cookie.name in merged)) merged[cookie.name] = cookie.value;
+      }
+    }
+    // 没拿到 SESSDATA 就是还没登录，继续等下一轮轮询
+    if (!hasBilibiliSession(merged)) return null;
+    return pickSessionCookies(merged);
+  },
+};
+
+/**
+ * 打开 B 站网页登录窗口
+ * @returns 登录成功返回 cookies 对象；用户关闭窗口返回 null
+ */
+export const openBilibiliLoginWindow = async (): Promise<Record<string, string> | null> => {
+  return await openLoginWindow(BILIBILI_CONFIG);
 };

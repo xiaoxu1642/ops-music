@@ -75,6 +75,9 @@ const result = (
 
 /**
  * 搜索在线平台单曲并转换为可直接播放的 Track
+ *
+ * 当前只实现了网易云；新增平台必须在这里显式分支，
+ * 否则会把 `bilibili` 之类的入参悄悄当网易云查一遍。
  * @param platform - 在线音乐平台
  * @param query - 搜索关键词
  * @param page - 从 1 开始的页码
@@ -82,7 +85,7 @@ const result = (
  * @returns 统一搜索结果
  */
 export const searchOnlineTracks = async (
-  platform: Platform,
+  platform: "netease",
   query: string,
   page: number,
   limit: number,

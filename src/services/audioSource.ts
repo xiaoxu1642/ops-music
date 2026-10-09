@@ -9,8 +9,8 @@ import { resolveNeteaseUrl } from "@/apis/song/netease";
 import { ErrorCode } from "@shared/types/errors";
 import { handleError } from "@/utils/errors";
 
-/** 在线平台 source → 插件 source key */
-const PLATFORM_TO_PLUGIN_SOURCE: Record<Platform, string> = {
+/** 在线平台 source → 插件 source key；未列出的平台不参与插件兜底 */
+const PLATFORM_TO_PLUGIN_SOURCE: Partial<Record<Platform, string>> = {
   netease: "wy",
 };
 
@@ -65,6 +65,8 @@ export const resolveByPlugin = async (
   const fail = (errorCode: ErrorCode): OnlineResolveResult => ({ ok: false, errorCode });
   if (!isPlatform(track.source)) return fail(ErrorCode.URL_RESOLVE_FAILED);
   const pluginSource = PLATFORM_TO_PLUGIN_SOURCE[track.source];
+  // 未映射到插件 source 的平台（如 B 站）不参与插件兜底，只能走内置接口
+  if (!pluginSource) return fail(ErrorCode.URL_RESOLVE_FAILED);
   const skip = new Set(skipPluginIds);
   const plugins = usePluginsStore();
   const candidates = plugins.list.filter(

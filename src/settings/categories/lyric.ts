@@ -1,5 +1,5 @@
 import type { SettingCategory } from "@/types/settings-schema";
-import { ALL_PLATFORMS } from "@shared/types/platform";
+import { LYRIC_SUPPORTED_PLATFORMS } from "@/types/settings";
 import { useSettingsStore } from "@/stores/settings";
 import AmllDbServerConfig from "@/components/settings/custom/AmllDbServerConfig.vue";
 import LocalLyricRepoConfig from "@/components/settings/custom/LocalLyricRepoConfig.vue";
@@ -11,7 +11,7 @@ import IconLucideMic2 from "~icons/lucide/mic-2";
 /** 来源偏好选项：auto + 全部平台（来自平台总表）+ self */
 const lyricSourcePreferenceOptions = [
   { value: "auto", labelKey: "settings.lyricSourcePreference.auto" },
-  ...ALL_PLATFORMS.map((platform) => ({
+  ...LYRIC_SUPPORTED_PLATFORMS.map((platform) => ({
     value: platform,
     labelKey: `settings.lyricSourcePreference.${platform}`,
   })),
