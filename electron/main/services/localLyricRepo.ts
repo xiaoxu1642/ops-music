@@ -2,8 +2,8 @@
  * 本地 TTML 歌词库
  *
  * 用户指定一个目录作为 TTML 歌词仓库。按需扫描目录下所有 .ttml，解析 AMLL
- * `<amll:meta>` 头（musicName / artists / ncmMusicId / qqMusicId）建立索引：
- * - 平台 id（网易云 / QQ）→ 文件路径（精确命中）
+ * `<amll:meta>` 头（musicName / artists / ncmMusicId）建立索引：
+ * - 网易云歌曲 id → 文件路径（精确命中）
  * - 归一化标题 → 候选列表
  * 命中返回文件原文，交由渲染层 parseTTML 解析。
  *
@@ -29,7 +29,6 @@ interface NameCandidate {
 
 interface RepoIndex {
   byNcm: Map<string, string>;
-  byQq: Map<string, string>;
   /** 归一化标题 → 同名候选 */
   byTitle: Map<string, NameCandidate[]>;
 }
@@ -44,12 +43,10 @@ let cache: IndexCache | null = null;
 let building: Promise<RepoIndex | null> | null = null;
 
 /** 从 TTML 文本头部提取 AMLL 元信息 */
-const extractMeta = (
-  text: string,
-): { name?: string; artist?: string; ncmId?: string; qqId?: string } => {
+const extractMeta = (text: string): { name?: string; artist?: string; ncmId?: string } => {
   const bodyAt = text.indexOf("<body");
   const head = bodyAt > 0 ? text.slice(0, bodyAt) : text.slice(0, 8000);
-  const meta: { name?: string; artist?: string; ncmId?: string; qqId?: string } = {};
+  const meta: { name?: string; artist?: string; ncmId?: string } = {};
   for (const tag of head.matchAll(/<amll:meta\b[^>]*>/gi)) {
     const key = tag[0].match(/\bkey="([^"]*)"/)?.[1];
     const value = tag[0].match(/\bvalue="([^"]*)"/)?.[1];
@@ -57,7 +54,6 @@ const extractMeta = (
     if (key === "musicName" && !meta.name) meta.name = value;
     else if (key === "artists" && !meta.artist) meta.artist = value;
     else if (key === "ncmMusicId" && !meta.ncmId) meta.ncmId = value;
-    else if (key === "qqMusicId" && !meta.qqId) meta.qqId = value;
   }
   return meta;
 };
@@ -84,7 +80,7 @@ const collectTtml = async (dir: string): Promise<string[]> => {
 
 /** 扫描目录建立索引 */
 const buildIndex = async (dir: string): Promise<RepoIndex> => {
-  const index: RepoIndex = { byNcm: new Map(), byQq: new Map(), byTitle: new Map() };
+  const index: RepoIndex = { byNcm: new Map(), byTitle: new Map() };
   const files = await collectTtml(dir);
   for (const file of files) {
     let text: string;
@@ -95,7 +91,6 @@ const buildIndex = async (dir: string): Promise<RepoIndex> => {
     }
     const meta = extractMeta(text);
     if (meta.ncmId && !index.byNcm.has(meta.ncmId)) index.byNcm.set(meta.ncmId, file);
-    if (meta.qqId && !index.byQq.has(meta.qqId)) index.byQq.set(meta.qqId, file);
     if (meta.name) {
       const titleKey = normalize(meta.name);
       const candidate: NameCandidate = { artist: normalize(meta.artist ?? ""), file };
@@ -164,28 +159,16 @@ const pickByArtist = (candidates: NameCandidate[], wantArtist: string): string =
 };
 
 /**
- * 用匹配缓存里在线模糊搜索解析出的平台 id 回查本地库
+ * 用匹配缓存里在线模糊搜索解析出的网易云歌曲 id 回查本地库
  * 本地歌首播时没有平台 id、标题也可能对不上，靠在线搜索事后写入的 id 兜底命中
  * @param track - 歌曲信息
  * @param index - 当前索引
  * @returns 命中的 TTML 原文，未命中返回 null
  */
 const matchByCachedId = async (track: Track, index: RepoIndex): Promise<string | null> => {
-  const fingerprint = buildFingerprint(track);
-  const ncm = getMatchedId(fingerprint, "netease");
-  if (ncm) {
-    const hit = await tryRead(index.byNcm.get(ncm.platformId));
-    if (hit) return hit;
-  }
-  const qq = getMatchedId(fingerprint, "qqmusic");
-  if (qq) {
-    for (const idCandidate of [qq.extra?.mid, qq.platformId]) {
-      if (!idCandidate) continue;
-      const hit = await tryRead(index.byQq.get(idCandidate));
-      if (hit) return hit;
-    }
-  }
-  return null;
+  const ncm = getMatchedId(buildFingerprint(track), "netease");
+  if (!ncm) return null;
+  return tryRead(index.byNcm.get(ncm.platformId));
 };
 
 /**
@@ -201,13 +184,6 @@ export const matchLocalTTML = async (track: Track): Promise<string | null> => {
   if (track.source === "netease") {
     const hit = await tryRead(index.byNcm.get(track.id));
     if (hit) return hit;
-  }
-  if (track.source === "qqmusic") {
-    for (const idCandidate of [track.extId, track.id]) {
-      if (!idCandidate) continue;
-      const hit = await tryRead(index.byQq.get(idCandidate));
-      if (hit) return hit;
-    }
   }
   // 标题命中；同名多条时再用艺术家软性区分
   const candidates = index.byTitle.get(normalize(track.title));

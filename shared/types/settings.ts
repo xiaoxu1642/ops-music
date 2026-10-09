@@ -240,9 +240,6 @@ export interface WindowStates {
 /** NCM 听歌打卡上报方式 */
 export type NeteaseScrobbleMode = "legacy" | "ncbl";
 
-/** KG 登录版本 */
-export type KugouLoginVersion = "standard" | "concept";
-
 /** 后端配置汇总 */
 export interface SystemConfig {
   /** 播放器配置 */
@@ -279,8 +276,6 @@ export interface SystemConfig {
     onboardingCompleted: boolean;
     /** 用户已同意的协议版本号 */
     agreedAgreementVersion: number;
-    /** KG 登录版本（standard 标准版 / concept 概念版） */
-    kugouLoginVersion: KugouLoginVersion;
     /** 听歌打卡开关 */
     neteaseScrobbleEnabled: boolean;
     /** 听歌打卡上报方式 */

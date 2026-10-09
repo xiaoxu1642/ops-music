@@ -3,8 +3,6 @@ import type { QualityLevel } from "@/utils/quality";
 import { isPlatform } from "@shared/types/platform";
 import { resolveByPlugin } from "@/services/audioSource";
 import { resolveNeteaseDownloadUrl } from "@/apis/song/netease";
-import { resolveQQMusicUrl } from "@/apis/song/qqmusic";
-import { resolveKugouUrl } from "@/apis/song/kugou";
 
 /** 下载源解析结果 */
 export interface DownloadSource {
@@ -35,16 +33,7 @@ export const resolveDownloadSource = async (
       // 官方失败回落插件
     }
   }
-  // 官方播放直链
-  if (track.source === "qqmusic") {
-    const resolved = await resolveQQMusicUrl(track, level);
-    if (resolved.available) return { url: resolved.url };
-  }
-  if (track.source === "kugou") {
-    const resolved = await resolveKugouUrl(track, level);
-    if (resolved.available) return { url: resolved.url };
-  }
-  // 其他播放源走插件
+  // 官方未命中时走插件兜底
   if (isPlatform(track.source)) {
     const res = await resolveByPlugin(track, level);
     if (res.ok && !res.isTrial) return { url: res.url };

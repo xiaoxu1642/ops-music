@@ -13,19 +13,15 @@ export const requestPlatformLyric = async (
   track: Track,
 ): Promise<LyricMatchResult | null> => {
   const byId = track.source === platform;
-  // QM lyric 接口要数字 songID
-  const lookupId = platform === "qqmusic" ? (track.extId ?? track.id) : track.id;
   const resp = byId
-    ? await window.api.lyrics.matchById(platform, lookupId)
+    ? await window.api.lyrics.matchById(platform, track.id)
     : await window.api.lyrics.matchByQuery(platform, track);
   return resp.ok && resp.data ? resp.data : null;
 };
 
 /**
- * 请求指定平台的 TTML 覆盖歌词
+ * 请求 AMLL TTML DB 的网易云 TTML 覆盖歌词
  * @param track - 歌曲信息
- * @param platform - 目标平台
  * @returns IPC 请求结果
  */
-export const requestTTMLOverlay = (track: Track, platform: "netease" | "qqmusic") =>
-  window.api.lyrics.fetchTTMLOverlay(track, platform);
+export const requestTTMLOverlay = (track: Track) => window.api.lyrics.fetchTTMLOverlay(track);

@@ -135,7 +135,7 @@ describe("queue", () => {
   it("队列中已有曲目时可替换播放上下文", () => {
     setQueue([track("a")], context);
     const nextContext: PlaybackContext = {
-      provider: "qqmusic",
+      provider: "netease",
       originId: "789",
       originType: "album",
     };

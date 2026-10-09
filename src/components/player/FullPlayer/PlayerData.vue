@@ -38,8 +38,6 @@ const artists = computed(() => getValidArtists(displayTrack.value?.artists));
 /** 歌词来源偏好下拉选项 */
 const lyricSourceOptions = computed<SSelectOption[]>(() => [
   { value: "auto", label: t("settings.lyricSourcePreference.auto") },
-  { value: "qqmusic", label: t("settings.lyricSourcePreference.qqmusic") },
-  { value: "kugou", label: t("settings.lyricSourcePreference.kugou") },
   { value: "netease", label: t("settings.lyricSourcePreference.netease") },
   { value: "self", label: t("settings.lyricSourcePreference.self") },
 ]);

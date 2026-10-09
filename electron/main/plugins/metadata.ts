@@ -20,8 +20,6 @@ import { pluginLog } from "@main/utils/logger";
 /** 在线平台 source → 插件源 key；与 audioSource 的映射保持一致 */
 const PLATFORM_TO_PLUGIN_SOURCE: Record<string, string> = {
   netease: "wy",
-  qqmusic: "tx",
-  kugou: "kg",
 };
 
 /**

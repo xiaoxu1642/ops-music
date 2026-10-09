@@ -123,7 +123,7 @@ describe("网易云听歌打卡元数据", () => {
   it("忽略其他平台的播放上下文", () => {
     const value = toNeteaseScrobbleTrack(
       track,
-      { provider: "qqmusic", originId: "456", originType: "playlist" },
+      { provider: "local", originId: "456", originType: "playlist" },
       180000,
     );
 

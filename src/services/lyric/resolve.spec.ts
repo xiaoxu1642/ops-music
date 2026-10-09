@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Track } from "@shared/types/player";
+import type { Track, TrackSource } from "@shared/types/player";
 import { useSettingsStore } from "@/stores/settings";
 
 const mockRequestPlatformLyric = vi.fn();
@@ -23,77 +23,159 @@ window.api = mockWindowApi;
 
 import { resolveOnlineByPreference } from "./resolve";
 
-const createTrack = (id: string): Track => ({
+const createTrack = (id: string, source: TrackSource = "netease"): Track => ({
   id,
-  source: "netease",
+  source,
   title: `Song ${id}`,
   artists: [{ id: "a1", name: "Artist" }],
   duration: 180_000,
 });
 
-describe("resolveOnlineByPreference 平台优先与智能回退", () => {
+describe("resolveOnlineByPreference 单音源解析", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
   });
 
-  it("偏好平台命中时：优先返回该偏好平台歌词且不查询其他平台", async () => {
+  it("智能选择：按音源顺序请求 NCM 并返回其歌词", async () => {
     const settings = useSettingsStore();
-    settings.lyric.lyricSourcePreference = "kugou";
-
-    mockRequestPlatformLyric.mockImplementation(async (platform: string) => {
-      if (platform === "kugou") {
-        return {
-          platform: "kugou",
-          format: "krc",
-          content: "[00:01.000]<0,1000>酷狗KRC",
-        };
-      }
-      return null;
+    settings.lyric.lyricSourcePreference = "auto";
+    mockRequestPlatformLyric.mockResolvedValue({
+      platform: "netease",
+      format: "yrc",
+      content: "[1000,1000]网易云YRC(1000,1000)",
     });
 
-    const result = await resolveOnlineByPreference(createTrack("song_hit"), {
+    const result = await resolveOnlineByPreference(createTrack("song_auto"), {
       hasLocal: false,
       localFormat: null,
     });
 
-    expect(result).not.toBeNull();
-    expect(result?.source.platform).toBe("kugou");
-    expect(result?.source.format).toBe("krc");
+    expect(result?.source.platform).toBe("netease");
+    expect(result?.source.format).toBe("yrc");
     expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
-    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("kugou", expect.anything());
+    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
   });
 
-  it("偏好平台查无此歌时：自动智能回退至其余音源平台成功获取歌词", async () => {
+  it("智能选择：NCM 查无此歌时返回 null", async () => {
     const settings = useSettingsStore();
-    settings.lyric.lyricSourcePreference = "kugou";
-    settings.lyric.lyricSourceOrder = ["netease", "qqmusic", "kugou"];
+    settings.lyric.lyricSourcePreference = "auto";
+    mockRequestPlatformLyric.mockResolvedValue(null);
 
-    // 酷狗完全查无此歌，QQ音乐有
-    mockRequestPlatformLyric.mockImplementation(async (platform: string) => {
-      if (platform === "kugou") return null;
-      if (platform === "netease") return null;
-      if (platform === "qqmusic") {
-        return {
-          platform: "qqmusic",
-          format: "qrc",
-          content: "[1000,1000]QQ音乐QRC(1000,1000)",
-        };
-      }
-      return null;
-    });
-
-    const result = await resolveOnlineByPreference(createTrack("song_fallback"), {
+    const result = await resolveOnlineByPreference(createTrack("song_miss"), {
       hasLocal: false,
       localFormat: null,
     });
 
-    expect(result).not.toBeNull();
-    expect(result?.source.platform).toBe("qqmusic");
-    expect(result?.source.format).toBe("qrc");
-    // 验证确实先查了酷狗，酷狗没有才查了 netease 和 qqmusic
-    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("kugou", expect.anything());
+    expect(result).toBeNull();
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+  });
+
+  it("显式偏好 NCM：查无此歌时不回退，因为没有其他在线音源", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.lyricSourcePreference = "netease";
+    mockRequestPlatformLyric.mockResolvedValue(null);
+
+    const result = await resolveOnlineByPreference(createTrack("song_explicit_miss"), {
+      hasLocal: false,
+      localFormat: null,
+    });
+
+    expect(result).toBeNull();
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+  });
+
+  it("跟随自身：本地曲目没有对应平台，不发起在线请求", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.lyricSourcePreference = "self";
+
+    const result = await resolveOnlineByPreference(createTrack("song_local", "local"), {
+      hasLocal: false,
+      localFormat: null,
+    });
+
+    expect(result).toBeNull();
+    expect(mockRequestPlatformLyric).not.toHaveBeenCalled();
+  });
+
+  it("跟随自身：在线曲目只查询自身来源 NCM", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.lyricSourcePreference = "self";
+    mockRequestPlatformLyric.mockResolvedValue({
+      platform: "netease",
+      format: "lrc",
+      content: "[00:01.00]网易云LRC",
+    });
+
+    const result = await resolveOnlineByPreference(createTrack("song_self"), {
+      hasLocal: false,
+      localFormat: null,
+    });
+
+    expect(result?.source.platform).toBe("netease");
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
     expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
-    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("qqmusic", expect.anything());
+  });
+
+  it("已有本地歌词且关闭智能优选：不请求在线歌词", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.smartPreferOnline = false;
+
+    const result = await resolveOnlineByPreference(createTrack("song_keep_local"), {
+      hasLocal: true,
+      localFormat: "lrc",
+    });
+
+    expect(result).toBeNull();
+    expect(mockRequestPlatformLyric).not.toHaveBeenCalled();
+  });
+
+  it("智能优选：本地仅有 LRC 时请求 NCM，返回更优的 YRC", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.smartPreferOnline = true;
+    mockRequestPlatformLyric.mockResolvedValue({
+      platform: "netease",
+      format: "yrc",
+      content: "[1000,1000]网易云YRC(1000,1000)",
+    });
+
+    const result = await resolveOnlineByPreference(createTrack("song_upgrade"), {
+      hasLocal: true,
+      localFormat: "lrc",
+    });
+
+    expect(result?.source.format).toBe("yrc");
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+  });
+
+  it("智能优选：本地已是 NCM 能打到的最高主格式时不请求", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.smartPreferOnline = true;
+
+    const result = await resolveOnlineByPreference(createTrack("song_no_upgrade"), {
+      hasLocal: true,
+      localFormat: "yrc",
+    });
+
+    expect(result).toBeNull();
+    expect(mockRequestPlatformLyric).not.toHaveBeenCalled();
+  });
+
+  it("竞态中断：shouldContinue 判定已过期时丢弃结果", async () => {
+    const settings = useSettingsStore();
+    settings.lyric.lyricSourcePreference = "netease";
+    mockRequestPlatformLyric.mockResolvedValue({
+      platform: "netease",
+      format: "yrc",
+      content: "[1000,1000]网易云YRC(1000,1000)",
+    });
+
+    const result = await resolveOnlineByPreference(createTrack("song_stale"), {
+      hasLocal: false,
+      localFormat: null,
+      shouldContinue: () => false,
+    });
+
+    expect(result).toBeNull();
   });
 });

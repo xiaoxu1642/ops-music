@@ -391,8 +391,7 @@ const api = {
     matchByQuery: (platform: string, track: unknown) =>
       ipcRenderer.invoke("lyrics:matchByQuery", platform, track),
     // 获取 AMLL TTML DB 的 TTML
-    fetchTTMLOverlay: (track: unknown, platform: string) =>
-      ipcRenderer.invoke("lyrics:fetchTTMLOverlay", track, platform),
+    fetchTTMLOverlay: (track: unknown) => ipcRenderer.invoke("lyrics:fetchTTMLOverlay", track),
     // 在本地 TTML 歌词库目录中按元信息匹配
     matchLocalTTML: (track: unknown) => ipcRenderer.invoke("lyrics:matchLocalTTML", track),
     // 选择本地 TTML 歌词库目录

@@ -86,7 +86,6 @@ export const defaultSystemConfig: SystemConfig = {
     uiZoom: 100,
     onboardingCompleted: false,
     agreedAgreementVersion: 1,
-    kugouLoginVersion: "standard",
     neteaseScrobbleEnabled: false,
     neteaseScrobbleMode: "ncbl",
     registerOrpheusProtocol: false,

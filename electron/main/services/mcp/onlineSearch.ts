@@ -1,6 +1,4 @@
-import { callKugou } from "@main/apis/kugou";
 import { callNetease } from "@main/apis/netease";
-import { callQQMusic } from "@main/apis/qqmusic";
 import type { Track, TrackFee } from "@shared/types/player";
 import type { Platform } from "@shared/types/platform";
 import { cacheTracks } from "./cache";
@@ -22,27 +20,6 @@ interface NeteaseSong {
   fee?: TrackFee;
   alia?: string[];
   alias?: string[];
-}
-
-interface QqMusicSong {
-  id: string;
-  mid?: string;
-  name: string;
-  artist?: string;
-  album?: string;
-  albumMid?: string;
-  duration?: number;
-}
-
-interface KugouSong {
-  id: string;
-  hash?: string;
-  name: string;
-  artist?: string;
-  album?: string;
-  cover?: string;
-  coverOriginal?: string;
-  duration?: number;
 }
 
 export interface OnlineSearchResult {
@@ -79,35 +56,6 @@ const neteaseToTrack = (song: NeteaseSong): Track => {
   };
 };
 
-const qqCover = (mid: string, size: number): string =>
-  `https://y.gtimg.cn/music/photo_new/T002R${size}x${size}M000${mid}.jpg`;
-
-const qqMusicToTrack = (song: QqMusicSong): Track => {
-  const cover = song.albumMid ? qqCover(song.albumMid, 300) : undefined;
-  return {
-    id: song.mid || song.id,
-    extId: song.mid && song.id !== song.mid ? song.id : undefined,
-    source: "qqmusic",
-    title: song.name,
-    artists: song.artist ? [{ name: song.artist }] : [],
-    album: song.album ? { name: song.album, cover } : undefined,
-    duration: song.duration ?? 0,
-    cover,
-    coverOriginal: song.albumMid ? qqCover(song.albumMid, 800) : undefined,
-  };
-};
-
-const kugouToTrack = (song: KugouSong): Track => ({
-  id: song.hash || song.id,
-  source: "kugou",
-  title: song.name,
-  artists: song.artist ? [{ name: song.artist }] : [],
-  album: song.album ? { name: song.album, cover: song.cover } : undefined,
-  duration: song.duration ?? 0,
-  cover: song.cover,
-  coverOriginal: song.coverOriginal,
-});
-
 const result = (
   platform: Platform,
   page: number,
@@ -139,43 +87,19 @@ export const searchOnlineTracks = async (
   page: number,
   limit: number,
 ): Promise<OnlineSearchResult> => {
-  if (platform === "netease") {
-    const { body } = await callNetease("cloudsearch", {
-      keywords: query,
-      type: 1,
-      offset: (page - 1) * limit,
-      limit,
-    });
-    if (body?.code !== 200) throw new Error(body?.message ?? body?.msg ?? "Netease search failed");
-    const songs = (body?.result?.songs ?? []) as NeteaseSong[];
-    return result(
-      platform,
-      page,
-      limit,
-      body?.result?.songCount ?? songs.length,
-      songs.map(neteaseToTrack),
-    );
-  }
-
-  if (platform === "qqmusic") {
-    const body = (await callQQMusic("search", {
-      keywords: query,
-      type: 0,
-      page,
-      limit,
-    })) as { code?: number; message?: string; total?: number; songs?: QqMusicSong[] };
-    if (body.code !== 200) throw new Error(body.message ?? "QQ Music search failed");
-    const songs = body.songs ?? [];
-    return result(platform, page, limit, body.total ?? songs.length, songs.map(qqMusicToTrack));
-  }
-
-  const body = (await callKugou("search", { keywords: query, page, limit })) as {
-    code?: number;
-    message?: string;
-    total?: number;
-    songs?: KugouSong[];
-  };
-  if (body.code !== 200) throw new Error(body.message ?? "Kugou search failed");
-  const songs = body.songs ?? [];
-  return result(platform, page, limit, body.total ?? songs.length, songs.map(kugouToTrack));
+  const { body } = await callNetease("cloudsearch", {
+    keywords: query,
+    type: 1,
+    offset: (page - 1) * limit,
+    limit,
+  });
+  if (body?.code !== 200) throw new Error(body?.message ?? body?.msg ?? "Netease search failed");
+  const songs = (body?.result?.songs ?? []) as NeteaseSong[];
+  return result(
+    platform,
+    page,
+    limit,
+    body?.result?.songCount ?? songs.length,
+    songs.map(neteaseToTrack),
+  );
 };

@@ -224,9 +224,9 @@ const createServer = (): McpServer => {
     "search_online_songs",
     {
       title: "搜索在线歌曲",
-      description: "按关键词搜索网易云音乐、QQ 音乐或KG音乐，返回可直接传给 play_track 的曲目",
+      description: "按关键词搜索网易云音乐，返回可直接传给 play_track 的曲目",
       inputSchema: {
-        platform: z.enum(["netease", "qqmusic", "kugou"]),
+        platform: z.enum(["netease"]),
         query: z.string().trim().min(1).max(200),
         page: z.number().int().min(1).max(100).default(1),
         limit: z.number().int().min(1).max(50).default(20),

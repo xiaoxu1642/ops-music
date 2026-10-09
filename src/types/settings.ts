@@ -30,7 +30,7 @@ export type SearchPlayBehavior = "current" | "all";
 /**
  * 歌词来源偏好
  * - auto：智能选择（按打分结果）
- * - Platform（netease / qqmusic / kugou…）：优先该平台
+ * - Platform（当前仅 netease）：优先该平台
  * - self：跟随歌曲自身来源平台
  */
 export type LyricSourcePreference = Platform | "auto" | "self";

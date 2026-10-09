@@ -8,9 +8,6 @@ import { usePluginsStore } from "@/stores/plugins";
 import { DEFAULT_LYRIC_FORMAT_ORDER, DEFAULT_LYRIC_SOURCE_ORDER } from "@/types/settings";
 import { requestPlatformLyric, requestTTMLOverlay } from "./request";
 
-/** 支持 AMLL TTML DB 的平台列表 */
-const TTML_PLATFORMS = ["netease", "qqmusic"] as const;
-
 /** 单个平台返回的在线歌词 */
 export interface OnlineResult {
   source: { source: "online"; format: LyricFormat; platform: Platform };
@@ -59,8 +56,6 @@ export const embeddedLyricFromDetail = (detail: TrackDetail | null): LocalLyric 
 /** 平台主格式可达列表 */
 const PLATFORM_MAIN_FORMATS: Record<Platform, LyricFormat[]> = {
   netease: ["yrc", "lrc"],
-  qqmusic: ["qrc", "lrc"],
-  kugou: ["krc", "lrc"],
 };
 
 /**
@@ -76,7 +71,7 @@ const platformCanUpgrade = (
 ): boolean => {
   const localIdx = formatOrder.indexOf(localFormat);
   if (localIdx === -1) return true;
-  for (const format of PLATFORM_MAIN_FORMATS[platform] ?? []) {
+  for (const format of PLATFORM_MAIN_FORMATS[platform]) {
     const idx = formatOrder.indexOf(format);
     if (idx !== -1 && idx < localIdx) return true;
   }
@@ -196,6 +191,7 @@ const shouldTryTTMLByFormat = (mainFormat: LyricFormat): boolean => {
 
 /**
  * 拉取在线歌词对应的 TTML 覆盖版本
+ * AMLL TTML DB 只收录网易云曲目，因此覆盖结果恒为 NCM 来源
  * @param track - 歌曲信息
  * @param online - 在线歌词结果
  */
@@ -204,20 +200,11 @@ export const resolveTTMLOverlay = async (
   online: OnlineResult,
 ): Promise<ResolvedLyric | null> => {
   if (!shouldTryTTMLByFormat(online.source.format)) return null;
-  const candidates = await Promise.all(
-    TTML_PLATFORMS.map(async (platform) => ({
-      platform,
-      response: await requestTTMLOverlay(track, platform),
-    })),
-  );
-  const match = candidates.find(
-    (candidate): candidate is typeof candidate & { response: { ok: true; data: string } } =>
-      candidate.response.ok && !!candidate.response.data,
-  );
-  if (!match) return null;
+  const response = await requestTTMLOverlay(track);
+  if (!response.ok || !response.data) return null;
   return {
-    source: { source: "online", format: "ttml", platform: match.platform },
-    input: { content: match.response.data },
+    source: { source: "online", format: "ttml", platform: "netease" },
+    input: { content: response.data },
   };
 };
 

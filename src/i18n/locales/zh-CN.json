@@ -613,8 +613,6 @@
       "about": "关于软件"
     },
     "section": {
-      "platformLogin": "平台登录",
-      "platformConfig": "平台配置",
       "aboutApp": "关于软件",
       "specialThanks": "特别致谢",
       "developers": "开发人员",
@@ -826,8 +824,6 @@
       "label": "歌词来源偏好",
       "description": "匹配在线歌词时的平台优先级",
       "auto": "智能选择",
-      "qqmusic": "优先 QM",
-      "kugou": "优先 KG",
       "netease": "优先 NCM",
       "self": "跟随自身"
     },
@@ -843,7 +839,7 @@
     },
     "smartPreferOnline": {
       "label": "自动升级歌词格式",
-      "description": "当前歌词格式较低时，从其他平台获取更高级的格式覆盖"
+      "description": "当前歌词格式较低时，从在线音源获取更高级的格式覆盖"
     },
     "preferPluginLyric": {
       "label": "优先使用插件歌词",
@@ -964,8 +960,6 @@
       "highResourceContent": "开启后可能明显增加内存与 CPU 占用，低配设备上或出现卡顿。确定开启吗？",
       "restartRequiredTitle": "需要重启应用",
       "restartRequiredContent": "此设置需要重启应用后生效。确定保存并立即重启吗？",
-      "kugouLoginVersionTitle": "切换 KG 登录版本",
-      "kugouLoginVersionContent": "切换后当前登录凭据与新版本不匹配，需退出登录并重新扫码，否则会员权益与高音质解析会失效。确定切换吗？",
       "exclusiveModeTitle": "切换到独占模式",
       "exclusiveModeContent": "独占模式绕过系统混音器，优先使用音源采样率与位深，适合外接 DAC / Hi-Fi 设备。播放器的音量、均衡器等处理仍然生效，不保证逐位无损输出。独占期间其他应用可能无法播放声音；独占不可用时会尝试共享模式，若设备被其他应用独占，共享模式也可能无法播放。确定切换吗？",
       "preloadCacheTitle": "开启预载所需的缓存？",
@@ -1344,28 +1338,6 @@
       "label": "系统媒体控制",
       "description": "在系统媒体控制中显示当前播放信息"
     },
-    "platformLogin": {
-      "title": "登录 {name} 账号",
-      "desc": "登录后可获取对应平台播放地址",
-      "loginWeb": "网页登录",
-      "loginQr": "扫码登录",
-      "loginQrQQ": "QQ 扫码登录",
-      "loginQrWX": "微信扫码登录",
-      "qrTitle": "扫码登录",
-      "manualCookie": "Cookie 登录",
-      "logout": "退出登录",
-      "logoutTitle": "退出 {name} 登录",
-      "logoutConfirm": "确定要退出当前 {name} 账号（{user}）吗？",
-      "cookieTitle": "设置 {name} Cookie",
-      "cookiePlaceholder": "请输入 Cookie",
-      "toast": {
-        "loginSuccess": "{name} 登录成功：{user}",
-        "loginFailed": "{name} 登录失败，请重试",
-        "logoutDone": "已退出 {name} 登录",
-        "cookieSuccess": "{name} Cookie 设置成功",
-        "cookieInvalid": "Cookie 无效，请检查后重试"
-      }
-    },
     "rememberWindowState": {
       "label": "记忆窗口状态",
       "description": "下次启动时恢复窗口的大小、位置和最大化状态"
@@ -1385,12 +1357,6 @@
     "taskbarThumbnailCover": {
       "label": "任务栏封面预览",
       "description": "悬停任务栏时以专辑封面作为窗口预览，关闭则显示系统默认的实时窗口"
-    },
-    "kugouLoginVersion": {
-      "label": "KG 登录版本",
-      "description": "切换后需重新扫码登录",
-      "standard": "标准版",
-      "concept": "概念版"
     },
     "neteaseScrobbleEnabled": {
       "label": "启用听歌打卡",

@@ -49,7 +49,7 @@ const pickSub = (
  */
 export const getByPlatformId = async (id: string): Promise<LyricMatchResult | null> => {
   // 立刻预热 TTML 抓取
-  prefetchTTML("netease", [id]);
+  prefetchTTML([id]);
   // 缓存命中直接返回
   const cached = getCachedLyric("netease", id);
   if (cached) {

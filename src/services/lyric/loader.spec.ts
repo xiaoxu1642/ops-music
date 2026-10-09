@@ -84,27 +84,26 @@ describe("lyric loader", () => {
     window.api = mockWindowApi;
   });
 
-  it("在线多平台并发查询时，先到达的候选歌词立即上屏展示", async () => {
+  it("在线候选歌词先到达时，立即上屏展示而不等待后续流程", async () => {
     const media = useMediaStore();
     const track = createTrack("song_1");
     media.track = track;
 
     mockResolveOnlineByPreference.mockImplementation(
       async (_track, options: { onCandidate?: (res: unknown) => void }) => {
-        // 平台 A 先到并触发 onCandidate
         options.onCandidate?.({
           source: { source: "online", format: "lrc", platform: "netease" },
-          input: { content: "[00:01.00]平台A优先到达的歌词" },
+          input: { content: "[00:01.00]优先到达的歌词" },
         });
 
         // 验证此时界面已立即展示，不需要等后续流程
         expect(media.activeLyric?.format).toBe("lrc");
         expect(media.parsedLyric.length).toBeGreaterThan(0);
-        expect(media.parsedLyric[0].words[0].word).toContain("平台A优先到达的歌词");
+        expect(media.parsedLyric[0].words[0].word).toContain("优先到达的歌词");
 
         return {
           source: { source: "online", format: "lrc", platform: "netease" },
-          input: { content: "[00:01.00]平台A优先到达的歌词" },
+          input: { content: "[00:01.00]优先到达的歌词" },
         };
       },
     );
@@ -120,32 +119,32 @@ describe("lyric loader", () => {
 
     mockResolveOnlineByPreference.mockImplementation(
       async (_track, options: { onCandidate?: (res: unknown) => void }) => {
-        // 优质歌词 QRC 先到
+        // 优质逐词 YRC 先到
         options.onCandidate?.({
-          source: { source: "online", format: "qrc", platform: "qqmusic" },
-          input: { content: "[1000,1000]优质逐词歌词(1000,1000)" },
+          source: { source: "online", format: "yrc", platform: "netease" },
+          input: { content: "[0,3000](0,1500,0)优质逐词歌词(1500,1500,0)先行" },
         });
-        expect(media.activeLyric?.format).toBe("qrc");
+        expect(media.activeLyric?.format).toBe("yrc");
 
         // 迟到的普通 LRC 试图通过 onCandidate 提交
         options.onCandidate?.({
-          source: { source: "online", format: "lrc", platform: "kugou" },
+          source: { source: "online", format: "lrc", platform: "netease" },
           input: { content: "[00:01.00]迟到的普通LRC" },
         });
 
-        // 必须被拦截，保持 QRC
-        expect(media.activeLyric?.format).toBe("qrc");
+        // 必须被拦截，保持 YRC
+        expect(media.activeLyric?.format).toBe("yrc");
 
         return {
-          source: { source: "online", format: "lrc", platform: "kugou" },
+          source: { source: "online", format: "lrc", platform: "netease" },
           input: { content: "[00:01.00]迟到的普通LRC" },
         };
       },
     );
 
     await loadForTrack(null);
-    // 最终状态依然必须是优质的 QRC
-    expect(media.activeLyric?.format).toBe("qrc");
+    // 最终状态依然必须是优质的 YRC
+    expect(media.activeLyric?.format).toBe("yrc");
   });
 
   it("格式升级：已展示普通 LRC 时，后到达的高优先级格式能够平滑热替换", async () => {
@@ -162,22 +161,22 @@ describe("lyric loader", () => {
         });
         expect(media.activeLyric?.format).toBe("lrc");
 
-        // 逐词 QRC 后到
+        // 逐词 YRC 后到
         options.onCandidate?.({
-          source: { source: "online", format: "qrc", platform: "qqmusic" },
-          input: { content: "[1000,1000]逐词QRC(1000,1000)" },
+          source: { source: "online", format: "yrc", platform: "netease" },
+          input: { content: "[0,3000](0,1500,0)逐词YRC(1500,1500,0)热替换" },
         });
-        expect(media.activeLyric?.format).toBe("qrc");
+        expect(media.activeLyric?.format).toBe("yrc");
 
         return {
-          source: { source: "online", format: "qrc", platform: "qqmusic" },
-          input: { content: "[1000,1000]逐词QRC(1000,1000)" },
+          source: { source: "online", format: "yrc", platform: "netease" },
+          input: { content: "[0,3000](0,1500,0)逐词YRC(1500,1500,0)热替换" },
         };
       },
     );
 
     await loadForTrack(null);
-    expect(media.activeLyric?.format).toBe("qrc");
+    expect(media.activeLyric?.format).toBe("yrc");
   });
 
   it("TTML 异步非阻塞：基础歌词立即展示，后台 TTML 完成后平滑热替换升级", async () => {
@@ -320,21 +319,21 @@ describe("lyric loader", () => {
           source: { source: "online", format: "lrc", platform: "netease" },
           input: { content: "[00:01.00]先到的LRC" },
         });
-        // 最终结果 QRC 更优，再次走到 TTML 触发点
+        // 最终结果 YRC 更优，再次走到 TTML 触发点
         return {
-          source: { source: "online", format: "qrc", platform: "qqmusic" },
-          input: { content: "[1000,1000]更优的QRC(1000,1000)" },
+          source: { source: "online", format: "yrc", platform: "netease" },
+          input: { content: "[0,3000](0,1500,0)更优的YRC(1500,1500,0)结果" },
         };
       },
     );
 
     await loadForTrack(null);
 
-    expect(media.activeLyric?.format).toBe("qrc");
+    expect(media.activeLyric?.format).toBe("yrc");
     expect(mockResolveTTMLOverlay).toHaveBeenCalledTimes(1);
   });
 
-  it("插件优选防降级：插件优质歌词先上屏，内置平台迟到的普通 LRC 不覆盖", async () => {
+  it("插件优选防降级：插件优质逐词歌词先上屏，内置平台迟到的普通 LRC 不覆盖", async () => {
     const settings = useSettingsStore();
     settings.lyric.preferPluginLyric = true;
 
@@ -343,7 +342,7 @@ describe("lyric loader", () => {
 
     mockResolvePluginLyric.mockResolvedValue({
       source: { source: "online", format: "qrc" },
-      input: { content: "[1000,1000]插件优质QRC(1000,1000)" },
+      input: { content: "[1000,1000]插件优质逐词歌词(1000,1000)" },
     });
     mockResolveOnlineByPreference.mockResolvedValue({
       source: { source: "online", format: "lrc", platform: "netease" },
@@ -353,10 +352,10 @@ describe("lyric loader", () => {
     await loadForTrack(null);
 
     expect(media.activeLyric?.format).toBe("qrc");
-    expect(media.parsedLyric[0].words[0].word).toContain("插件优质QRC");
+    expect(media.parsedLyric[0].words[0].word).toContain("插件优质逐词歌词");
   });
 
-  it("插件优选可被升级：插件普通 LRC 先上屏，内置平台更优 QRC 后到时热替换", async () => {
+  it("插件优选可被升级：插件普通 LRC 先上屏，内置平台更优 YRC 后到时热替换", async () => {
     const settings = useSettingsStore();
     settings.lyric.preferPluginLyric = true;
 
@@ -368,14 +367,14 @@ describe("lyric loader", () => {
       input: { content: "[00:01.00]插件普通LRC" },
     });
     mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "qrc", platform: "qqmusic" },
-      input: { content: "[1000,1000]内置优质QRC(1000,1000)" },
+      source: { source: "online", format: "yrc", platform: "netease" },
+      input: { content: "[0,3000](0,1500,0)内置优质YRC(1500,1500,0)替换" },
     });
 
     await loadForTrack(null);
 
-    expect(media.activeLyric?.format).toBe("qrc");
-    expect(media.parsedLyric[0].words[0].word).toContain("内置优质QRC");
+    expect(media.activeLyric?.format).toBe("yrc");
+    expect(media.parsedLyric[0].words[0].word).toContain("内置优质YRC");
   });
 
   it("切歌竞态 Token 隔离：快速切歌时，上一首延迟到达的响应绝不污染新歌", async () => {
@@ -407,42 +406,13 @@ describe("lyric loader", () => {
 
     // 此时歌曲 A 迟到了很久才返回
     resolveSongA({
-      source: { source: "online", format: "qrc", platform: "qqmusic" },
-      input: { content: "[1000,1000]歌曲A迟到的歌词(1000,1000)" },
+      source: { source: "online", format: "yrc", platform: "netease" },
+      input: { content: "[0,3000](0,1500,0)歌曲A迟到的歌词(1500,1500,0)内容" },
     });
     await loadPromiseA;
 
     // 状态必须依然属于歌曲 B，绝不能被歌曲 A 覆盖
     expect(media.parsedLyric[0].words[0].word).toContain("歌曲B的歌词");
-  });
-
-  it("偏好指定平台：当前展示高优先级 QRC 时，切换偏好为酷狗 (KRC) 必须成功替换展示", async () => {
-    const settings = useSettingsStore();
-    const media = useMediaStore();
-    const track = createTrack("song_pref_switch");
-    media.track = track;
-
-    // 先加载 QQ 音乐的 QRC
-    mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "qrc", platform: "qqmusic" },
-      input: { content: "[1000,1000]QQ音乐QRC歌词(1000,1000)" },
-    });
-    await loadForTrack(null);
-    expect(media.activeLyric?.format).toBe("qrc");
-    expect(media.activeLyric?.platform).toBe("qqmusic");
-
-    // 用户在播放器中点击切换偏好为酷狗音乐 (KRC)
-    mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "krc", platform: "kugou" },
-      input: { content: "[00:01.000]<0,1000>酷狗音乐KRC歌词" },
-    });
-    settings.lyric.lyricSourcePreference = "kugou";
-
-    await vi.waitFor(() => {
-      expect(media.activeLyric?.format).toBe("krc");
-    });
-    expect(media.activeLyric?.platform).toBe("kugou");
-    expect(media.parsedLyric[0].words[0].word).toContain("酷狗音乐KRC歌词");
   });
 
   it("显式平台指令：显式指定平台时即便仅有普通 LRC 也强制生效展示", async () => {
@@ -452,11 +422,11 @@ describe("lyric loader", () => {
     media.track = track;
 
     mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "qrc", platform: "qqmusic" },
-      input: { content: "[1000,1000]原优质QRC(1000,1000)" },
+      source: { source: "online", format: "yrc", platform: "netease" },
+      input: { content: "[0,3000](0,1500,0)智能优选YRC(1500,1500,0)展示" },
     });
     await loadForTrack(null);
-    expect(media.activeLyric?.format).toBe("qrc");
+    expect(media.activeLyric?.format).toBe("yrc");
 
     mockResolveOnlineByPreference.mockResolvedValue({
       source: { source: "online", format: "lrc", platform: "netease" },
@@ -471,18 +441,18 @@ describe("lyric loader", () => {
     expect(media.parsedLyric[0].words[0].word).toContain("网易云普通LRC歌词");
   });
 
-  it("跟随自身：当前展示他站高优先级时，切换为跟随自身必须替换为自身平台歌词", async () => {
+  it("跟随自身：当前展示更优逐词歌词时，切换为跟随自身必须重新解析并替换", async () => {
     const settings = useSettingsStore();
     const media = useMediaStore();
     const track = createTrack("song_self_switch");
     media.track = track;
 
     mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "qrc", platform: "qqmusic" },
-      input: { content: "[1000,1000]他站优质QRC(1000,1000)" },
+      source: { source: "online", format: "yrc", platform: "netease" },
+      input: { content: "[0,3000](0,1500,0)逐词YRC(1500,1500,0)先行" },
     });
     await loadForTrack(null);
-    expect(media.activeLyric?.format).toBe("qrc");
+    expect(media.activeLyric?.format).toBe("yrc");
 
     mockResolveOnlineByPreference.mockResolvedValue({
       source: { source: "online", format: "lrc", platform: "netease" },

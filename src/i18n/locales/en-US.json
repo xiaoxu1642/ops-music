@@ -622,8 +622,6 @@
       "about": "About"
     },
     "section": {
-      "platformLogin": "Platform Login",
-      "platformConfig": "Platform Config",
       "aboutApp": "About",
       "specialThanks": "Special Thanks",
       "developers": "Developers",
@@ -835,8 +833,6 @@
       "label": "Lyric Source Preference",
       "description": "Platform priority when matching online lyrics",
       "auto": "Smart",
-      "qqmusic": "Prefer QM",
-      "kugou": "Prefer KG",
       "netease": "Prefer NCM",
       "self": "Follow Self"
     },
@@ -852,7 +848,7 @@
     },
     "smartPreferOnline": {
       "label": "Auto-Upgrade Lyric Format",
-      "description": "Fetch a higher-ranked format from other platforms when the current one is low"
+      "description": "Fetch a higher-ranked format from the online source when the current one is low"
     },
     "preferPluginLyric": {
       "label": "Prefer Plugin Lyrics",
@@ -973,8 +969,6 @@
       "highResourceContent": "Enabling it may noticeably increase memory and CPU usage, and could cause stuttering on lower-end devices. Enable it anyway?",
       "restartRequiredTitle": "Restart Required",
       "restartRequiredContent": "This setting requires an app restart. Save and relaunch now?",
-      "kugouLoginVersionTitle": "Switch KG Login Version",
-      "kugouLoginVersionContent": "After switching, the current credentials will not match the new version. You must log out and scan the QR code again, or VIP privileges and high-quality playback will stop working. Switch anyway?",
       "exclusiveModeTitle": "Switch to Exclusive Mode",
       "exclusiveModeContent": "Exclusive mode bypasses the system mixer and prefers the source sample rate and bit depth, making it suitable for external DACs / Hi-Fi gear. Player volume, EQ and other processing still apply, so bit-perfect output is not guaranteed. Other apps may be unable to play audio while exclusive. If exclusive mode is unavailable, shared mode will be attempted; it may also fail if another app holds the device exclusively. Switch anyway?",
       "preloadCacheTitle": "Enable the caches required for preloading?",
@@ -1353,28 +1347,6 @@
       "label": "System Media Controls",
       "description": "Show playback info in system media controls"
     },
-    "platformLogin": {
-      "title": "Log in to {name} Account",
-      "desc": "Log in to retrieve playback streams directly from the platform",
-      "loginWeb": "Web Login",
-      "loginQr": "QR Login",
-      "loginQrQQ": "QQ QR Login",
-      "loginQrWX": "WeChat QR Login",
-      "qrTitle": "Scan to Log In",
-      "manualCookie": "Cookie Login",
-      "logout": "Log Out",
-      "logoutTitle": "Log Out from {name}",
-      "logoutConfirm": "Are you sure you want to log out of current {name} account ({user})?",
-      "cookieTitle": "Set {name} Cookie",
-      "cookiePlaceholder": "Please enter Cookie",
-      "toast": {
-        "loginSuccess": "{name} login successful: {user}",
-        "loginFailed": "{name} login failed, please try again",
-        "logoutDone": "Logged out from {name}",
-        "cookieSuccess": "{name} Cookie set successfully",
-        "cookieInvalid": "Invalid Cookie, please check and retry"
-      }
-    },
     "rememberWindowState": {
       "label": "Remember Window State",
       "description": "Restore window size, position and maximized state on next launch"
@@ -1394,12 +1366,6 @@
     "taskbarThumbnailCover": {
       "label": "Taskbar Cover Preview",
       "description": "Use the album cover as the window preview when hovering the taskbar; disable to show the system's live window"
-    },
-    "kugouLoginVersion": {
-      "label": "KG Login Version",
-      "description": "Re-login is required after switching",
-      "standard": "Standard",
-      "concept": "Concept"
     },
     "neteaseScrobbleEnabled": {
       "label": "Enable scrobble",

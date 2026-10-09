@@ -144,10 +144,8 @@ const handleOnlineMatch = async (): Promise<void> => {
 
 /** 选中候选后拉取该平台歌词 */
 const fillLyricFromCandidate = async (track: Track): Promise<void> => {
-  // 特殊 ID 处理
-  const lookupId = matchPlatform.value === "qqmusic" ? (track.extId ?? track.id) : track.id;
   try {
-    const resp = await window.api.lyrics.matchById(matchPlatform.value, lookupId);
+    const resp = await window.api.lyrics.matchById(matchPlatform.value, track.id);
     if (resp.ok && resp.data?.content) form.lyrics = resp.data.content;
   } catch {
     // 拉取失败保留现有歌词，不打断匹配流程

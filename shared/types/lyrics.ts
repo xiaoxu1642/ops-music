@@ -43,19 +43,11 @@ export type LyricData = {
   platform?: Platform;
 } | null;
 
-/** 平台额外字段 */
-export interface LyricMatchExtra {
-  /** QM 的 mid */
-  mid?: string;
-}
-
 /** 歌词匹配结果 */
 export interface LyricMatchResult extends LyricInput {
   platform: Platform;
   /** 主歌词格式 */
   format: LyricFormat;
-  /** 平台额外字段，netease/kugou 暂未使用 */
-  extra?: LyricMatchExtra;
 }
 
 /** 歌词匹配 IPC 响应 */
@@ -71,8 +63,8 @@ export interface LyricsApi {
   matchById: (platform: Platform, id: string) => Promise<LyricMatchResponse>;
   /** 按 Track 元数据在某平台模糊搜索歌词 */
   matchByQuery: (platform: Platform, track: Track) => Promise<LyricMatchResponse>;
-  /** 抓取 AMLL TTML DB 的 TTML 歌词，仅 NCM/QM 适用 */
-  fetchTTMLOverlay: (track: Track, platform: "netease" | "qqmusic") => Promise<LyricTTMLResponse>;
+  /** 抓取 AMLL TTML DB 的网易云 TTML 歌词 */
+  fetchTTMLOverlay: (track: Track) => Promise<LyricTTMLResponse>;
   /** 在本地 TTML 歌词库中按元信息匹配，命中返回 TTML 原文 */
   matchLocalTTML: (track: Track) => Promise<LyricTTMLResponse>;
   /** 弹出目录选择器，返回所选本地 TTML 歌词库目录 */

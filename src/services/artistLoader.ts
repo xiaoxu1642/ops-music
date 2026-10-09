@@ -6,13 +6,9 @@ import type { TrackSource } from "@shared/types/player";
 import type { ArtistProfile } from "@/types/artist";
 import { useLibraryStore } from "@/stores/library";
 import { fetchArtist } from "@/apis/artist/netease";
-import { fetchQQMusicArtist } from "@/apis/artist/qqmusic";
-import { fetchKugouArtist } from "@/apis/artist/kugou";
 import { albumsToCoverItems } from "@/utils/format/coverItem";
 
 export interface LoadArtistOptions {
-  /** 名称兜底（在线源元数据返回前用于占位） */
-  fallbackName?: string;
   /** 数据更新回调（一次或多次） */
   onUpdate: (artist: ArtistProfile | null) => void;
   /** 中断信号 */
@@ -21,7 +17,7 @@ export interface LoadArtistOptions {
 
 /**
  * 加载指定歌手
- * @param source 来源：local / netease / qqmusic / kugou
+ * @param source 来源：local / netease
  * @param id     歌手 id（route 原始字符串）
  * @param options 回调与中断信号
  */
@@ -36,18 +32,6 @@ export const loadArtist = async (
   }
   if (source === "netease") {
     await loadNetease(id, options);
-    return;
-  }
-  if (source === "qqmusic") {
-    const artistId = decodeURIComponent(id);
-    const result = await fetchQQMusicArtist(artistId, options.fallbackName ?? artistId);
-    if (!options.signal?.aborted) options.onUpdate(result);
-    return;
-  }
-  if (source === "kugou") {
-    const artistId = decodeURIComponent(id);
-    const result = await fetchKugouArtist(artistId, options.fallbackName ?? artistId);
-    if (!options.signal?.aborted) options.onUpdate(result);
     return;
   }
   options.onUpdate(null);
