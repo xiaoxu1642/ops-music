@@ -392,9 +392,11 @@ const api = {
       ipcRenderer.invoke("lyrics:matchByQuery", platform, track),
     // 获取 AMLL TTML DB 的 TTML
     fetchTTMLOverlay: (track: unknown) => ipcRenderer.invoke("lyrics:fetchTTMLOverlay", track),
-    // 在本地 TTML 歌词库目录中按元信息匹配
-    matchLocalTTML: (track: unknown) => ipcRenderer.invoke("lyrics:matchLocalTTML", track),
-    // 选择本地 TTML 歌词库目录
+    // 在本地歌词库目录（.ttml / .lrc / .txt）中按元信息匹配
+    matchLocalLyric: (track: unknown) => ipcRenderer.invoke("lyrics:matchLocalLyric", track),
+    // LRCLIB 最后兜底歌词
+    matchLrclib: (track: unknown) => ipcRenderer.invoke("lyrics:matchLrclib", track),
+    // 选择本地歌词库目录
     pickLyricRepoDir: () => ipcRenderer.invoke("lyrics:pickLyricRepoDir"),
   },
   opencc: {

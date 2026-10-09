@@ -12,6 +12,7 @@ import {
   embeddedLyricFromDetail,
   isBetterFormat,
   isPluginLyricPreferred,
+  resolveLrclibLyric,
   resolveLocalRepoLyric,
   resolveOnlineByPreference,
   resolvePluginLyric,
@@ -239,6 +240,20 @@ const tryPluginFallback = async (token: number, track: Track): Promise<boolean> 
 };
 
 /**
+ * LRCLIB 末位兜底：平台 API、本地歌词库、在线 TTML 与插件都没给出歌词时才请求
+ * 只有行级时间戳，因此不参与格式竞争，只在屏幕本来没有歌词时提交
+ * @param token - 竞态 token
+ * @param track - 歌曲信息
+ * @returns 是否已提交有效歌词
+ */
+const lrclibLastResort = async (token: number, track: Track): Promise<boolean> => {
+  if (token !== currentToken || useMediaStore().parsedLyric.length > 0) return false;
+  const resolved = await resolveLrclibLyric(track);
+  if (token !== currentToken) return false;
+  return resolved ? commitResolvedAndHasParsed(token, resolved) : false;
+};
+
+/**
  * 插件优先加载
  * 插件请求与正常流程并发发出，任意一方就绪且更优时立即抢占展示
  * @param token - 竞态 token
@@ -281,8 +296,15 @@ const loadPlatformLyric = (token: number, track: Track): Promise<void> =>
       shouldContinue: () => token === currentToken,
     });
     if (token !== currentToken) return;
-    if (online) applyOnline(token, track, online, null);
-    else if (useMediaStore().parsedLyric.length === 0 && !(await tryPluginFallback(token, track))) {
+    if (online) {
+      applyOnline(token, track, online, null);
+      return;
+    }
+    if (
+      useMediaStore().parsedLyric.length === 0 &&
+      !(await tryPluginFallback(token, track)) &&
+      !(await lrclibLastResort(token, track))
+    ) {
       commit(token, null, null);
     }
   });
@@ -302,7 +324,7 @@ export const beginLoad = (): number => {
  *    - 默认顺序下，track.platform 与候选平台一致时走 matchById
  *    - 不一致则走 matchByQuery
  * 3. 本地歌曲：本地有先立即 commit 显示；再按偏好查在线，命中热替换
- * 4. 本地 + 在线都无：commit null 收尾 loading
+ * 4. 本地 + 在线都无：插件兜底，再 LRCLIB 兜底，仍没有则 commit null 收尾 loading
  *
  * @param detail - 歌曲详细信息
  */
@@ -365,7 +387,8 @@ export const loadForTrack = async (detail: TrackDetail | null): Promise<void> =>
       } else if (
         !hasUsableLocal &&
         useMediaStore().parsedLyric.length === 0 &&
-        !(await tryPluginFallback(token, track))
+        !(await tryPluginFallback(token, track)) &&
+        !(await lrclibLastResort(token, track))
       ) {
         commit(token, null, null);
       }

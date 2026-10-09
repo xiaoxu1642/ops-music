@@ -6,7 +6,7 @@ import { detectFormat } from "lyric-kit";
 import { useSettingsStore } from "@/stores/settings";
 import { usePluginsStore } from "@/stores/plugins";
 import { DEFAULT_LYRIC_FORMAT_ORDER, DEFAULT_LYRIC_SOURCE_ORDER } from "@/types/settings";
-import { requestPlatformLyric, requestTTMLOverlay } from "./request";
+import { requestPlatformLyric, requestLrclibLyric, requestTTMLOverlay } from "./request";
 
 /** 单个平台返回的在线歌词 */
 export interface OnlineResult {
@@ -209,7 +209,7 @@ export const resolveTTMLOverlay = async (
 };
 
 /**
- * 从本地 TTML 仓库解析歌词
+ * 从本地歌词库（.ttml / .lrc / .txt）解析歌词
  * @param track - 歌曲信息
  * @returns 本地仓库歌词，不存在则返回 null
  */
@@ -221,9 +221,24 @@ export const resolveLocalRepoLyric = async (track: Track): Promise<ResolvedLyric
   ) {
     return null;
   }
-  const resp = await window.api.lyrics.matchLocalTTML(track);
+  const resp = await window.api.lyrics.matchLocalLyric(track);
   if (!resp.ok || !resp.data) return null;
-  return { source: { source: "external", format: "ttml" }, input: { content: resp.data } };
+  return {
+    source: { source: "external", format: detectFormat(resp.data) },
+    input: { content: resp.data },
+  };
+};
+
+/**
+ * LRCLIB 兜底歌词：歌词链路的最后一环
+ * 平台 API、本地歌词库、在线 TTML 与插件都没给出歌词时才用，只有行级时间戳
+ * @param track - 歌曲信息
+ * @returns 兜底歌词，未命中返回 null
+ */
+export const resolveLrclibLyric = async (track: Track): Promise<ResolvedLyric | null> => {
+  const resp = await requestLrclibLyric(track);
+  if (!resp.ok || !resp.data) return null;
+  return { source: { source: "online", format: "lrc" }, input: { content: resp.data } };
 };
 
 /**
@@ -261,6 +276,7 @@ export const isPluginLyricPreferred = (): boolean =>
 /**
  * 为下一首歌曲解析最终歌词结果
  * 本地歌曲依赖实际加载后的 TrackDetail，不在此处提前解析
+ * LRCLIB 兜底不进预载：不该为可能不播的歌多发一次请求
  * @param track - 候选歌曲
  * @param shouldContinue - 竞态检查
  * @returns 最终歌词，不存在或不支持预载则返回 null

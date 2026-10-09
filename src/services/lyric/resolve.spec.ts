@@ -8,6 +8,7 @@ const mockRequestPlatformLyric = vi.fn();
 vi.mock("./request", () => ({
   requestPlatformLyric: (...args: unknown[]) => mockRequestPlatformLyric(...args),
   requestTTMLOverlay: vi.fn(),
+  requestLrclibLyric: vi.fn(),
 }));
 
 const mockWindowApi = {

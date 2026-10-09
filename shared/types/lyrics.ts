@@ -54,8 +54,8 @@ export interface LyricMatchResult extends LyricInput {
 export type LyricMatchResponse =
   { ok: true; data: LyricMatchResult | null } | { ok: false; error: string };
 
-/** TTML 抓取 IPC 响应 */
-export type LyricTTMLResponse = { ok: true; data: string | null } | { ok: false; error: string };
+/** 歌词原文 IPC 响应（TTML / LRC 等未解析文本） */
+export type LyricTextResponse = { ok: true; data: string | null } | { ok: false; error: string };
 
 /** 渲染端歌词匹配入口 */
 export interface LyricsApi {
@@ -64,9 +64,11 @@ export interface LyricsApi {
   /** 按 Track 元数据在某平台模糊搜索歌词 */
   matchByQuery: (platform: Platform, track: Track) => Promise<LyricMatchResponse>;
   /** 抓取 AMLL TTML DB 的网易云 TTML 歌词 */
-  fetchTTMLOverlay: (track: Track) => Promise<LyricTTMLResponse>;
-  /** 在本地 TTML 歌词库中按元信息匹配，命中返回 TTML 原文 */
-  matchLocalTTML: (track: Track) => Promise<LyricTTMLResponse>;
-  /** 弹出目录选择器，返回所选本地 TTML 歌词库目录 */
+  fetchTTMLOverlay: (track: Track) => Promise<LyricTextResponse>;
+  /** 在本地歌词库（.ttml / .lrc / .txt）中按元信息匹配，命中返回原文 */
+  matchLocalLyric: (track: Track) => Promise<LyricTextResponse>;
+  /** LRCLIB 最后兜底：其它来源都没有歌词时取行级时间戳 LRC */
+  matchLrclib: (track: Track) => Promise<LyricTextResponse>;
+  /** 弹出目录选择器，返回所选本地歌词库目录 */
   pickLyricRepoDir: () => Promise<string | null>;
 }

@@ -4,6 +4,8 @@
  * - lyrics:matchById(platform, id)         按 id 直取
  * - lyrics:matchByQuery(platform, track)   按 Track 元数据模糊搜索
  * - lyrics:fetchTTMLOverlay(track)         抓 AMLL TTML DB 的高质量 TTML
+ * - lyrics:matchLocalLyric(track)          本地歌词库（.ttml / .lrc / .txt）匹配
+ * - lyrics:matchLrclib(track)              LRCLIB 最后兜底
  *
  * 同 key 的并发请求会被 dedup：连按多次切歌只发一次网络。
  */
@@ -11,10 +13,11 @@
 import { ipcMain, dialog } from "electron";
 import * as netease from "@main/apis/common/lyric/netease";
 import { fetchTTML } from "@main/apis/common/lyric/ttml";
-import { matchLocalTTML } from "@main/services/localLyricRepo";
+import { fetchLrclibLyric } from "@main/apis/common/lyric/lrclib";
+import { matchLocalLyric } from "@main/services/localLyricRepo";
 import { buildFingerprint, getMatchedId } from "@main/database/lyricMatchCache";
 import { coreLog } from "@main/utils/logger";
-import type { LyricMatchResponse, LyricTTMLResponse } from "@shared/types/lyrics";
+import type { LyricMatchResponse, LyricTextResponse } from "@shared/types/lyrics";
 import type { Platform } from "@shared/types/platform";
 import type { Track } from "@shared/types/player";
 
@@ -76,7 +79,7 @@ const resolveByQuery = async (platform: Platform, track: Track): Promise<LyricMa
  * - track.source=netease 时先用 track.id / track.extId
  * - 其它情况（本地歌曲）查 match cache 拿数字 id
  */
-const resolveTTMLOverlay = async (track: Track): Promise<LyricTTMLResponse> => {
+const resolveTTMLOverlay = async (track: Track): Promise<LyricTextResponse> => {
   try {
     const ids: string[] = [];
     const push = (v?: string) => {
@@ -96,6 +99,20 @@ const resolveTTMLOverlay = async (track: Track): Promise<LyricTTMLResponse> => {
   }
 };
 
+/**
+ * LRCLIB 最后兜底：平台 API、本地歌词库、在线 TTML 与插件都没给歌词时才由渲染层调用
+ * @param track - 歌曲信息
+ * @returns 行级时间戳 LRC 原文响应
+ */
+const resolveLrclib = async (track: Track): Promise<LyricTextResponse> => {
+  try {
+    return { ok: true, data: await fetchLrclibLyric(track) };
+  } catch (err) {
+    coreLog.warn(`[lyrics] matchLrclib(${track.title}) failed:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+};
+
 export const registerLyricsIpc = (): void => {
   ipcMain.handle("lyrics:matchById", (_evt, platform: Platform, id: string) =>
     dedup(`byId:${platform}:${id}`, () => resolveById(platform, id)),
@@ -107,19 +124,22 @@ export const registerLyricsIpc = (): void => {
     dedup(`ttml:${track.id}`, () => resolveTTMLOverlay(track)),
   );
   ipcMain.handle(
-    "lyrics:matchLocalTTML",
-    async (_evt, track: Track): Promise<LyricTTMLResponse> => {
+    "lyrics:matchLocalLyric",
+    async (_evt, track: Track): Promise<LyricTextResponse> => {
       try {
-        return { ok: true, data: await matchLocalTTML(track) };
+        return { ok: true, data: await matchLocalLyric(track) };
       } catch (err) {
-        coreLog.warn(`[lyrics] matchLocalTTML(${track.title}) failed:`, err);
+        coreLog.warn(`[lyrics] matchLocalLyric(${track.title}) failed:`, err);
         return { ok: false, error: err instanceof Error ? err.message : String(err) };
       }
     },
   );
+  ipcMain.handle("lyrics:matchLrclib", (_evt, track: Track) =>
+    dedup(`lrclib:${track.id}`, () => resolveLrclib(track)),
+  );
   ipcMain.handle("lyrics:pickLyricRepoDir", async (): Promise<string | null> => {
     const result = await dialog.showOpenDialog({
-      title: "选择本地 TTML 歌词库目录",
+      title: "选择本地歌词库目录",
       properties: ["openDirectory"],
     });
     if (result.canceled || result.filePaths.length === 0) return null;

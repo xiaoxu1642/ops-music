@@ -71,3 +71,37 @@ describe("buildLyricSearchKeyword", () => {
     );
   });
 });
+
+// LRCLIB 兜底只有单条结果，接受判定走同一打分器，时长口径即 durationClose / durationFar
+describe("单候选时长闸门", () => {
+  const pickSingle = (candidate: Omit<LyricCandidate<null>, "extra">, target: Track): boolean =>
+    pickBestCandidate([{ ...candidate, extra: null }], target) !== null;
+
+  const synced = { name: "同名歌曲", artist: "目标歌手" };
+
+  it("相差 30s 视为不同曲目，歌名歌手全等也拒绝", () => {
+    assert.equal(pickSingle({ ...synced, duration: 210_000 }, track({})), false);
+  });
+
+  it("相差 8s 但歌名歌手全等时接受，不做二值硬卡", () => {
+    assert.equal(pickSingle({ ...synced, duration: 188_000 }, track({})), true);
+  });
+
+  it("相差 8s 且只靠歌名子串命中、又无歌手佐证时拒绝", () => {
+    assert.equal(
+      pickSingle({ name: "同名歌曲 Live", artist: "", duration: 188_000 }, track({ artists: [] })),
+      false,
+    );
+  });
+
+  it("相差 3s 的歌名子串命中有时长佐证，接受", () => {
+    assert.equal(
+      pickSingle({ name: "同名歌曲 Live", artist: "", duration: 183_000 }, track({ artists: [] })),
+      true,
+    );
+  });
+
+  it("候选没报时长时不因时长否决", () => {
+    assert.equal(pickSingle({ ...synced }, track({})), true);
+  });
+});

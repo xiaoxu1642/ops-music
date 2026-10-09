@@ -22,6 +22,7 @@ const mockResolveOnlineByPreference = vi.fn();
 const mockResolveTTMLOverlay = vi.fn();
 const mockResolveLocalRepoLyric = vi.fn();
 const mockResolvePluginLyric = vi.fn();
+const mockResolveLrclibLyric = vi.fn();
 
 vi.mock("@/services/lyric/resolve", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/services/lyric/resolve")>();
@@ -31,6 +32,7 @@ vi.mock("@/services/lyric/resolve", async (importOriginal) => {
     resolveTTMLOverlay: (...args: unknown[]) => mockResolveTTMLOverlay(...args),
     resolveLocalRepoLyric: (...args: unknown[]) => mockResolveLocalRepoLyric(...args),
     resolvePluginLyric: (...args: unknown[]) => mockResolvePluginLyric(...args),
+    resolveLrclibLyric: (...args: unknown[]) => mockResolveLrclibLyric(...args),
   };
 });
 
@@ -79,6 +81,7 @@ describe("lyric loader", () => {
     mockResolveTTMLOverlay.mockResolvedValue(null);
     mockResolveLocalRepoLyric.mockResolvedValue(null);
     mockResolvePluginLyric.mockResolvedValue(null);
+    mockResolveLrclibLyric.mockResolvedValue(null);
 
     // @ts-expect-error test mock
     window.api = mockWindowApi;
@@ -465,5 +468,34 @@ describe("lyric loader", () => {
     });
     expect(media.activeLyric?.platform).toBe("netease");
     expect(media.parsedLyric[0].words[0].word).toContain("自身平台普通LRC歌词");
+  });
+
+  it("所有来源都没有歌词时，LRCLIB 作为末位兜底上屏", async () => {
+    const media = useMediaStore();
+    media.track = createTrack("song_lrclib");
+    mockResolveLrclibLyric.mockResolvedValue({
+      source: { source: "online", format: "lrc" },
+      input: { content: "[00:01.00]LRCLIB兜底歌词" },
+    });
+
+    await loadForTrack(null);
+
+    expect(media.activeLyric?.format).toBe("lrc");
+    expect(media.parsedLyric[0].words[0].word).toContain("LRCLIB兜底歌词");
+    expect(mockResolveLrclibLyric).toHaveBeenCalledTimes(1);
+  });
+
+  it("在线歌词已上屏时不再请求 LRCLIB", async () => {
+    const media = useMediaStore();
+    media.track = createTrack("song_online_first");
+    mockResolveOnlineByPreference.mockResolvedValue({
+      source: { source: "online", format: "yrc", platform: "netease" },
+      input: { content: "[0,3000](0,1500,0)逐词歌词(1500,1500,0)展示" },
+    });
+
+    await loadForTrack(null);
+
+    expect(media.activeLyric?.format).toBe("yrc");
+    expect(mockResolveLrclibLyric).not.toHaveBeenCalled();
   });
 });

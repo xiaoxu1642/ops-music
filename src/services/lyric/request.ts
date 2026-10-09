@@ -25,3 +25,11 @@ export const requestPlatformLyric = async (
  * @returns IPC 请求结果
  */
 export const requestTTMLOverlay = (track: Track) => window.api.lyrics.fetchTTMLOverlay(track);
+
+/**
+ * 请求 LRCLIB 兜底歌词（行级时间戳 LRC）
+ * 只在所有其它来源都没有歌词时调用
+ * @param track - 歌曲信息
+ * @returns IPC 请求结果
+ */
+export const requestLrclibLyric = (track: Track) => window.api.lyrics.matchLrclib(track);
