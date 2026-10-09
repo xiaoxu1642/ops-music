@@ -17,7 +17,6 @@ import type { PlayEventInput, FavoriteEventInput } from "@shared/types/stats";
 import type { TagEditRequest } from "@shared/types/tagEditor";
 import type { CloudUploadProgress } from "@shared/types/cloudUpload";
 import type { MusicCommentQuery } from "@shared/types/comment";
-import type { AiModelSaveInput } from "@shared/types/ai";
 import type { DesktopLyricUnlockButtonBounds } from "@shared/types/window";
 import type {
   LegacyPlaylistRecord,
@@ -734,12 +733,6 @@ const api = {
       ipcRenderer.removeAllListeners("mcp:status");
       return subscribe<McpStatus>("mcp:status", callback);
     },
-  },
-  aiModel: {
-    list: () => ipcRenderer.invoke("aiModel:list"),
-    save: (input: AiModelSaveInput) => ipcRenderer.invoke("aiModel:save", input),
-    remove: (id: string) => ipcRenderer.invoke("aiModel:remove", id),
-    setActive: (id: string | null) => ipcRenderer.invoke("aiModel:setActive", id),
   },
   stats: {
     // 记录一次播放

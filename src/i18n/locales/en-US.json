@@ -770,7 +770,6 @@
       "lastfm": "Last.fm",
       "externalApi": "External API",
       "mcp": "MCP",
-      "aiModel": "AI Models",
       "systemConfig": "System",
       "pluginManage": "Import Plugins",
       "pluginsList": "Plugin Management",
@@ -1816,38 +1815,6 @@
     "mcpEnabled": {
       "label": "Enable MCP server",
       "description": "Enable the local MCP server so AI Agents can join the app ecosystem and extend capabilities on demand"
-    },
-    "aiModelConfig": {
-      "label": "AI Models",
-      "description": "Configure AI models used by the app"
-    },
-    "aiModel": {
-      "hint": "AI Model Configuration",
-      "hintDetail": "Provides model support for selected AI features in the app",
-      "add": "Add model",
-      "editModel": "Edit model",
-      "empty": "No AI models configured",
-      "emptyHint": "Add an AI model configuration for the app to use",
-      "protocol": "Protocol",
-      "name": "Configuration name",
-      "namePlaceholder": "For example: OpenAI",
-      "baseUrl": "API URL",
-      "apiKey": "API Key",
-      "apiKeyPlaceholder": "Enter API Key",
-      "apiKeySavedPlaceholder": "Saved; leave blank to keep unchanged",
-      "model": "Model ID",
-      "added": "Model added",
-      "updated": "Model updated",
-      "removed": "Model deleted",
-      "activated": "Active model changed",
-      "deleteConfirmTitle": "Delete AI model?",
-      "deleteConfirm": "Delete “{name}”? Its saved API key will also be removed.",
-      "errors": {
-        "nameEmpty": "Enter a configuration name",
-        "urlInvalid": "Enter an API URL starting with http:// or https://",
-        "modelEmpty": "Enter a model ID",
-        "apiKeyEmpty": "Enter an API Key"
-      }
     },
     "mcpPort": {
       "label": "Listen port",

@@ -28,7 +28,6 @@ import { IpcResponse } from "@shared/types/player";
 import { StatsApi } from "@shared/types/stats";
 import { CloudUploadApi } from "@shared/types/cloudUpload";
 import { CommentsApi } from "@shared/types/comment";
-import { AiModelApi } from "@shared/types/ai";
 import { PlaylistApi } from "@shared/types/playlist";
 import { OpenccApi } from "@shared/types/opencc";
 
@@ -131,7 +130,6 @@ declare global {
         injectAgentConfig: (agentId: string, params: McpClientConfigParams) => Promise<boolean>;
         onStatus: (callback: (status: McpStatus) => void) => () => void;
       };
-      aiModel: AiModelApi;
     };
   }
 }

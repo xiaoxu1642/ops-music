@@ -18,7 +18,6 @@ import { registerMcpIpc } from "./mcp";
 import { registerStatsIpc } from "./stats";
 import { registerCloudIpc } from "./cloud";
 import { registerCommentsIpc } from "./comments";
-import { registerAiModelIpc } from "./aiModel";
 import { registerPlaylistIpc } from "./playlist";
 import { registerRecognitionIpc } from "./recognition";
 import { registerOpenccIpc } from "./opencc";
@@ -47,6 +46,5 @@ export const registerIpcHandlers = (): void => {
   registerDownloadIpc();
   registerExternalApiIpc();
   registerMcpIpc();
-  registerAiModelIpc();
   registerStatsIpc();
 };
