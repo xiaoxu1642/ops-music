@@ -836,21 +836,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "discord-rich-presence"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90c55d69cab17c19677ce3a5f8face993a9e6eaf847fecac3547f3a3ff4a2494"
-dependencies = [
- "log",
- "serde",
- "serde_derive",
- "serde_json",
- "serde_repr",
- "thiserror 2.0.20",
- "uuid 0.8.2",
-]
-
-[[package]]
 name = "dispatch2"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1888,7 +1873,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "block2",
- "discord-rich-presence",
  "mpris-server",
  "napi",
  "napi-build",
@@ -2983,7 +2967,7 @@ dependencies = [
  "rend",
  "rkyv_derive",
  "tinyvec",
- "uuid 1.23.0",
+ "uuid",
 ]
 
 [[package]]
@@ -3942,15 +3926,6 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "uuid"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
-dependencies = [
- "getrandom 0.2.17",
-]
-
-[[package]]
-name = "uuid"
 version = "1.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ac8b6f42ead25368cf5b098aeb3dc8a1a2c05a3eee8a9a1a68c640edbfc79d9"
@@ -4551,7 +4526,7 @@ dependencies = [
  "serde_repr",
  "tracing",
  "uds_windows",
- "uuid 1.23.0",
+ "uuid",
  "windows-sys 0.61.2",
  "winnow 0.7.15",
  "zbus_macros",

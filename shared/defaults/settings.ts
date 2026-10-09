@@ -31,11 +31,6 @@ export const defaultSystemConfig: SystemConfig = {
   },
   media: {
     systemMediaControls: true,
-    discord: {
-      enabled: false,
-      showWhenPaused: false,
-      displayMode: "name",
-    },
   },
   library: {
     scanDirs: [],

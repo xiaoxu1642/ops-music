@@ -79,7 +79,7 @@ pub struct MetadataPayload {
 }
 
 impl MetadataPayload {
-    /// 拼接后的歌手文本，供只接受单一字符串的平台（SMTC / MPNowPlaying / Discord）使用
+    /// 拼接后的歌手文本，供只接受单一字符串的平台（SMTC / MPNowPlaying）使用
     pub fn artist_text(&self) -> String {
         self.artists.join(ARTIST_SEPARATOR)
     }
@@ -113,7 +113,7 @@ pub struct MetadataParam {
     pub album: String,
     /// 封面原始字节（用于系统媒体控件）
     pub cover_data: Option<Buffer>,
-    /// 封面 HTTP URL（用于 Discord RPC，Linux 无 cover_data 时也可用）
+    /// 封面 HTTP URL（Linux MPRIS 在无 cover_data 时的兜底）
     pub cover_url: Option<String>,
     /// 时长（毫秒）
     pub duration_ms: Option<f64>,
@@ -170,23 +170,4 @@ pub struct TimelineParam {
 pub struct PlayModeParam {
     pub shuffle: bool,
     pub repeat: RepeatMode,
-}
-
-/// Discord 显示模式
-#[napi(string_enum)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DiscordDisplayMode {
-    /// Listening to SPlayer
-    Name,
-    /// Listening to {artist}
-    State,
-    /// Listening to {title}
-    Details,
-}
-
-#[napi(object)]
-#[derive(Debug, Clone)]
-pub struct DiscordConfig {
-    pub show_when_paused: bool,
-    pub display_mode: Option<DiscordDisplayMode>,
 }

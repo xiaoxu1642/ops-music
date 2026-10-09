@@ -63,25 +63,10 @@ export interface PlayerSettings {
   lyricOffsets: Record<string, number>;
 }
 
-/** Discord 显示模式 */
-export type DiscordDisplayMode = "name" | "state" | "details";
-
-/** Discord RPC 配置 */
-export interface DiscordSettings {
-  /** 是否启用 */
-  enabled: boolean;
-  /** 暂停时是否显示状态 */
-  showWhenPaused: boolean;
-  /** 显示模式 */
-  displayMode: DiscordDisplayMode;
-}
-
 /** 媒体集成配置 */
 export interface MediaSettings {
   /** 是否启用系统媒体控件（SMTC / MPRIS / MPNowPlaying） */
   systemMediaControls: boolean;
-  /** Discord RPC 配置 */
-  discord: DiscordSettings;
 }
 
 /** 桌面歌词对齐方式 */

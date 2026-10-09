@@ -16,8 +16,6 @@ tracing-subscriber = { workspace = true }
 tracing-appender = { workspace = true }
 time = { workspace = true }
 
-# Discord RPC
-discord-rich-presence = "1.0"
 url = "2.5"
 
 [build-dependencies]

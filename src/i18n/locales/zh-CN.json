@@ -716,7 +716,6 @@
       "device": "输出设备",
       "hotkeys": "快捷键",
       "musicSpectrum": "音乐频谱",
-      "discord": "Discord RPC",
       "mcp": "MCP",
       "systemConfig": "系统配置",
       "pluginManage": "导入插件",
@@ -1564,21 +1563,6 @@
     "systemMediaControls": {
       "label": "系统媒体控制",
       "description": "在系统媒体控制中显示当前播放信息"
-    },
-    "discordEnabled": {
-      "label": "Discord 状态",
-      "description": "在 Discord 中显示当前播放状态"
-    },
-    "discordShowWhenPaused": {
-      "label": "暂停时显示",
-      "description": "暂停播放时仍然显示 Discord 状态"
-    },
-    "discordDisplayMode": {
-      "label": "简略状态显示",
-      "description": "不打开详细信息面板时，在用户名下方显示的小字",
-      "name": "应用名",
-      "details": "歌曲名",
-      "state": "歌手名"
     },
     "platformLogin": {
       "title": "登录 {name} 账号",

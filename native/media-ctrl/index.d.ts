@@ -3,29 +3,10 @@
 /** 禁用系统媒体控件 */
 export declare function disable(): void
 
-/** 禁用 Discord RPC */
-export declare function disableDiscord(): void
-
-export interface DiscordConfig {
-  showWhenPaused: boolean
-  displayMode?: DiscordDisplayMode
-}
-
-/** Discord 显示模式 */
-export type DiscordDisplayMode = /** Listening to SPlayer */
-'Name'|
-/** Listening to {artist} */
-'State'|
-/** Listening to {title} */
-'Details';
-
 /** 启用系统媒体控件 */
 export declare function enable(): void
 
-/** 启用 Discord RPC */
-export declare function enableDiscord(): void
-
-/** 初始化系统媒体控件和 Discord RPC 后台线程 */
+/** 初始化系统媒体控件 */
 export declare function initialize(): void
 
 /** 初始化原生日志系统（主进程启动时调用一次） */
@@ -58,7 +39,7 @@ export interface MetadataParam {
   album: string
   /** 封面原始字节（用于系统媒体控件） */
   coverData?: Buffer
-  /** 封面 HTTP URL（用于 Discord RPC，Linux 无 cover_data 时也可用） */
+  /** 封面 HTTP URL（Linux MPRIS 在无 cover_data 时的兜底） */
   coverUrl?: string
   /** 时长（毫秒） */
   durationMs?: number
@@ -83,10 +64,7 @@ export type RepeatMode =  'None'|
 'Track'|
 'List';
 
-/** 更新 Discord RPC 配置 */
-export declare function setDiscordConfig(config: DiscordConfig): void
-
-/** 更新歌曲元数据（同时更新系统媒体控件和 Discord RPC） */
+/** 更新歌曲元数据（系统媒体控件） */
 export declare function setMetadata(param: MetadataParam): void
 
 /** 更新播放模式（随机/循环） */

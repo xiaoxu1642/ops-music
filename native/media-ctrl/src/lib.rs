@@ -1,7 +1,6 @@
-//! 跨平台系统媒体控件（Windows SMTC / Linux MPRIS / macOS MPNowPlaying）+ Discord RPC。
+//! 跨平台系统媒体控件（Windows SMTC / Linux MPRIS / macOS MPNowPlaying）。
 //! 通过 NAPI-RS 暴露给 Node.js，作为 Electron 主进程的原生模块。
 
-mod discord;
 mod logger;
 mod model;
 mod sys_media;
@@ -15,8 +14,7 @@ use napi_derive::napi;
 use tracing::{error, info};
 
 use model::{
-    DiscordConfig, MediaEvent, MetadataParam, MetadataPayload, PlayModeParam, PlayStateParam,
-    TimelineParam,
+    MediaEvent, MetadataParam, MetadataPayload, PlayModeParam, PlayStateParam, TimelineParam,
 };
 
 /// 初始化原生日志系统（主进程启动时调用一次）
@@ -26,11 +24,10 @@ pub fn init_logger(log_dir: String, is_dev: bool) {
     info!(log_dir, is_dev, "media-ctrl 日志系统已初始化");
 }
 
-/// 初始化系统媒体控件和 Discord RPC 后台线程
+/// 初始化系统媒体控件
 #[napi]
 pub fn initialize() -> Result<()> {
     info!("初始化系统媒体控件");
-    discord::init();
     sys_media::get_platform_controls()
         .initialize()
         .map_err(|e| {
@@ -43,8 +40,7 @@ pub fn initialize() -> Result<()> {
 /// 关闭并清理资源
 #[napi]
 pub fn shutdown() {
-    info!("关闭媒体控件和 Discord RPC");
-    discord::shutdown();
+    info!("关闭媒体控件");
     let _ = sys_media::get_platform_controls().shutdown();
 }
 
@@ -76,19 +72,9 @@ pub fn on_event(callback: Function<Unknown<'static>, UnknownReturnValue>) -> Res
         .map_err(|e| napi::Error::from_reason(e.to_string()))
 }
 
-/// 更新歌曲元数据（同时更新系统媒体控件和 Discord RPC）
+/// 更新歌曲元数据（系统媒体控件）
 #[napi]
 pub fn set_metadata(param: MetadataParam) {
-    let discord_payload = MetadataPayload {
-        title: param.title.clone(),
-        artists: param.artists.clone(),
-        album: param.album.clone(),
-        cover_data: None,
-        cover_url: param.cover_url.clone(),
-        duration_ms: param.duration_ms,
-    };
-    discord::update_metadata(discord_payload);
-
     let payload = MetadataPayload::from(param);
     sys_media::get_platform_controls().update_metadata(payload);
 }
@@ -96,7 +82,6 @@ pub fn set_metadata(param: MetadataParam) {
 /// 更新播放状态
 #[napi]
 pub fn set_play_state(param: PlayStateParam) {
-    discord::update_play_state(param);
     sys_media::get_platform_controls().update_playback_status(param);
 }
 
@@ -115,7 +100,6 @@ pub fn set_volume(volume: f64) {
 /// 更新播放进度
 #[napi]
 pub fn set_timeline(param: TimelineParam) {
-    discord::update_timeline(param);
     sys_media::get_platform_controls().update_timeline(param);
 }
 
@@ -123,24 +107,4 @@ pub fn set_timeline(param: TimelineParam) {
 #[napi]
 pub fn set_play_mode(param: PlayModeParam) {
     sys_media::get_platform_controls().update_play_mode(param);
-}
-
-/// 启用 Discord RPC
-#[napi]
-pub fn enable_discord() {
-    info!("启用 Discord RPC");
-    discord::enable();
-}
-
-/// 禁用 Discord RPC
-#[napi]
-pub fn disable_discord() {
-    info!("禁用 Discord RPC");
-    discord::disable();
-}
-
-/// 更新 Discord RPC 配置
-#[napi]
-pub fn set_discord_config(config: DiscordConfig) {
-    discord::update_config(config);
 }

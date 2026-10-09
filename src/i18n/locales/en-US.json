@@ -728,7 +728,6 @@
       "device": "Output Device",
       "hotkeys": "Hotkeys",
       "musicSpectrum": "Music Spectrum",
-      "discord": "Discord RPC",
       "mcp": "MCP",
       "systemConfig": "System",
       "pluginManage": "Import Plugins",
@@ -1576,21 +1575,6 @@
     "systemMediaControls": {
       "label": "System Media Controls",
       "description": "Show playback info in system media controls"
-    },
-    "discordEnabled": {
-      "label": "Discord Status",
-      "description": "Show playback status on Discord"
-    },
-    "discordShowWhenPaused": {
-      "label": "Show When Paused",
-      "description": "Keep Discord status visible when paused"
-    },
-    "discordDisplayMode": {
-      "label": "Brief Status Display",
-      "description": "Text shown below username when detailed panel is not open",
-      "name": "App Name",
-      "details": "Song Name",
-      "state": "Artist Name"
     },
     "platformLogin": {
       "title": "Log in to {name} Account",

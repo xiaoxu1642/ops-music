@@ -3,11 +3,7 @@ import { dialog, ipcMain } from "electron";
 import { store } from "@main/store";
 import type { ConfigPath } from "@main/store/types";
 import { systemLog } from "@main/utils/logger";
-import {
-  enable as enableMedia,
-  disable as disableMedia,
-  reloadDiscordConfig,
-} from "@main/services/media";
+import { enable as enableMedia, disable as disableMedia } from "@main/services/media";
 import {
   setNormalizationEnabled,
   setEqualizerEnabled,
@@ -41,11 +37,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
   switch (keyPath) {
     case "media.systemMediaControls":
       value ? enableMedia() : disableMedia();
-      break;
-    case "media.discord.enabled":
-    case "media.discord.showWhenPaused":
-    case "media.discord.displayMode":
-      reloadDiscordConfig();
       break;
     case "player.loudnessNormalization":
       setNormalizationEnabled(value as boolean);
