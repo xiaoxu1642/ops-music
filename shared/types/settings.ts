@@ -93,10 +93,6 @@ export interface TaskbarLyricSettings {
   colorMode: TaskbarLyricColorMode;
   /** 获焦时显示半透明背景 */
   showBackground: boolean;
-  /** Windows 11 原生 Acrylic 背景；Win10 无此合成后端，开关不生效 */
-  acrylicEnabled: boolean;
-  /** Acrylic 模糊半径（逻辑像素，2~24）；系统不按它控制模糊量，实际体现为染色浓度 */
-  acrylicRadius: number;
   /** 双行显示（歌词 + 翻译 / 下一行） */
   doubleLine: boolean;
   /** 显示翻译（doubleLine 开启时，副行优先显示翻译，没有翻译则回退到下一行） */

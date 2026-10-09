@@ -1174,14 +1174,6 @@
       "label": "显示背景",
       "description": "获焦时显示半透明背景，增强歌词与任务栏的区分"
     },
-    "taskbarLyricAcrylicEnabled": {
-      "label": "原生亚克力背景",
-      "description": "仅 Windows 11 生效：由系统合成 Acrylic 背景，替代获焦时的半透明底色"
-    },
-    "taskbarLyricAcrylicRadius": {
-      "label": "亚克力半径",
-      "description": "模糊半径 2~24 像素；系统不据此改变模糊量，越大则背景染色越浓"
-    },
     "taskbarLyricFontSize": {
       "label": "字号",
       "description": "任务栏歌词的文字大小（像素）"

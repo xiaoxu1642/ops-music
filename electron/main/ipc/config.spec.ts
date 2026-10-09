@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   replaceAll: vi.fn(),
   broadcast: vi.fn(),
   applyTaskbarLyricLayout: vi.fn(),
-  applyTaskbarLyricAcrylic: vi.fn(),
 }));
 vi.mock("electron", () => ({
   dialog: {},
@@ -30,10 +29,7 @@ vi.mock("@main/utils/config", () => ({ isWin: true }));
 vi.mock("@main/utils/broadcast", () => ({ broadcast: mocks.broadcast }));
 vi.mock("@main/services/media", () => ({}));
 vi.mock("@main/services/engine", () => ({}));
-vi.mock("@main/window", () => ({
-  applyTaskbarLyricLayout: mocks.applyTaskbarLyricLayout,
-  applyTaskbarLyricAcrylic: mocks.applyTaskbarLyricAcrylic,
-}));
+vi.mock("@main/window", () => ({ applyTaskbarLyricLayout: mocks.applyTaskbarLyricLayout }));
 vi.mock("@main/services/mcp/http", () => ({}));
 vi.mock("@main/services/orpheus", () => ({}));
 vi.mock("@main/services/thumbnail", () => ({}));
@@ -69,13 +65,6 @@ describe("配置 IPC 入口", () => {
     mocks.get.mockReturnValue(config);
     mocks.handlers.get("config:set")!(null, "taskbarLyric.position", "left");
     expect(mocks.applyTaskbarLyricLayout).toHaveBeenCalledOnce();
-    expect(mocks.applyTaskbarLyricAcrylic).not.toHaveBeenCalled();
     expect(mocks.broadcast).toHaveBeenCalledWith("taskbarLyric:configChange", config);
-  });
-
-  it("Acrylic 配置变更只重设背景，不重扫任务栏布局", () => {
-    mocks.handlers.get("config:set")!(null, "taskbarLyric.acrylicRadius", 12);
-    expect(mocks.applyTaskbarLyricAcrylic).toHaveBeenCalledOnce();
-    expect(mocks.applyTaskbarLyricLayout).not.toHaveBeenCalled();
   });
 });

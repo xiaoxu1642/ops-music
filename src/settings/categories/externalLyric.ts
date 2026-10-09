@@ -87,24 +87,6 @@ const taskbarLyricSection: SettingSection = {
       defaultValue: false,
     },
     {
-      key: "taskbarLyricAcrylicEnabled",
-      type: "switch",
-      binding: { store: "settings", path: "system.taskbarLyric.acrylicEnabled" },
-      defaultValue: true,
-    },
-    {
-      key: "taskbarLyricAcrylicRadius",
-      type: "slider",
-      binding: { store: "settings", path: "system.taskbarLyric.acrylicRadius" },
-      visible: () => useSettingsStore().system.taskbarLyric.acrylicEnabled === true,
-      // 2~24px：0 是内部"关闭 accent"的取值，不让滑块落在它上面
-      min: 2,
-      max: 24,
-      step: 2,
-      defaultValue: 8,
-      marks: { 2: "2", 8: "8", 24: "24" },
-    },
-    {
       key: "taskbarLyricFontSize",
       type: "slider",
       binding: { store: "settings", path: "system.taskbarLyric.fontSize" },

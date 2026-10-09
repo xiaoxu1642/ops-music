@@ -1183,14 +1183,6 @@
       "label": "Show Background",
       "description": "Show a translucent background while focused"
     },
-    "taskbarLyricAcrylicEnabled": {
-      "label": "Acrylic Background",
-      "description": "Windows 11 only: composite a native Acrylic background instead of the translucent hover tint"
-    },
-    "taskbarLyricAcrylicRadius": {
-      "label": "Acrylic Radius",
-      "description": "Blur radius from 2 to 24 px; the system keeps its own blur amount, larger values tint the backdrop stronger"
-    },
     "taskbarLyricFontSize": {
       "label": "Font Size",
       "description": "Taskbar lyric text size (px)"

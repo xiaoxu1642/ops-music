@@ -36,8 +36,6 @@ export const defaultSystemConfig: SystemConfig = {
     rightMargin: 0,
     colorMode: "taskbar",
     showBackground: false,
-    acrylicEnabled: true,
-    acrylicRadius: 8,
     doubleLine: true,
     showTranslation: true,
     showCover: true,

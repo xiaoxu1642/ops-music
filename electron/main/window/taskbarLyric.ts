@@ -1,7 +1,6 @@
 import { BrowserWindow, screen } from "electron";
 import { join } from "path";
 import { is } from "@electron-toolkit/utils";
-import { colord } from "colord";
 import { createWindow } from "./create";
 import { isTaskbarLyricPresentationShown } from "./taskbarLyricPresentation";
 import { loadNativeModule } from "@main/utils/nativeLoader";
@@ -26,15 +25,6 @@ type TaskbarLyricNative = typeof import("@splayer/taskbar-lyric");
 const REG_SUBKEY_EXPLORER_ADVANCED =
   "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
 const REG_SUBKEY_PERSONALIZE = "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
-
-/** Acrylic 染色底色，沿用歌词背景的两套语义：浅色任务栏压暗、深色任务栏提亮 */
-const ACRYLIC_TINT_LIGHT_TASKBAR = "#000000";
-const ACRYLIC_TINT_DARK_TASKBAR = "#ffffff";
-/** 染色 alpha 区间：半径拉满也只到 0.18，避免盖住任务栏本身 */
-const ACRYLIC_TINT_MIN_ALPHA = 0.08;
-const ACRYLIC_TINT_MAX_ALPHA = 0.18;
-/** 半径上限，与设置滑块的 max 一致，用于把半径线性换算成染色浓度 */
-const ACRYLIC_MAX_RADIUS = 24;
 
 type AnchorSide = "left" | "right";
 
@@ -62,13 +52,6 @@ interface ActiveWindowRegion {
 
 let activeWindowRegion: ActiveWindowRegion | null = null;
 let contentWidth: number | null = null;
-
-/** 嵌入用的 HWND 数值，ready-to-show 校验过安全整数范围后记下，供 Acrylic 复用 */
-let embeddedHwnd: number | null = null;
-/** 最近一次布局回调的任务栏策略，Acrylic 只在 "win11" 下启用 */
-let layoutSystemType: string | null = null;
-/** 最近一次布局回调的任务栏浅深色，决定 Acrylic 染色底色 */
-let taskbarIsLight = false;
 
 /** 从设置读取当前歌词宽度（Win10 据此从 tasklist 划空间，Win11 忽略） */
 const resolveLyricWidth = (): number => {
@@ -152,45 +135,6 @@ export const updateTaskbarLyricContentWidth = (width: number): void => {
   applyContentShape();
 };
 
-/**
- * 把染色底色与半径换算成 accent 接口要的 0xAABBGGRR
- *
- * Win11 不按半径控制模糊量（系统固定），可见强度落在染色 alpha 上，故半径同步换算 alpha
- * @param hex - 染色底色
- * @param radius - Acrylic 半径（px）
- * @returns 0xAABBGGRR 整数
- */
-const toAccentColor = (hex: string, radius: number): number => {
-  const { r, g, b } = colord(hex).toRgb();
-  const ratio = radius / ACRYLIC_MAX_RADIUS;
-  const alpha = Math.round(
-    255 * (ACRYLIC_TINT_MIN_ALPHA + (ACRYLIC_TINT_MAX_ALPHA - ACRYLIC_TINT_MIN_ALPHA) * ratio),
-  );
-  return ((alpha << 24) | (b << 16) | (g << 8) | r) >>> 0;
-};
-
-/**
- * 按设置应用或清除原生 Acrylic 背景
- *
- * 关闭时以半径 0 调一次，走原生 DISABLED 分支撤销 accent，不给窗口留常驻合成层；
- * Win10（含第三方任务栏回退成的 Legacy 策略）不碰 accent，背景仍由渲染层的半透明底色负责
- */
-export const applyTaskbarLyricAcrylic = (): void => {
-  const win = getTaskbarLyricWindow();
-  const mod = nativeModule;
-  if (!win || !mod || !embeddedHwnd || layoutSystemType !== "win11") return;
-
-  const enabled = store.get("taskbarLyric.acrylicEnabled") ?? false;
-  const radius = enabled ? (store.get("taskbarLyric.acrylicRadius") ?? 0) : 0;
-  const hex = taskbarIsLight ? ACRYLIC_TINT_LIGHT_TASKBAR : ACRYLIC_TINT_DARK_TASKBAR;
-  // 原生侧同步抛错（无效句柄、接口调用失败），try/catch 才接得住，Promise 风格在这里会漏
-  try {
-    mod.setAcrylic(embeddedHwnd, radius, toAccentColor(hex, radius));
-  } catch (error) {
-    taskbarLog.warn("Acrylic 背景设置失败", error);
-  }
-};
-
 /** 根据设置和任务栏对齐方式选择使用哪侧空间以及锚定方向 */
 const pickSpace = (layout: JsTaskbarLayout): PickedSpace | null => {
   const position: TaskbarLyricPosition = store.get("taskbarLyric.position") ?? "auto";
@@ -232,11 +176,6 @@ const hideIfVisible = (win: BrowserWindow): void => {
 const applyLayout = (layout: JsTaskbarLayout): void => {
   const win = getTaskbarLyricWindow();
   if (!win) return;
-
-  // 背景与布局同源：策略判定和任务栏浅深色都只在这次回调里拿到，先应用背景再算位置
-  layoutSystemType = layout.extra.systemType;
-  taskbarIsLight = layout.extra.isLight;
-  applyTaskbarLyricAcrylic();
 
   const picked = pickSpace(layout);
   if (!picked) {
@@ -421,7 +360,6 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
     }
     const hwndPtr = Number(hwndPtrBigInt);
     taskbarLog.info(`嵌入窗口 hwnd=${hwndPtr}`);
-    embeddedHwnd = hwndPtr;
     svc.embedWindowByPtr(hwndPtr);
     svc.update(resolveLyricWidth());
     startWatchers(mod);
@@ -437,9 +375,6 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
     shownByModule = false;
     activeWindowRegion = null;
     contentWidth = null;
-    embeddedHwnd = null;
-    layoutSystemType = null;
-    taskbarIsLight = false;
     cleanupWatchers();
     setTrayTaskbarLyric(false);
     broadcast("taskbarLyric:visibilityChange", false);
