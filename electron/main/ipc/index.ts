@@ -13,7 +13,6 @@ import { registerStreamingIpc } from "./streaming";
 import { registerLastfmIpc } from "./lastfm";
 import { registerCacheIpc } from "./cache";
 import { registerDownloadIpc } from "./download";
-import { registerExternalApiIpc } from "./externalApi";
 import { registerMcpIpc } from "./mcp";
 import { registerStatsIpc } from "./stats";
 import { registerCloudIpc } from "./cloud";
@@ -42,7 +41,6 @@ export const registerIpcHandlers = (): void => {
   registerLastfmIpc();
   registerCacheIpc();
   registerDownloadIpc();
-  registerExternalApiIpc();
   registerMcpIpc();
   registerStatsIpc();
 };

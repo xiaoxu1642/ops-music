@@ -9,7 +9,6 @@ import { extname } from "node:path";
 import { app, ipcMain, powerMonitor } from "electron";
 import { sendToMain } from "@main/utils/broadcast";
 import { readFileAutoEncoding } from "@main/utils/encoding";
-import { wsBroadcast } from "@main/server/broadcast";
 import { toCacheUrl } from "@main/utils/protocol";
 import { toMs } from "@main/utils/time";
 import * as mediaService from "@main/services/media";
@@ -159,12 +158,10 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
           },
         };
         sendToMain("player:event", statusEvent);
-        wsBroadcast(statusEvent);
         break;
       }
       case "ended": {
         sendToMain("player:event", { type: "ended" });
-        wsBroadcast({ type: "ended" });
         mediaService.setPlayState({ status: "Paused" });
         lastfm.onEnded();
         neteaseScrobble.onEnded();
@@ -202,7 +199,6 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
         };
         // 主窗口隐藏时跳过高频推送
         if (getMainWindow()?.isVisible()) sendToMain("player:event", positionEvent);
-        wsBroadcast(positionEvent);
         mediaService.setTimeline({ currentMs: posMs, totalMs: durMs });
         nowPlaying.onPosition(posMs, true);
         lastfm.onPosition();
@@ -222,13 +218,11 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
           data: { active: event.transitionActive ?? false, mode: "crossfade" },
         } as const;
         sendToMain("player:event", transitionEvent);
-        wsBroadcast(transitionEvent);
         break;
       }
       case "fftData": {
         const fftEvent = { type: "fftData", data: event.fftData ?? { ldata: [], rdata: [] } };
         if (getMainWindow()?.isVisible()) sendToMain("player:event", fftEvent);
-        wsBroadcast(fftEvent);
         break;
       }
       case "outputFailed": {
@@ -476,7 +470,6 @@ export const registerPlayerIpc = (): void => {
         },
       };
       sendToMain("player:event", loadingEvent);
-      wsBroadcast(loadingEvent);
       // 在线封面原图 URL
       const remoteCover =
         authoritative && authoritative.source !== "local"
@@ -991,7 +984,6 @@ export const registerPlayerIpc = (): void => {
       data: { state: "stopped", position: 0, duration: 0, volume: 1, speed: 1, isFinished: false },
     };
     sendToMain("player:event", stoppedEvent);
-    wsBroadcast(stoppedEvent);
   };
   powerMonitor.on("resume", resumeHandler);
   // 退出前停止设备监听并释放休眠抑制

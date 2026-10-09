@@ -29,7 +29,6 @@ import {
 } from "@main/window";
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
-import { startServer, stopServer } from "@main/server";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
 import { setOrpheusProtocolRegistered } from "@main/services/orpheus";
 import { setTaskbarThumbnailEnabled } from "@main/services/thumbnail";
@@ -81,9 +80,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
       break;
     case "system.registerOrpheusProtocol":
       setOrpheusProtocolRegistered(value as boolean);
-      break;
-    case "externalApi.enabled":
-      void (value ? startServer() : stopServer());
       break;
     case "mcp.enabled":
       void (value ? startMcpServer() : stopMcpServer());

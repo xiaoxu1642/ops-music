@@ -29,7 +29,6 @@ vi.mock("@main/services/media", () => ({}));
 vi.mock("@main/services/lastfm", () => ({}));
 vi.mock("@main/services/engine", () => ({}));
 vi.mock("@main/window", () => ({}));
-vi.mock("@main/server", () => ({}));
 vi.mock("@main/services/mcp/http", () => ({}));
 vi.mock("@main/services/orpheus", () => ({}));
 vi.mock("@main/services/thumbnail", () => ({}));

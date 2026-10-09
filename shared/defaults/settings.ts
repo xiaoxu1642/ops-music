@@ -135,12 +135,6 @@ export const defaultSystemConfig: SystemConfig = {
     nowPlaying: true,
     loveSync: true,
   },
-  externalApi: {
-    enabled: false,
-    wsEnabled: false,
-    allowLan: false,
-    port: 14558,
-  },
   mcp: {
     enabled: false,
     port: 14559,

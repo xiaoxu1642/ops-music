@@ -1,7 +1,7 @@
 import os from "os";
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-import type { ExternalApiStatus, McpStatus, TaskbarLyricSettings } from "@shared/types/settings";
+import type { McpStatus, TaskbarLyricSettings } from "@shared/types/settings";
 import type {
   PluginInfo,
   PluginResolveUrlArgs,
@@ -674,17 +674,6 @@ const api = {
     // 同步喜欢
     love: (artist: string, track: string, loved: boolean) =>
       ipcRenderer.invoke("lastfm:love", artist, track, loved),
-  },
-  externalApi: {
-    // 重启外部 API 服务
-    restart: () => ipcRenderer.invoke("externalApi:restart"),
-    // 查询当前运行状态
-    getStatus: () => ipcRenderer.invoke("externalApi:getStatus"),
-    // 订阅外部 API 服务状态变化
-    onStatus: (callback: (status: ExternalApiStatus) => void) => {
-      ipcRenderer.removeAllListeners("externalApi:status");
-      return subscribe<ExternalApiStatus>("externalApi:status", callback);
-    },
   },
   mcp: {
     // 重启 MCP 服务

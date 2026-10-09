@@ -230,18 +230,6 @@ export interface StreamingSettings {
   enabled: boolean;
 }
 
-/** 外部 API 服务配置 */
-export interface ExternalApiSettings {
-  /** 总开关 */
-  enabled: boolean;
-  /** WebSocket 子开关 */
-  wsEnabled: boolean;
-  /** 允许局域网访问；关闭时仅监听 127.0.0.1 */
-  allowLan: boolean;
-  /** 监听端口 */
-  port: number;
-}
-
 /** MCP 服务配置 */
 export interface McpSettings {
   /** 服务开关 */
@@ -250,20 +238,6 @@ export interface McpSettings {
   port: number;
   /** 本机客户端连接密钥，由主进程首次使用时生成 */
   accessKey: string;
-}
-
-/** 外部 API 服务运行时状态 */
-export interface ExternalApiStatus {
-  /** 是否正在监听 */
-  listening: boolean;
-  /** 实际生效的局域网开关（监听时绑定的模式，与配置项比对判断是否待重启） */
-  allowLan: boolean;
-  /** 展示用主机地址：仅本机时为 127.0.0.1，开放局域网时为本机局域网 IP */
-  host: string | null;
-  /** 实际监听端口 */
-  port: number | null;
-  /** 上次启动失败的错误 */
-  error: { code: string; message: string } | null;
 }
 
 /** MCP 服务运行时状态 */
@@ -436,8 +410,6 @@ export interface SystemConfig {
   streaming: StreamingSettings;
   /** Last.fm 集成配置 */
   lastfm: LastfmSettings;
-  /** 外部 API 服务（HTTP + WS） */
-  externalApi: ExternalApiSettings;
   /** AI 集成使用的 MCP 服务 */
   mcp: McpSettings;
   /** 系统配置 */

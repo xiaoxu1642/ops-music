@@ -730,7 +730,6 @@
       "musicSpectrum": "Music Spectrum",
       "discord": "Discord RPC",
       "lastfm": "Last.fm",
-      "externalApi": "External API",
       "mcp": "MCP",
       "systemConfig": "System",
       "pluginManage": "Import Plugins",
@@ -1691,29 +1690,6 @@
     "streamingEnabled": {
       "label": "Enable streaming",
       "description": "When disabled, the media sources entry is hidden from the sidebar"
-    },
-    "externalApiEnabled": {
-      "label": "Allow external control",
-      "description": "Let external apps control the player via the API"
-    },
-    "externalApiWs": {
-      "label": "Enable WebSocket",
-      "description": "External apps can subscribe to events and send commands"
-    },
-    "externalApiAllowLan": {
-      "label": "Allow LAN access",
-      "description": "Other devices on your network can reach the API via this device's IP; when off, only this device can connect"
-    },
-    "externalApiPort": {
-      "label": "Listen port",
-      "description": "TCP port for the external API (1024–65535)"
-    },
-    "externalApi": {
-      "restart": "Restart server",
-      "restarted": "Server restarted",
-      "portInUse": "Port {port} is already in use, pick another",
-      "running": "Server is running",
-      "stopped": "Server not running"
     },
     "mcpEnabled": {
       "label": "Enable MCP server",

@@ -65,7 +65,6 @@ vi.mock("@main/services/device", () => ({
   stopDeviceMonitoring: vi.fn(),
 }));
 vi.mock("@main/utils/broadcast", () => ({ sendToMain: vi.fn() }));
-vi.mock("@main/server/broadcast", () => ({ wsBroadcast: vi.fn() }));
 vi.mock("@main/utils/encoding", () => ({}));
 vi.mock("@main/utils/protocol", () => ({ toCacheUrl: () => undefined }));
 vi.mock("@main/utils/config", () => ({ appName: "SPlayer", getSongCacheDir: () => "cache" }));

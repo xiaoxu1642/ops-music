@@ -718,7 +718,6 @@
       "musicSpectrum": "音乐频谱",
       "discord": "Discord RPC",
       "lastfm": "Last.fm",
-      "externalApi": "外部 API",
       "mcp": "MCP",
       "systemConfig": "系统配置",
       "pluginManage": "导入插件",
@@ -1679,29 +1678,6 @@
     "streamingEnabled": {
       "label": "启用流媒体",
       "description": "关闭后将隐藏侧边栏的媒体源入口"
-    },
-    "externalApiEnabled": {
-      "label": "允许外部控制",
-      "description": "允许外部应用通过 API 控制播放器"
-    },
-    "externalApiWs": {
-      "label": "启用 WebSocket",
-      "description": "外部应用可订阅播放事件并发送控制指令"
-    },
-    "externalApiAllowLan": {
-      "label": "允许局域网访问",
-      "description": "开启后局域网内的其他设备可通过本机 IP 访问，关闭时仅本机可访问"
-    },
-    "externalApiPort": {
-      "label": "监听端口",
-      "description": "外部 API 服务监听的端口（1024–65535）"
-    },
-    "externalApi": {
-      "restart": "重启服务",
-      "restarted": "服务已重启",
-      "portInUse": "端口 {port} 已被占用，请换一个",
-      "running": "服务运行中",
-      "stopped": "服务未运行"
     },
     "mcpEnabled": {
       "label": "启用 MCP 服务",

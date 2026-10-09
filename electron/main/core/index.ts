@@ -23,7 +23,6 @@ import {
   dispose as disposePlaybackBridge,
 } from "@main/plugins/playbackBridge";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
-import { startServer, stopServer } from "@main/server";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
 import { coreLog, initLogger } from "@main/utils/logger";
 import {
@@ -135,8 +134,6 @@ export const initApp = (): void => {
     restoreLyricWindows();
     // 注册全局快捷键
     initGlobalHotkey();
-    // 启动外部 API 服务
-    void startServer();
     // 启动 AI 集成 MCP 服务
     void startMcpServer();
     // 周期记录各进程内存
@@ -163,7 +160,6 @@ export const initApp = (): void => {
     coreLog.info("应用即将退出，清理资源");
     shutdownMedia();
     closeDatabase();
-    void stopServer();
     void stopMcpServer();
     void pluginRegistry.shutdown();
     disposePlaybackBridge();

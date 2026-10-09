@@ -2,7 +2,6 @@ import { ElectronAPI } from "@electron-toolkit/preload";
 import { PlayerApi, TrackSource } from "@shared/types/player";
 import {
   ConfigApi,
-  ExternalApiStatus,
   LocaleCode,
   McpClientConfigParams,
   McpAgentApp,
@@ -113,11 +112,6 @@ declare global {
       hotkey: HotkeyApi;
       streaming: StreamingApi;
       lastfm: LastfmApi;
-      externalApi: {
-        restart: () => Promise<ExternalApiStatus>;
-        getStatus: () => Promise<ExternalApiStatus>;
-        onStatus: (callback: (status: ExternalApiStatus) => void) => () => void;
-      };
       mcp: {
         restart: () => Promise<McpStatus>;
         getStatus: () => Promise<McpStatus>;

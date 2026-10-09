@@ -1,6 +1,5 @@
 import { ipcMain } from "electron";
 import { broadcast } from "@main/utils/broadcast";
-import { wsBroadcast } from "@main/server/broadcast";
 import * as nowPlaying from "@main/services/nowPlaying";
 import type { NowPlayingUpdatePayload } from "@shared/types/nowPlaying";
 
@@ -22,15 +21,12 @@ export const registerNowPlayingIpc = (): void => {
   // position-sync 高频（5Hz），WS 端走 HIGH_FREQ_EVENTS 过滤自动跳过
   nowPlaying.onTrackChange((data) => {
     broadcast("nowPlaying:track-change", data);
-    wsBroadcast({ type: "track", data });
   });
   nowPlaying.onLyricChange((snap) => {
     broadcast("nowPlaying:lyric-change", snap);
-    wsBroadcast({ type: "lyric", data: { source: snap.source, lyric: snap.lyric } });
   });
   nowPlaying.onPositionSync((data) => broadcast("nowPlaying:position-sync", data, true));
   nowPlaying.onLyricOffsetChange((data) => {
     broadcast("nowPlaying:lyric-offset-change", data);
-    wsBroadcast({ type: "lyricOffset", data });
   });
 };
