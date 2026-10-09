@@ -1,7 +1,6 @@
 import type { SettingCategory } from "@/types/settings-schema";
 import { useSettingsStore } from "@/stores/settings";
 import { useThemeStore } from "@/stores/theme";
-import FontConfig from "@/components/settings/custom/FontConfig.vue";
 import BackgroundImagePicker from "@/components/settings/custom/BackgroundImagePicker.vue";
 import SidebarCustomizeConfig from "@/components/settings/custom/SidebarCustomizeConfig.vue";
 import IconLucidePalette from "~icons/lucide/palette";
@@ -111,16 +110,6 @@ const appearanceCategory: SettingCategory = {
               marks: { 1: "1", 1.2: "1.2", 2: "2" },
             },
           ],
-        },
-      ],
-    },
-    {
-      id: "font",
-      items: [
-        {
-          key: "fontConfig",
-          type: "custom",
-          component: FontConfig,
         },
       ],
     },

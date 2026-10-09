@@ -723,7 +723,6 @@
       "theme": "Theme",
       "appearanceStyle": "Appearance Style",
       "layout": "Layout",
-      "font": "Fonts",
       "playerBar": "Player Bar",
       "nowPlaying": "Now Playing",
       "media": "Media Controls",
@@ -1576,38 +1575,6 @@
     "showQualitySwitch": {
       "label": "Show Quick Quality Switch",
       "description": "Show the online audio quality tag in the player bar for quick switching"
-    },
-    "fontConfig": {
-      "label": "Font Settings",
-      "description": "Configure fonts for the app, lyrics, and external lyric windows",
-      "title": "Font Settings",
-      "loading": "Loading system fonts",
-      "placeholder": "Enter a font name",
-      "useSystem": "System default",
-      "useGlobal": "Follow global",
-      "useLyric": "Follow lyric",
-      "modeLabel": "Input method",
-      "modeHint": "All fields below use this method",
-      "modeSelect": "Manual pick",
-      "modeCustom": "Custom font",
-      "resetRow": "Reset to default",
-      "fieldLabel": "{name} font",
-      "groups": {
-        "general": "General",
-        "appLyric": "Lyric Font",
-        "externalLyric": "External Lyric Windows"
-      },
-      "fields": {
-        "global": "global",
-        "lyric": "lyrics",
-        "lyricChinese": "Chinese lyrics",
-        "lyricJapanese": "Japanese lyrics",
-        "lyricKorean": "Korean lyrics",
-        "lyricLatin": "English / Latin-script lyrics",
-        "desktopLyric": "desktop lyric",
-        "dynamicIsland": "dynamic island lyric",
-        "taskbarLyric": "taskbar lyric"
-      }
     },
     "systemMediaControls": {
       "label": "System Media Controls",

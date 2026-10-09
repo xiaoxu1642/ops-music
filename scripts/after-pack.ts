@@ -29,10 +29,7 @@ const afterPack = async (context: AfterPackContext): Promise<void> => {
       : "resources",
   );
 
-  await Promise.all([
-    trimBetterSqlite3(resourceDir, context),
-    trimFontListLibs(resourceDir, context),
-  ]);
+  await Promise.all([trimBetterSqlite3(resourceDir, context)]);
 };
 
 const trimBetterSqlite3 = async (resourceDir: string, context: AfterPackContext) => {
@@ -69,20 +66,6 @@ const trimBetterSqlite3 = async (resourceDir: string, context: AfterPackContext)
         tryRm(join(dir, "lib", `${fileName}.js`), { force: true }),
       );
     }
-  }
-
-  await Promise.all(deletePromises);
-};
-
-const trimFontListLibs = async (resourceDir: string, context: AfterPackContext) => {
-  const dir = join(resourceDir, "app.asar.unpacked/node_modules/font-list/libs/");
-  const allPlatform = ["win32", "darwin", "linux"];
-  const keepPlatform = new Set<string>([context.electronPlatformName]);
-
-  const deletePromises: Promise<void>[] = [];
-  for (const platform of allPlatform) {
-    if (keepPlatform.has(platform)) continue;
-    deletePromises.push(tryRm(join(dir, platform), { recursive: true, force: true }));
   }
 
   await Promise.all(deletePromises);

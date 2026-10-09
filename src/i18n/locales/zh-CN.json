@@ -711,7 +711,6 @@
       "theme": "主题与颜色",
       "appearanceStyle": "外观风格",
       "layout": "布局",
-      "font": "字体",
       "playerBar": "播放栏",
       "nowPlaying": "播放页",
       "media": "媒体控制",
@@ -1564,38 +1563,6 @@
     "showQualitySwitch": {
       "label": "显示快捷音质切换",
       "description": "在播放栏显示在线音质标签，可点击快速切换音质"
-    },
-    "fontConfig": {
-      "label": "字体配置",
-      "description": "统一配置应用、歌词和外部歌词窗口的字体",
-      "title": "字体配置",
-      "loading": "正在加载系统字体",
-      "placeholder": "输入字体名称",
-      "useSystem": "系统默认",
-      "useGlobal": "跟随全局",
-      "useLyric": "跟随歌词",
-      "modeLabel": "设置方式",
-      "modeHint": "下方所有字段统一使用该方式",
-      "modeSelect": "手动选择",
-      "modeCustom": "自定义字体",
-      "resetRow": "恢复默认",
-      "fieldLabel": "{name}字体",
-      "groups": {
-        "general": "通用字体",
-        "appLyric": "歌词字体",
-        "externalLyric": "外部歌词字体"
-      },
-      "fields": {
-        "global": "全局",
-        "lyric": "歌词",
-        "lyricChinese": "中文歌词",
-        "lyricJapanese": "日语歌词",
-        "lyricKorean": "韩语歌词",
-        "lyricLatin": "英语 / 拉丁文字歌词",
-        "desktopLyric": "桌面歌词",
-        "dynamicIsland": "灵动岛歌词",
-        "taskbarLyric": "任务栏歌词"
-      }
     },
     "systemMediaControls": {
       "label": "系统媒体控制",

@@ -53,7 +53,6 @@ declare global {
         onOpenSettings: (
           callback: (payload: { category?: string; highlight?: string }) => void,
         ) => () => void;
-        listFonts: () => Promise<string[]>;
         fetchRemoteBytes: (url: string) => Promise<IpcResponse<Buffer | null>>;
         saveFile: (
           data: ArrayBuffer,

@@ -42,7 +42,7 @@ html,
 body {
   background-color: var(--s-app-bg);
   color: rgb(var(--s-on-surface));
-  font-family: var(--user-font, var(--app-font));
+  font-family: var(--app-font);
 }
 
 /* 主区域容器 */

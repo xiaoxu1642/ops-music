@@ -193,8 +193,6 @@ const api = {
     // 主窗口监听"打开设置"事件
     onOpenSettings: (callback: (payload: { category?: string; highlight?: string }) => void) =>
       subscribe<{ category?: string; highlight?: string }>("system:openSettings", callback),
-    // 获取系统已安装字体
-    listFonts: () => ipcRenderer.invoke("system:listFonts"),
     // 拉远端字节回渲染层
     fetchRemoteBytes: (url: string) => ipcRenderer.invoke("system:fetchRemoteBytes", url),
     // 保存文件到下载目录

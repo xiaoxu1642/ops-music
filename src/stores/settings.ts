@@ -120,7 +120,6 @@ export const useSettingsStore = defineStore(
       showQualitySwitch: false,
       closeAction: "hide",
       rememberCloseChoice: false,
-      fontFamily: "",
       showPerformanceMonitor: false,
     });
 

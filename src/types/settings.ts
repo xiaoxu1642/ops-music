@@ -301,8 +301,6 @@ export interface AppearanceSettings {
   closeAction: "quit" | "hide";
   /** 记忆关闭选择 */
   rememberCloseChoice: boolean;
-  /** 全局字体 */
-  fontFamily: string;
   /** 性能监视器悬浮卡片 */
   showPerformanceMonitor: boolean;
 }
