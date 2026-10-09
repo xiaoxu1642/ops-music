@@ -63,3 +63,11 @@ export interface JsTaskbarLayout {
   space: JsAvailableSpace
   extra: JsExtraLayoutInfo
 }
+
+/**
+ * 给窗口应用或清除原生 Acrylic 背景：`radius = 0` 走 DISABLED 分支，是唯一关闭路径
+ *
+ * `hwnd` 为 Electron BrowserWindow 的 native handle，`tint` 是 JS 侧换算好的 0xAABBGGRR。
+ * 仅在 Windows 11 调用（Win10 没有这套合成后端），门控在 JS 侧按任务栏策略判定
+ */
+export declare function setAcrylic(hwnd: number, radius: number, tint: number): void

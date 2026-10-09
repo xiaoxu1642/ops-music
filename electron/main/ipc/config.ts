@@ -11,7 +11,12 @@ import {
   setPreampGain,
   setExclusiveMode,
 } from "@main/services/engine";
-import { setTaskbarProgress, applyMainWindowZoom, applyTaskbarLyricLayout } from "@main/window";
+import {
+  setTaskbarProgress,
+  applyMainWindowZoom,
+  applyTaskbarLyricLayout,
+  applyTaskbarLyricAcrylic,
+} from "@main/window";
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
@@ -68,6 +73,11 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
     case "taskbarLyric.leftMargin":
     case "taskbarLyric.rightMargin":
       if (isWin) applyTaskbarLyricLayout();
+      break;
+    case "taskbarLyric.acrylicEnabled":
+    case "taskbarLyric.acrylicRadius":
+      // 背景只改 accent 属性，不必重扫任务栏布局
+      if (isWin) applyTaskbarLyricAcrylic();
       break;
   }
   // 任务栏歌词配置变更广播到所有窗口（仅 Windows）

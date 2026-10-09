@@ -20,6 +20,9 @@ const config = reactive<TaskbarLyricSettings>({
   rightMargin: 0,
   colorMode: "taskbar",
   showBackground: false,
+  // 背景由主进程直接调原生接口，这里的初值只为补全配置形状
+  acrylicEnabled: true,
+  acrylicRadius: 8,
   doubleLine: true,
   showTranslation: true,
   showCover: true,

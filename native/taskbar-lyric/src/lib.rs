@@ -15,6 +15,7 @@ pub const GAP: i32 = 10;
 
 #[macro_use]
 mod logger;
+mod acrylic;
 mod registry_watcher;
 mod service;
 mod strategy;
