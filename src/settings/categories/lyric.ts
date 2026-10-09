@@ -483,6 +483,17 @@ const lyricCategory: SettingCategory = {
         },
       ],
     },
+    {
+      id: "media",
+      items: [
+        {
+          key: "systemMediaControls",
+          type: "switch",
+          binding: { store: "settings", path: "system.media.systemMediaControls" },
+          defaultValue: true,
+        },
+      ],
+    },
   ],
 };
 
