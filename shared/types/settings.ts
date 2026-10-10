@@ -104,8 +104,6 @@ export interface TaskbarLyricSettings {
   fontSize: number;
   /** 字重 */
   fontWeight: number;
-  /** 字体 */
-  fontFamily: string;
 }
 
 /** 音乐库配置 */

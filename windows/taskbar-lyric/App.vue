@@ -26,15 +26,17 @@ const config = reactive<TaskbarLyricSettings>({
   wordByWord: true,
   fontSize: 14,
   fontWeight: 400,
-  fontFamily: "",
 });
 
 const anchor = ref<"left" | "right">("left");
 const taskbarIsLight = ref(false);
+/**
+ * 悬停态由主进程按光标几何位置轮询判定后广播（100ms），渲染端只做展示：
+ * 悬停 = 展开态（封面 + 上一首/播放暂停/下一首 + 歌词），离开即收起
+ */
 const isHovered = ref(false);
 const maxLayoutWidth = ref(400);
 const wrapperRef = ref<HTMLElement | null>(null);
-let hoverLeaveTimer: number | null = null;
 let widthReportRaf = 0;
 let lastReportedWidth = 0;
 
@@ -59,6 +61,7 @@ const reportContentWidth = (): void => {
   const wrapper = wrapperRef.value;
   if (!wrapper) return;
   if (isHovered.value) {
+    // 展开态需要完整宽度容纳三个控件
     const targetWidth = Math.ceil(maxLayoutWidth.value);
     if (targetWidth === lastReportedWidth) return;
     lastReportedWidth = targetWidth;
@@ -94,24 +97,7 @@ const scheduleContentWidthReport = (): void => {
   widthReportRaf = requestAnimationFrame(reportContentWidth);
 };
 
-const setContentHovered = (hovered: boolean): void => {
-  if (hoverLeaveTimer !== null) {
-    window.clearTimeout(hoverLeaveTimer);
-    hoverLeaveTimer = null;
-  }
-  if (hovered) {
-    isHovered.value = true;
-    nextTick(scheduleContentWidthReport);
-    return;
-  }
-  hoverLeaveTimer = window.setTimeout(() => {
-    hoverLeaveTimer = null;
-    isHovered.value = false;
-    nextTick(scheduleContentWidthReport);
-  }, 40);
-};
-
-const { track, lyric, primaryIndex, playing } = useNowPlayingSync({
+const { track, lyric, primaryIndex, playing, syncRevision } = useNowPlayingSync({
   pickIndex: pickPrimaryIndex,
   logTag: "taskbar-lyric",
 });
@@ -182,7 +168,6 @@ const items = computed<RenderItem[]>(() => {
 const rootStyle = computed(() => ({
   "--tbl-font-size": `${config.fontSize}px`,
   fontWeight: config.fontWeight,
-  fontFamily: config.fontFamily || undefined,
 }));
 
 const handlePrev = (): void => window.api.player.dispatch("prev");
@@ -195,15 +180,7 @@ const handleFocusMain = (): void => {
 const unsubscribers: Array<() => void> = [];
 
 onMounted(async () => {
-  try {
-    const saved = (await window.api.config.get("taskbarLyric")) as TaskbarLyricSettings | null;
-    if (saved) Object.assign(config, saved);
-    await nextTick();
-    scheduleContentWidthReport();
-  } catch (error) {
-    console.error("[taskbar-lyric] load config failed", error);
-  }
-
+  // 先同步订阅再拉配置：主进程的布局/悬停广播可能紧随窗口装载而来，不能被异步步骤错过
   unsubscribers.push(
     window.api.taskbarLyric.onLayout((data) => {
       anchor.value = data.anchor;
@@ -215,39 +192,37 @@ onMounted(async () => {
       Object.assign(config, next);
       nextTick(scheduleContentWidthReport);
     }),
+    window.api.taskbarLyric.onHoverChange((hovered) => {
+      if (hovered === isHovered.value) return;
+      isHovered.value = hovered;
+      nextTick(scheduleContentWidthReport);
+    }),
   );
+
+  try {
+    const saved = (await window.api.config.get("taskbarLyric")) as TaskbarLyricSettings | null;
+    if (saved) Object.assign(config, saved);
+    await nextTick();
+    scheduleContentWidthReport();
+  } catch (error) {
+    console.error("[taskbar-lyric] load config failed", error);
+  }
 });
 
 watch(items, () => nextTick(scheduleContentWidthReport));
 watch(
-  () => [
-    config.showCover,
-    config.doubleLine,
-    config.fontSize,
-    config.fontWeight,
-    config.fontFamily,
-  ],
+  () => [config.showCover, config.doubleLine, config.fontSize, config.fontWeight],
   () => nextTick(scheduleContentWidthReport),
 );
 
 onBeforeUnmount(() => {
   if (widthReportRaf) cancelAnimationFrame(widthReportRaf);
-  if (hoverLeaveTimer !== null) {
-    window.clearTimeout(hoverLeaveTimer);
-    hoverLeaveTimer = null;
-  }
   for (const off of unsubscribers) off();
 });
 </script>
 
 <template>
-  <div
-    ref="wrapperRef"
-    class="wrapper"
-    :data-align="anchor"
-    @mouseenter="setContentHovered(true)"
-    @mouseleave="setContentHovered(false)"
-  >
+  <div ref="wrapperRef" class="wrapper" :data-align="anchor">
     <div
       class="container"
       :class="{ 'is-hovered': isHovered, 'shows-background': config.showBackground }"
@@ -266,7 +241,7 @@ onBeforeUnmount(() => {
         />
       </div>
 
-      <!-- 播放控件 -->
+      <!-- 播放控件：悬停（主进程光标轮询广播）时展开，离开即收起 -->
       <div class="controls-wrapper">
         <div class="controls-inner">
           <button class="control-btn" type="button" @click.stop="handlePrev" @dblclick.stop>
@@ -281,9 +256,8 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- 文本区 -->
+      <!-- 文本区：歌词常驻；播放中逐字扫光，暂停时定格在当前位置且不跑动画 -->
       <div class="lyric-area">
-        <!-- 歌词层 -->
         <TransitionGroup
           tag="div"
           name="line"
@@ -296,18 +270,11 @@ onBeforeUnmount(() => {
               :text="item.text"
               :word-by-word="config.wordByWord && !!item.line"
               :anchor="anchor"
+              :live="playing"
+              :sync-revision="syncRevision"
             />
           </div>
         </TransitionGroup>
-        <!-- 歌曲信息 -->
-        <div class="song-info">
-          <div class="song-title">
-            {{ titleText }}
-          </div>
-          <div v-if="config.doubleLine" class="song-artist">
-            {{ artistsText }}
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -449,10 +416,6 @@ onBeforeUnmount(() => {
 .container[data-align="right"] .lyric-column {
   align-items: flex-end;
 }
-.container.is-hovered .lyric-column {
-  opacity: 0;
-  pointer-events: none;
-}
 
 .lyric-line {
   width: 100%;
@@ -495,43 +458,5 @@ onBeforeUnmount(() => {
 .line-leave-to {
   opacity: 0;
   transform: translateY(-100%);
-}
-
-.song-info {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-}
-.container[data-align="right"] .song-info {
-  align-items: flex-end;
-}
-.container.is-hovered .song-info {
-  opacity: 1;
-  transition-delay: 0.08s;
-}
-.song-title {
-  width: fit-content;
-  font-size: var(--tbl-font-size);
-  color: var(--tbl-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  pointer-events: auto;
-}
-.song-artist {
-  width: fit-content;
-  font-size: calc(var(--tbl-font-size) * 0.82);
-  color: var(--tbl-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  pointer-events: auto;
 }
 </style>

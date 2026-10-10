@@ -9,8 +9,12 @@ const props = withDefaults(
     text?: string;
     wordByWord?: boolean;
     anchor?: "left" | "right";
+    /** 播放中 = 逐字扫光动画推进；暂停时冻结在当前进度并停掉渲染循环 */
+    live?: boolean;
+    /** 暂停期间的同步修订号：每次位置事件后自增，驱动一次静态重绘 */
+    syncRevision?: number;
   }>(),
-  { wordByWord: false, anchor: "left" },
+  { wordByWord: false, anchor: "left", live: true, syncRevision: 0 },
 );
 
 const useKaraoke = computed(() => props.wordByWord && !!props.line);
@@ -86,7 +90,8 @@ const resetRenderCache = (): void => {
   wordRefs.length = 0;
 };
 
-const renderFrame = (): void => {
+/** 渲染一帧：按当前进度更新滚动位移与逐字扫光（脏检查，无变化不写 DOM） */
+const renderOnce = (): void => {
   const currentMs = getNowPlayingCurrentMs();
 
   if (contentRef.value) {
@@ -108,35 +113,77 @@ const renderFrame = (): void => {
       }
     }
   }
+};
 
+const renderFrame = (): void => {
+  renderOnce();
   rafId = requestAnimationFrame(renderFrame);
 };
+
+const startLoop = (): void => {
+  if (rafId === 0) rafId = requestAnimationFrame(renderFrame);
+};
+
+const stopLoop = (): void => {
+  if (rafId !== 0) {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+};
+
+/** 暂停态的静态刷新：不重启循环，只按当前进度重绘一帧 */
+const renderStatic = (): void => {
+  if (props.live) return;
+  renderOnce();
+};
+
+// 播放/暂停切换：暂停立即停表并定格一帧，恢复时重启循环
+watch(
+  () => props.live,
+  (live) => {
+    if (live) {
+      startLoop();
+      return;
+    }
+    stopLoop();
+    nextTick(renderOnce);
+  },
+);
 
 watch(
   () => props.line,
   () => {
     resetRenderCache();
-    nextTick(measure);
+    nextTick(() => {
+      measure();
+      renderStatic();
+    });
   },
 );
 watch(
   () => props.text,
-  () => nextTick(measure),
+  () =>
+    nextTick(() => {
+      measure();
+      renderStatic();
+    }),
 );
+watch(() => props.syncRevision, renderStatic);
 
 onMounted(() => {
   resizeObserver = new ResizeObserver(measure);
   if (wrapperRef.value) resizeObserver.observe(wrapperRef.value);
   if (contentRef.value) resizeObserver.observe(contentRef.value);
   measure();
-  rafId = requestAnimationFrame(renderFrame);
+  if (props.live) {
+    startLoop();
+  } else {
+    renderOnce();
+  }
 });
 
 onBeforeUnmount(() => {
-  if (rafId !== 0) {
-    cancelAnimationFrame(rafId);
-    rafId = 0;
-  }
+  stopLoop();
   resizeObserver?.disconnect();
   resizeObserver = null;
 });

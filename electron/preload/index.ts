@@ -295,6 +295,9 @@ const api = {
     // 订阅任务栏歌词配置变化
     onConfigChange: (callback: (config: TaskbarLyricSettings) => void) =>
       subscribe<TaskbarLyricSettings>("taskbarLyric:configChange", callback),
+    // 订阅悬停态变化（主进程按光标位置轮询判定，渲染端据此展开/收起）
+    onHoverChange: (callback: (hovered: boolean) => void) =>
+      subscribe<boolean>("taskbarLyric:hoverChange", callback),
   },
   apis: {
     // 调用任意平台的任意接口

@@ -24,6 +24,11 @@ export interface NowPlayingSync {
   lyric: ShallowRef<LyricLine[]>;
   playing: Ref<boolean>;
   primaryIndex: Ref<number>;
+  /**
+   * 暂停期间的同步修订号：每次位置/歌词/偏移事件后自增
+   * 暂停时消费方没有 RAF 循环，靠它驱动一次静态重绘（播放期间恒不自增）
+   */
+  syncRevision: Ref<number>;
 }
 
 /**
@@ -37,6 +42,7 @@ export const useNowPlayingSync = (options: NowPlayingSyncOptions): NowPlayingSyn
   const lyric = shallowRef<LyricLine[]>([]);
   const playing = ref(false);
   const primaryIndex = ref(-1);
+  const syncRevision = ref(0);
 
   let anchorPos = 0;
   let anchorPerf = 0;
@@ -97,6 +103,8 @@ export const useNowPlayingSync = (options: NowPlayingSyncOptions): NowPlayingSyn
     currentNowPlayingMs = next + lyricOffsetMs;
     const idx = pickIndex(lyric.value, currentNowPlayingMs);
     if (idx !== primaryIndex.value) primaryIndex.value = idx;
+    // 暂停时没有 RAF 驱动，靠修订号通知消费方重绘一帧静态画面
+    if (!playing.value) syncRevision.value += 1;
   };
 
   const tick = (): void => {
@@ -147,5 +155,5 @@ export const useNowPlayingSync = (options: NowPlayingSyncOptions): NowPlayingSyn
     for (const off of unsubscribers) off();
   });
 
-  return { track, lyric, playing, primaryIndex };
+  return { track, lyric, playing, primaryIndex, syncRevision };
 };

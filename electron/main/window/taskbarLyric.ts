@@ -8,6 +8,7 @@ import { broadcast } from "@main/utils/broadcast";
 import { setTrayTaskbarLyric } from "@main/services/tray";
 import { store } from "@main/store";
 import { isAppQuitting } from "@main/utils/lifecycle";
+import * as nowPlaying from "@main/services/nowPlaying";
 import type { TaskbarLyricPosition } from "@shared/types/settings";
 import type {
   JsRect,
@@ -19,6 +20,14 @@ import type {
   UiaWatcher,
 } from "@splayer/taskbar-lyric";
 import { taskbarLog } from "@main/utils/logger";
+import {
+  PAUSE_AUTO_HIDE_MS,
+  createPauseHideState,
+  isPointInsideRect,
+  reducePauseHide,
+  shouldAutoHideNow,
+} from "./taskbarLyricPauseHide";
+import type { PauseHideEvent, PauseHideState } from "./taskbarLyricPauseHide";
 
 type TaskbarLyricNative = typeof import("@splayer/taskbar-lyric");
 
@@ -41,6 +50,22 @@ let themeRegWatcher: RegistryWatcher | null = null;
 let uiaWatcher: UiaWatcher | null = null;
 let trayWatcher: TrayWatcher | null = null;
 let taskbarCreatedWatcher: TaskbarCreatedWatcher | null = null;
+
+/** 悬停轮询间隔（毫秒）：对齐参考实现的 100ms 光标热区检查 */
+const HOVER_POLL_MS = 100;
+
+/**
+ * 暂停自动隐藏状态机。
+ * displayed 同时充当「模块是否已把窗口显示出来」的账本——窗口嵌进任务栏后
+ * Electron 的 isVisible() 对其恒为真，显隐只能由这里的 show/hide 调用记账
+ */
+let pauseHide: PauseHideState = createPauseHideState(false);
+/** 暂停自动隐藏 30s 计时器 */
+let pauseHideTimer: NodeJS.Timeout | null = null;
+/** 光标悬停轮询计时器（窗口存在期间运行） */
+let hoverPollTimer: NodeJS.Timeout | null = null;
+/** nowPlaying 播放态订阅取消函数 */
+let unsubscribeNowPlaying: (() => void) | null = null;
 
 interface ActiveWindowRegion {
   x: number;
@@ -82,7 +107,8 @@ export const getTaskbarLyricWindow = (): BrowserWindow | null =>
 
 /**
  * 任务栏歌词此刻是否真的呈现在屏幕上，高频推送用它代替 isVisible 过滤
- * @returns 用户开关开启、窗口存在、未最小化且未被空间不足隐藏时返回 true
+ * 暂停 30s 自动隐藏同样写入 displayed=false，位置推送随之停止；恢复播放后重新拉起
+ * @returns 用户开关开启、窗口存在、未最小化且未被空间不足/暂停隐藏时返回 true
  */
 export const isTaskbarLyricPresented = (): boolean => {
   const win = getTaskbarLyricWindow();
@@ -90,8 +116,106 @@ export const isTaskbarLyricPresented = (): boolean => {
     enabled: store.get("windowStates.taskbarLyric.visible"),
     windowExists: win !== null,
     minimized: !!win?.isMinimized(),
-    shownByModule,
+    shownByModule: pauseHide.displayed,
   });
+};
+
+/** 向任务栏歌词窗口发送悬停态变化（渲染端据此展开/收起控件） */
+const sendHover = (win: BrowserWindow | null, hovered: boolean): void => {
+  if (!win || win.isDestroyed()) return;
+  win.webContents.send("taskbarLyric:hoverChange", hovered);
+};
+
+/** 取消暂停自动隐藏计时器 */
+const clearPauseHideTimer = (): void => {
+  if (pauseHideTimer) {
+    clearTimeout(pauseHideTimer);
+    pauseHideTimer = null;
+  }
+};
+
+/** 启动（或重排）30s 暂停自动隐藏计时器 */
+const startPauseHideTimer = (): void => {
+  clearPauseHideTimer();
+  pauseHideTimer = setTimeout(() => onPauseHideTimer(), PAUSE_AUTO_HIDE_MS);
+};
+
+/**
+ * 30s 计时器到点：先以光标真实位置复核悬停态，再派发 timeout 决策
+ * 复核让正确性不依赖 100ms 轮询的相位，光标停在窗口上时不会被误隐藏
+ */
+const onPauseHideTimer = (): void => {
+  pauseHideTimer = null;
+  const win = getTaskbarLyricWindow();
+  if (!win) return;
+  const inside = isPointInsideRect(screen.getCursorScreenPoint(), win.getBounds());
+  if (inside !== pauseHide.hovered) {
+    dispatchPauseHideEvent({ type: inside ? "hover-enter" : "hover-leave" });
+  }
+  if (shouldAutoHideNow(pauseHide)) {
+    dispatchPauseHideEvent({ type: "timeout" });
+  }
+};
+
+/** 启动悬停轮询：窗口在屏期间按光标几何位置驱动悬停/展开与暂停隐藏 */
+const startHoverPoll = (): void => {
+  if (hoverPollTimer) return;
+  hoverPollTimer = setInterval(() => {
+    const win = getTaskbarLyricWindow();
+    if (!win || !pauseHide.displayed) return;
+    const inside = isPointInsideRect(screen.getCursorScreenPoint(), win.getBounds());
+    if (inside === pauseHide.hovered) return;
+    dispatchPauseHideEvent({ type: inside ? "hover-enter" : "hover-leave" });
+  }, HOVER_POLL_MS);
+};
+
+/** 停止悬停轮询 */
+const stopHoverPoll = (): void => {
+  if (hoverPollTimer) {
+    clearInterval(hoverPollTimer);
+    hoverPollTimer = null;
+  }
+};
+
+/** 订阅播放态变化（onPositionSync 覆盖 onPosition 与 onPlayStateChange 两个发射点） */
+const startNowPlayingWatch = (): void => {
+  stopNowPlayingWatch();
+  pauseHide = createPauseHideState(nowPlaying.snapshot().playing);
+  unsubscribeNowPlaying = nowPlaying.onPositionSync((data) => {
+    if (data.playing === pauseHide.playing) return;
+    dispatchPauseHideEvent({ type: data.playing ? "play" : "pause" });
+  });
+};
+
+/** 取消播放态订阅 */
+const stopNowPlayingWatch = (): void => {
+  unsubscribeNowPlaying?.();
+  unsubscribeNowPlaying = null;
+};
+
+/** 派发状态机事件并执行副作用（计时器、整窗隐藏、回显、悬停广播） */
+const dispatchPauseHideEvent = (event: PauseHideEvent): void => {
+  const win = getTaskbarLyricWindow();
+  const previous = pauseHide;
+  const result = reducePauseHide(previous, event);
+  pauseHide = result.state;
+
+  if (result.cancelTimer) clearPauseHideTimer();
+  if (result.armTimer) startPauseHideTimer();
+
+  if (result.state.hovered !== previous.hovered) sendHover(win, result.state.hovered);
+
+  if (result.hide && win) {
+    if (win.isVisible()) win.hide();
+    taskbarLog.info("暂停 30 秒且未悬停，整窗隐藏任务栏歌词");
+  }
+  if (result.show) {
+    taskbarLog.info("播放恢复，重新显示任务栏歌词窗口");
+    applyTaskbarLyricLayout();
+    // 高频位置推送在隐藏期间被门控丢弃，回显时补发一帧完整快照让渲染端立即接续
+    const shown = getTaskbarLyricWindow();
+    if (shown) shown.webContents.send("nowPlaying:lyric-change", nowPlaying.snapshot());
+  }
 };
 
 /**
@@ -157,19 +281,10 @@ const pickSpace = (layout: JsTaskbarLayout): PickedSpace | null => {
   return null;
 };
 
-/** 首次 applyLayout 成功后才 show 窗口——避免初始 3000x200 大窗口闪现 */
-let firstLayoutDone = false;
-
-/**
- * 本模块是否已把窗口显示出来。窗口是嵌进任务栏的子窗口，Electron 的 isVisible()
- * 对其恒为真，显隐只能由这里的 show/hide 调用记账
- */
-let shownByModule = false;
-
 /** 空间不足时安静隐藏窗口，避免残留旧位置的歌词残影 */
 const hideIfVisible = (win: BrowserWindow): void => {
-  shownByModule = false;
   if (win.isVisible()) win.hide();
+  dispatchPauseHideEvent({ type: "window-hidden" });
 };
 
 /** Rust 布局回调：把物理像素空间转为 DIP，<阈值则隐藏，≥阈值则 setBounds 并 show */
@@ -219,10 +334,10 @@ const applyLayout = (layout: JsTaskbarLayout): void => {
   win.setBounds({ x: windowX, y: availY, width: windowWidth, height: availHeight });
   applyContentShape();
 
-  if (!firstLayoutDone || !win.isVisible()) {
-    firstLayoutDone = true;
-    win.showInactive();
-    shownByModule = true;
+  // 暂停自动隐藏期间布局变化不得回显（恢复播放由状态机的 show 分支重跑布局）
+  if (!pauseHide.hiddenByPause && (!pauseHide.displayed || !win.isVisible())) {
+    if (!win.isVisible()) win.showInactive();
+    dispatchPauseHideEvent({ type: "window-shown" });
   }
 
   win.webContents.send("taskbarLyric:layout", {
@@ -296,8 +411,9 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
   }
 
   if (taskbarLyricWindow && !taskbarLyricWindow.isDestroyed()) {
-    taskbarLyricWindow.show();
-    shownByModule = true;
+    // 已存在时视为「确保呈现」：清掉暂停隐藏并按需显示
+    if (!taskbarLyricWindow.isVisible()) taskbarLyricWindow.show();
+    dispatchPauseHideEvent({ type: "window-shown" });
     return taskbarLyricWindow;
   }
 
@@ -344,6 +460,10 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
     taskbarLyricWindow.loadFile(join(__dirname, "../renderer/windows/taskbar-lyric/index.html"));
   }
 
+  // 创建即接管：播种播放态、订阅播放变化并开始悬停轮询
+  startNowPlayingWatch();
+  startHoverPoll();
+
   taskbarLyricWindow.once("ready-to-show", () => {
     const win = taskbarLyricWindow;
     const svc = service;
@@ -371,10 +491,13 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
 
   taskbarLyricWindow.on("closed", () => {
     taskbarLyricWindow = null;
-    firstLayoutDone = false;
-    shownByModule = false;
     activeWindowRegion = null;
     contentWidth = null;
+    // 生命周期随窗口终了：停止轮询/计时与新播放订阅，清空状态机
+    stopHoverPoll();
+    stopNowPlayingWatch();
+    clearPauseHideTimer();
+    pauseHide = createPauseHideState(false);
     cleanupWatchers();
     setTrayTaskbarLyric(false);
     broadcast("taskbarLyric:visibilityChange", false);

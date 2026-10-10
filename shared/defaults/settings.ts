@@ -41,7 +41,6 @@ export const defaultSystemConfig: SystemConfig = {
     wordByWord: true,
     fontSize: 14,
     fontWeight: 400,
-    fontFamily: "",
   },
   lyric: {
     enableOnlineTTMLLyric: false,
