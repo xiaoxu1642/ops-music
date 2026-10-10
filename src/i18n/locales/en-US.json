@@ -324,11 +324,7 @@
     "logout": "Sign out",
     "logoutConfirmTitle": "Sign out",
     "logoutConfirmDesc": "Sign out of the current account?",
-    "logoutDone": "Signed out",
-    "bilibiliTitle": "Bilibili account",
-    "bilibiliLogin": "Web sign-in",
-    "bilibiliWaiting": "Waiting for sign-in…",
-    "bilibiliLogoutConfirmDesc": "Sign out of your Bilibili account?"
+    "logoutDone": "Signed out"
   },
   "search": {
     "title": "Search",
@@ -833,7 +829,6 @@
       "description": "Platform priority when matching online lyrics",
       "auto": "Smart",
       "netease": "Prefer NCM",
-      "bilibili": "Prefer BILI",
       "self": "Follow Self"
     },
     "lyricSourceOrder": {
@@ -1788,7 +1783,6 @@
     "NETEASE_VIP_REQUIRED": "This track requires a membership or separate purchase",
     "NETEASE_TRIAL_DISABLED": "Only a trial is available; enable trial playback in settings",
     "NETEASE_UNAVAILABLE": "No source is currently available for this track",
-    "BILIBILI_PROXY_MISSING": "Bilibili stream proxy is unavailable; cannot play",
     "SCAN_NO_DIRS": "No scan directories configured",
     "SCAN_DIR_EXISTS": "Directory already exists",
     "SCAN_DIR_NOT_FOUND": "Directory not found",

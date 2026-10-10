@@ -6,7 +6,6 @@ import { useSettingsStore } from "@/stores/settings";
 import { usePluginsStore } from "@/stores/plugins";
 import { useUserStore } from "@/stores/user";
 import { resolveNeteaseUrl } from "@/apis/song/netease";
-import { resolveBilibiliUrl } from "@/apis/song/bilibili";
 import { ErrorCode } from "@shared/types/errors";
 import { handleError } from "@/utils/errors";
 
@@ -66,7 +65,7 @@ export const resolveByPlugin = async (
   const fail = (errorCode: ErrorCode): OnlineResolveResult => ({ ok: false, errorCode });
   if (!isPlatform(track.source)) return fail(ErrorCode.URL_RESOLVE_FAILED);
   const pluginSource = PLATFORM_TO_PLUGIN_SOURCE[track.source];
-  // 未映射到插件 source 的平台（如 B 站）不参与插件兜底，只能走内置接口
+  // 未映射到插件 source 的平台不参与插件兜底，只能走内置接口
   if (!pluginSource) return fail(ErrorCode.URL_RESOLVE_FAILED);
   const skip = new Set(skipPluginIds);
   const plugins = usePluginsStore();
@@ -166,19 +165,6 @@ const resolveOnlineUrl = async (
       console.warn("[audio-source] official URL resolve failed:", err);
       officialErrorCode = ErrorCode.NETWORK_ERROR;
     }
-  } else if (track.source === "bilibili" && !options.skipOfficialOnline) {
-    try {
-      // 取流地址只能走本地代理：裸地址缺 Referer 会被站方 403
-      const resolved = await resolveBilibiliUrl(track);
-      if (!resolved.available) {
-        officialErrorCode = resolved.errorCode;
-      } else {
-        return { ok: true, url: resolved.url, isTrial: false, provider: "official" };
-      }
-    } catch (err) {
-      console.warn("[audio-source] bilibili URL resolve failed:", err);
-      officialErrorCode = ErrorCode.NETWORK_ERROR;
-    }
   }
   const pluginResolved = await resolveByPlugin(track, songLevel, options.skipPluginIds ?? []);
   if (pluginResolved.ok) return pluginResolved;
@@ -243,7 +229,7 @@ export const resolveTrackSource = async (
     const cached = await window.api.cache.song.lookup(cacheKey!);
     if (cached) return { source: cached, fromCache: true, provider: "cache" };
   }
-  // 在线源（netease / bilibili）
+  // 在线源（netease）
   if (isPlatform(track.source)) {
     try {
       const resolved = await resolveOnlineUrl(track, songLevel, options);

@@ -28,7 +28,6 @@ import {
   captureOrpheusUrl,
 } from "@main/services/orpheus";
 import { extractAudioFiles, captureAudioFiles } from "@main/services/externalFile";
-import { stopBilibiliProxy } from "@main/services/bilibiliProxy";
 
 /**
  * 配置 Chromium 启动参数以优化内存占用
@@ -151,7 +150,6 @@ export const initApp = (): void => {
   // 退出前清理
   app.on("before-quit", () => {
     coreLog.info("应用即将退出，清理资源");
-    stopBilibiliProxy();
     shutdownMedia();
     closeDatabase();
     void stopMcpServer();

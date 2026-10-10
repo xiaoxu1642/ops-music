@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/user";
-import { useBilibiliAccountStore } from "@/stores/bilibiliAccount";
 import { dialog } from "@/composables/useDialog";
 import { toast } from "@/composables/useToast";
 import { withPicSize } from "@/utils/format/netease";
@@ -12,17 +11,13 @@ import IconLucideUserRound from "~icons/lucide/user-round";
 const { t } = useI18n();
 const router = useRouter();
 const user = useUserStore();
-const bilibili = useBilibiliAccountStore();
 
 const loginOpen = ref(false);
 const popoverOpen = ref(false);
-const bilibiliOpen = ref(false);
 
 /** 启动时同步登录状态 */
 onMounted(() => {
   void user.fetchStatus();
-  // 只在有缓存身份时校验，未登录过 B 站的用户不为此多发一次请求
-  if (bilibili.isLoggedIn) void bilibili.fetchStatus();
 });
 
 const isVip = computed(() => !!user.profile?.vipType && user.profile.vipType !== 0);
@@ -176,27 +171,5 @@ const handleLogout = async (): Promise<void> => {
     <template #icon><IconLucideUserRound /></template>
   </SButton>
 
-  <!-- B 站账号入口，与网易云账号相互独立 -->
-  <SButton
-    class="app-no-drag"
-    variant="tertiary"
-    :size="40"
-    circle
-    :title="bilibili.profile?.uname || t('login.bilibiliTitle')"
-    @click="bilibiliOpen = true"
-  >
-    <template #icon>
-      <img
-        v-if="bilibili.profile?.face"
-        :src="bilibili.profile.face"
-        alt="avatar"
-        class="rounded-full object-cover"
-        decoding="async"
-      />
-      <IconLucideTv v-else />
-    </template>
-  </SButton>
-
   <LoginDialog v-model:open="loginOpen" />
-  <BilibiliAccountDialog v-model:open="bilibiliOpen" />
 </template>

@@ -71,7 +71,6 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     expect(result).toBeNull();
     expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
     expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
-    expect(mockRequestPlatformLyric).not.toHaveBeenCalledWith("bilibili", expect.anything());
   });
 
   it("显式偏好 NCM：查无此歌时返回 null（无其他兜底平台可回退）", async () => {
@@ -148,7 +147,7 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     });
 
     expect(result?.source.format).toBe("yrc");
-    // B 站主格式只有 lrc，无法比本地 lrc 更优，被 platformCanUpgrade 过滤
+    // 只有 NCM 一个在线源，且主格式可达 yrc，能升级本地 lrc
     expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
     expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
   });

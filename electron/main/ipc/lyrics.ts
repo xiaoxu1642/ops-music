@@ -1,8 +1,8 @@
 /**
  * 歌词匹配 IPC
  *
- * - lyrics:matchById(platform, id)         按 id 直取（含 B 站自身视频字幕）
- * - lyrics:matchByQuery(platform, track)   按 Track 元数据模糊搜索（跨源兜底，B 站不参与）
+ * - lyrics:matchById(platform, id)         按 id 直取
+ * - lyrics:matchByQuery(platform, track)   按 Track 元数据模糊搜索（跨源兜底）
  * - lyrics:fetchTTMLOverlay(track)         抓 AMLL TTML DB 的高质量 TTML
  * - lyrics:matchLocalLyric(track)          本地歌词库（.ttml / .lrc / .txt）匹配
  * - lyrics:matchLrclib(track)              LRCLIB 最后兜底
@@ -12,7 +12,6 @@
 
 import { ipcMain, dialog } from "electron";
 import * as netease from "@main/apis/common/lyric/netease";
-import * as bilibili from "@main/apis/common/lyric/bilibili";
 import { fetchTTML } from "@main/apis/common/lyric/ttml";
 import { fetchLrclibLyric } from "@main/apis/common/lyric/lrclib";
 import { matchLocalLyric } from "@main/services/localLyricRepo";
@@ -51,8 +50,6 @@ const resolveById = async (platform: Platform, id: string): Promise<LyricMatchRe
     switch (platform) {
       case "netease":
         return { ok: true, data: await netease.getByPlatformId(id) };
-      case "bilibili":
-        return { ok: true, data: await bilibili.getByPlatformId(id) };
       default:
         return { ok: false, error: `unsupported platform: ${platform}` };
     }
@@ -62,7 +59,7 @@ const resolveById = async (platform: Platform, id: string): Promise<LyricMatchRe
   }
 };
 
-/** 按 Track 元数据 fuzzy 匹配（跨源兜底；B 站只有自身字幕，不支持按歌名搜） */
+/** 按 Track 元数据 fuzzy 匹配（跨源兜底） */
 const resolveByQuery = async (platform: Platform, track: Track): Promise<LyricMatchResponse> => {
   try {
     switch (platform) {

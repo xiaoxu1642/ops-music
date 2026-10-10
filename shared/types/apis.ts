@@ -3,7 +3,7 @@
  */
 
 /** 支持的音源平台 */
-export type ApiPlatform = "netease" | "bilibili";
+export type ApiPlatform = "netease";
 
 /** 通用响应包装 */
 export type ApiCallResponse =
@@ -35,7 +35,7 @@ export interface ApisApi {
    */
   openLoginWeb: (platform: ApiPlatform) => Promise<{ ok: true } | { ok: false; error: string }>;
   /**
-   * 手动写入 cookie 登录（netease 需 MUSIC_U，bilibili 需 SESSDATA）
+   * 手动写入 cookie 登录（netease 需 MUSIC_U）
    * @param platform 音源平台
    * @param cookie 形如 `MUSIC_U=xxx; __csrf=yyy` 的 cookie 字符串
    */

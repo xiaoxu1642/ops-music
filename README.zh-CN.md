@@ -21,7 +21,6 @@
 - **基线项目**：[SPlayer-Next](https://github.com/SPlayer-Dev/SPlayer-Next)（作者 imsyy，AGPL-3.0）。SPlayer-Next 本身是 [SPlayer](https://github.com/SPlayer-Dev/SPlayer) 的继任版本。本项目沿用 AGPL-3.0，`LICENSE` 未改动。
 - **二改内容**：更名为 Ops Music，只面向 Windows；移除听歌识曲、字体配置、桌面歌词、灵动岛、外部 HTTP/WS API、Last.fm、Discord RPC、检查更新、流媒体服务器等功能；保留任务栏歌词、在线逐字歌词与系统媒体控制（SMTC）。
 - **原生模块**：音频解码/标签/封面由 SPlayer-Next 的 Rust `audio-engine`（FFmpeg + lofty）提供，系统媒体控件由其 `media-ctrl`（WinRT SMTC）提供。
-- **B 站音源**：搜索、取流、歌词与账号登录移植自本人另一项目 **Otter Music**（Capacitor Android 播放器）。接口参数、WBI 签名与 Cookie 语义与该项目保持一致；因音频由 Rust 引擎直连取流（无法携带 Referer），播放流经应用内的 127.0.0.1 本地代理转发。
 
 ---
 
@@ -30,7 +29,6 @@
 - 🎵 **广泛的格式支持** —— MP3、FLAC、WAV、AAC、OGG、APE 等，基于 FFmpeg 解码
 - 📝 **丰富的歌词** —— LRC / QRC / YRC / TTML，逐字高亮与翻译，主播放页歌词与 Windows 任务栏歌词（逐字扫词）
 - 🌐 **在线逐字歌词** —— 可选匹配社区维护的 AMLL TTML DB，也可用本地 TTML 歌词库覆盖在线结果
-- 📺 **B 站音源** —— 搜索、取流与字幕歌词，支持网页登录；播放流经本机代理以携带 Referer
 - 🖥️ **Windows 桌面播放器** —— 不再发布 macOS / Linux 版本
 - 📁 **本地曲库** —— 文件夹扫描、歌单、收藏与播放记录
 - 🎚️ **音乐频谱** —— 实时 FFT 可视化

@@ -29,7 +29,7 @@ export type SearchPlayBehavior = "current" | "all";
 /**
  * 歌词来源偏好
  * - auto：智能选择（按打分结果）
- * - Platform（netease / bilibili）：优先该平台
+ * - Platform（netease）：优先该平台
  * - self：跟随歌曲自身来源平台
  */
 export type LyricSourcePreference = Platform | "auto" | "self";
@@ -68,7 +68,6 @@ export type LyricFormatOrder = LyricFormat[];
 
 /**
  * 参与「歌词来源偏好 / 音源顺序」的平台：只有这些平台提供跨源模糊兜底搜索。
- * B 站不在其中——它只按 bvid 提供自身视频字幕，不做按歌名搜视频。
  * 新增平台要先接好主进程的 matchByQuery 桥再登记。
  */
 export const LYRIC_SUPPORTED_PLATFORMS: Platform[] = ["netease"];

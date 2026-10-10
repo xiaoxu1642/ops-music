@@ -8,11 +8,7 @@ import { enableTaskbarThumbnail } from "@main/services/thumbnail";
 import { initTray } from "@main/services/tray";
 import { lightSnapshot } from "@main/services/nowPlaying";
 import { store } from "@main/store";
-import {
-  handleBilibiliImageHeaders,
-  handleCacheProtocolOnPartition,
-  MAIN_PARTITION,
-} from "@main/utils/protocol";
+import { handleCacheProtocolOnPartition, MAIN_PARTITION } from "@main/utils/protocol";
 import { isAppQuitting } from "@main/utils/lifecycle";
 import { coreLog } from "@main/utils/logger";
 import { broadcast } from "@main/utils/broadcast";
@@ -64,8 +60,6 @@ export const createMainWindow = (): BrowserWindow => {
 
   // 注册 cache:// 协议
   handleCacheProtocolOnPartition(MAIN_PARTITION);
-  // B 站封面缺 Referer 会被图片 CDN 拒绝，按分区注入请求头
-  handleBilibiliImageHeaders(MAIN_PARTITION);
   const borderlessWindow = store.get("system.borderlessWindow") ?? true;
 
   mainWindow = createWindow({

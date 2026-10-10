@@ -56,8 +56,6 @@ export const embeddedLyricFromDetail = (detail: TrackDetail | null): LocalLyric 
 /** 平台主格式可达列表 */
 const PLATFORM_MAIN_FORMATS: Record<Platform, LyricFormat[]> = {
   netease: ["yrc", "lrc"],
-  // B 站字幕只能转行级 LRC，没有逐字格式
-  bilibili: ["lrc"],
 };
 
 /**

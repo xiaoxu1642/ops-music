@@ -21,7 +21,6 @@
 - **Baseline project**: [SPlayer-Next](https://github.com/SPlayer-Dev/SPlayer-Next) (by imsyy, AGPL-3.0). SPlayer-Next itself is the successor of [SPlayer](https://github.com/SPlayer-Dev/SPlayer). This project stays AGPL-3.0 and keeps the original `LICENSE`.
 - **What changed**: renamed to Ops Music, Windows-only; song recognition, font configuration, desktop lyric, dynamic island, external HTTP/WS API, Last.fm, Discord RPC, update checking and streaming servers were removed; taskbar lyrics, online word-by-word lyrics and system media controls (SMTC) are kept.
 - **Native modules**: decoding, tags and covers come from SPlayer-Next's Rust `audio-engine` (FFmpeg + lofty); system media controls come from its `media-ctrl` (WinRT SMTC).
-- **Bilibili source**: search, stream resolution, lyrics and account login are ported from my other project **Otter Music** (a Capacitor Android player). Endpoint parameters, WBI signing and cookie semantics match that project; because audio is fetched by the Rust engine (which cannot carry a Referer), playback goes through a 127.0.0.1 proxy inside the app.
 
 ---
 
@@ -30,7 +29,6 @@
 - 🎵 **Broad format support** — MP3, FLAC, WAV, AAC, OGG, APE, and more, decoded via FFmpeg
 - 📝 **Rich lyrics** — LRC / QRC / YRC / TTML with word-by-word highlighting and translations, in the player and in the Windows taskbar lyric (word-by-word sweep)
 - 🌐 **Online word-level lyrics** — optional match against the community AMLL TTML DB, plus your own local TTML lyric library as an override
-- 📺 **Bilibili source** — search, streaming and subtitle lyrics with web login; playback runs through a local proxy that carries the required Referer
 - 🖥️ **Windows desktop player** — no macOS / Linux builds shipped
 - 📁 **Local library** — folder scanning, playlists, favorites and play history
 - 🎚️ **Audio spectrum** — real-time FFT visualization

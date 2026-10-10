@@ -7,17 +7,10 @@
  */
 
 import { ipcMain } from "electron";
-import { callBilibili, clearBilibiliCookies, mergeBilibiliCookies } from "@main/apis/bilibili";
-import {
-  hasBilibiliSession,
-  normalizeBilibiliCookie,
-  pickSessionCookies,
-} from "@main/apis/bilibili/core/credential";
-import { BilibiliRequestError } from "@main/apis/bilibili/core/request";
 import { callNetease, clearNeteaseCookies, mergeNeteaseCookies } from "@main/apis/netease";
 import { NeteaseRequestError } from "@main/apis/netease/core/request";
 import { cookieToJson } from "@main/apis/netease/core/cookie";
-import { openBilibiliLoginWindow, openNeteaseLoginWindow } from "@main/window/login";
+import { openNeteaseLoginWindow } from "@main/window/login";
 import { coreLog } from "@main/utils/logger";
 import type { ApiPlatform } from "@shared/types/apis";
 
@@ -30,10 +23,6 @@ const dispatch = async (
   switch (platform) {
     case "netease": {
       const res = await callNetease(name, params);
-      return { status: res.status, body: res.body };
-    }
-    case "bilibili": {
-      const res = await callBilibili(name, params);
       return { status: res.status, body: res.body };
     }
     default:
@@ -50,7 +39,7 @@ export const registerApisIpc = (): void => {
         return { ok: true, ...result };
       } catch (err) {
         coreLog.warn(`[apis] ${platform}.${name} failed:`, err);
-        if (err instanceof NeteaseRequestError || err instanceof BilibiliRequestError) {
+        if (err instanceof NeteaseRequestError) {
           return {
             ok: false,
             error: err.message,
@@ -68,9 +57,6 @@ export const registerApisIpc = (): void => {
       case "netease":
         clearNeteaseCookies();
         break;
-      case "bilibili":
-        clearBilibiliCookies();
-        break;
     }
   });
 
@@ -82,12 +68,6 @@ export const registerApisIpc = (): void => {
           const cookies = await openNeteaseLoginWindow();
           if (!cookies) return { ok: false, error: "canceled" };
           mergeNeteaseCookies(cookies);
-          return { ok: true };
-        }
-        case "bilibili": {
-          const cookies = await openBilibiliLoginWindow();
-          if (!cookies) return { ok: false, error: "canceled" };
-          mergeBilibiliCookies(cookies);
           return { ok: true };
         }
         default:
@@ -107,13 +87,6 @@ export const registerApisIpc = (): void => {
         const parsed = cookieToJson(raw);
         if (!parsed.MUSIC_U) return { ok: false, error: "missing MUSIC_U" };
         mergeNeteaseCookies(parsed);
-        return { ok: true };
-      }
-      case "bilibili": {
-        // 用户常把整行 `Cookie: ...` 粘进来，先剥掉头再解析
-        const parsed = cookieToJson(normalizeBilibiliCookie(raw));
-        if (!hasBilibiliSession(parsed)) return { ok: false, error: "missing SESSDATA" };
-        mergeBilibiliCookies(pickSessionCookies(parsed));
         return { ok: true };
       }
       default:

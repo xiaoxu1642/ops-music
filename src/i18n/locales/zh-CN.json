@@ -315,11 +315,7 @@
     "logout": "退出登录",
     "logoutConfirmTitle": "退出登录",
     "logoutConfirmDesc": "确认退出当前账号？",
-    "logoutDone": "已退出登录",
-    "bilibiliTitle": "哔哩哔哩账号",
-    "bilibiliLogin": "网页登录",
-    "bilibiliWaiting": "等待登录完成…",
-    "bilibiliLogoutConfirmDesc": "确认退出哔哩哔哩账号？"
+    "logoutDone": "已退出登录"
   },
   "search": {
     "title": "搜索",
@@ -824,7 +820,6 @@
       "description": "匹配在线歌词时的平台优先级",
       "auto": "智能选择",
       "netease": "优先 NCM",
-      "bilibili": "优先 BILI",
       "self": "跟随自身"
     },
     "lyricSourceOrder": {
@@ -1779,7 +1774,6 @@
     "NETEASE_VIP_REQUIRED": "该歌曲需要会员或单独购买",
     "NETEASE_TRIAL_DISABLED": "该歌曲仅提供试听，请在设置中允许试听播放",
     "NETEASE_UNAVAILABLE": "该歌曲暂无可用音源",
-    "BILIBILI_PROXY_MISSING": "B 站取流代理不可用，无法播放",
     "SCAN_NO_DIRS": "未配置扫描目录",
     "SCAN_DIR_EXISTS": "该目录已存在",
     "SCAN_DIR_NOT_FOUND": "目录不存在",

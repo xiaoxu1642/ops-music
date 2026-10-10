@@ -102,5 +102,4 @@ export const downloadLog = log.scope("download");
 export const serverLog = log.scope("server");
 export const pluginLog = log.scope("plugin");
 export const neteaseLog = log.scope("netease");
-export const bilibiliLog = log.scope("bilibili");
 export const cloudLog = log.scope("cloud");
