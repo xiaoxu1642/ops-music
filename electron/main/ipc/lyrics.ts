@@ -12,6 +12,7 @@
 
 import { ipcMain, dialog } from "electron";
 import * as netease from "@main/apis/common/lyric/netease";
+import * as bilibili from "@main/apis/common/lyric/bilibili";
 import { fetchTTML } from "@main/apis/common/lyric/ttml";
 import { fetchLrclibLyric } from "@main/apis/common/lyric/lrclib";
 import { matchLocalLyric } from "@main/services/localLyricRepo";
@@ -50,6 +51,8 @@ const resolveById = async (platform: Platform, id: string): Promise<LyricMatchRe
     switch (platform) {
       case "netease":
         return { ok: true, data: await netease.getByPlatformId(id) };
+      case "bilibili":
+        return { ok: true, data: await bilibili.getByPlatformId(id) };
       default:
         return { ok: false, error: `unsupported platform: ${platform}` };
     }
@@ -65,6 +68,8 @@ const resolveByQuery = async (platform: Platform, track: Track): Promise<LyricMa
     switch (platform) {
       case "netease":
         return { ok: true, data: await netease.getByQuery(track) };
+      case "bilibili":
+        return { ok: true, data: await bilibili.getByQuery(track) };
       default:
         return { ok: false, error: `unsupported platform: ${platform}` };
     }

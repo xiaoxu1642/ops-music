@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SSelectOption } from "@/components/ui/SSelect.vue";
 import type { QualityLevel } from "@/utils/quality";
+import type { TrackSource } from "@shared/types/player";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
 import { getQualityLabel } from "@/utils/quality";
@@ -32,9 +33,13 @@ const qualityOptions = computed<SSelectOption[]>(() => [
 const chipBase =
   "inline-flex min-w-9 shrink-0 items-center justify-center px-2 py-1 leading-none rounded-md border border-solid text-xs";
 
+/** 单一音质的在线源：引擎只拿到一股流，切档位重载只会重复取流并打断播放 */
+const SINGLE_QUALITY_SOURCES: readonly TrackSource[] = ["bilibili"];
+
 /** 切换音质 */
 const onQualityChange = (value: string | number | boolean): void => {
   settings.player.songLevel = value as QualityLevel;
+  if (media.track && SINGLE_QUALITY_SOURCES.includes(media.track.source)) return;
   void player.reloadCurrentTrack();
 };
 </script>

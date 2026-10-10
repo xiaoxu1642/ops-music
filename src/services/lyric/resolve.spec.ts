@@ -58,7 +58,7 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
   });
 
-  it("智能选择：NCM 查无此歌时返回 null", async () => {
+  it("智能选择：全部音源查无此歌时返回 null", async () => {
     const settings = useSettingsStore();
     settings.lyric.lyricSourcePreference = "auto";
     mockRequestPlatformLyric.mockResolvedValue(null);
@@ -69,10 +69,11 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     });
 
     expect(result).toBeNull();
-    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(2);
+    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("bilibili", expect.anything());
   });
 
-  it("显式偏好 NCM：查无此歌时不回退，因为没有其他在线音源", async () => {
+  it("显式偏好 NCM：查无此歌时回退其余音源，均未命中返回 null", async () => {
     const settings = useSettingsStore();
     settings.lyric.lyricSourcePreference = "netease";
     mockRequestPlatformLyric.mockResolvedValue(null);
@@ -83,7 +84,7 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     });
 
     expect(result).toBeNull();
-    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(2);
   });
 
   it("跟随自身：本地曲目没有对应平台，不发起在线请求", async () => {
@@ -131,7 +132,7 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     expect(mockRequestPlatformLyric).not.toHaveBeenCalled();
   });
 
-  it("智能优选：本地仅有 LRC 时请求 NCM，返回更优的 YRC", async () => {
+  it("智能优选：本地仅有 LRC 时只请求能升级到 YRC 的 NCM", async () => {
     const settings = useSettingsStore();
     settings.lyric.smartPreferOnline = true;
     mockRequestPlatformLyric.mockResolvedValue({
@@ -146,7 +147,9 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     });
 
     expect(result?.source.format).toBe("yrc");
+    // B 站主格式只有 lrc，无法比本地 lrc 更优，被 platformCanUpgrade 过滤
     expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
   });
 
   it("智能优选：本地已是 NCM 能打到的最高主格式时不请求", async () => {

@@ -1,13 +1,14 @@
 /**
  * 在线搜索入口
  * 对外暴露 searchSongs / searchAlbums / searchArtists / searchPlaylists
- * platform 参数当前恒为 netease，保留它是为了让调用方按来源分发、后续接入新音源时无需改签名
+ * platform 为当前选中平台，调用方按来源分发后无需改签名
  */
 
 import type { Track } from "@shared/types/player";
 import type { CoverItem } from "@/types/artist";
 import type { Platform } from "@shared/types/platform";
 import * as netease from "./netease";
+import * as bilibili from "./bilibili";
 
 /** 搜索结果通用 */
 export interface SearchResult<T> {
@@ -16,40 +17,52 @@ export interface SearchResult<T> {
   hasMore: boolean;
 }
 
-/**
- * 上面几个 fetcher 已实现分发的平台。搜索标签页只列这些：
- * `ALL_PLATFORMS` 里已有 B 站，但取流/解析还没接，混进标签会拿到网易云的结果。
- */
-export const SEARCHABLE_PLATFORMS: Platform[] = ["netease"];
+/** 搜索标签页展示的平台，与 fetcher 的实现范围一致 */
+export const SEARCHABLE_PLATFORMS: Platform[] = ["netease", "bilibili"];
+
+/** B 站没有专辑/歌手/歌单搜索，对应标签返回空集，不串回网易云的结果 */
+const emptyResult = <T>(): SearchResult<T> => ({ items: [], total: 0, hasMore: false });
 
 /** 搜索单曲 */
-export const searchSongs = (
-  _platform: Platform,
+export const searchSongs = async (
+  platform: Platform,
   keyword: string,
   offset: number,
   limit: number,
-): Promise<SearchResult<Track>> => netease.songs(keyword, offset, limit);
+): Promise<SearchResult<Track>> => {
+  if (platform === "bilibili") return bilibili.songs(keyword, offset, limit);
+  return netease.songs(keyword, offset, limit);
+};
 
 /** 搜索专辑 */
-export const searchAlbums = (
-  _platform: Platform,
+export const searchAlbums = async (
+  platform: Platform,
   keyword: string,
   offset: number,
   limit: number,
-): Promise<SearchResult<CoverItem>> => netease.albums(keyword, offset, limit);
+): Promise<SearchResult<CoverItem>> => {
+  if (platform === "bilibili") return emptyResult<CoverItem>();
+  return netease.albums(keyword, offset, limit);
+};
 
 /** 搜索歌手 */
-export const searchArtists = (
-  _platform: Platform,
+export const searchArtists = async (
+  platform: Platform,
   keyword: string,
   offset: number,
   limit: number,
-): Promise<SearchResult<CoverItem>> => netease.artists(keyword, offset, limit);
+): Promise<SearchResult<CoverItem>> => {
+  if (platform === "bilibili") return emptyResult<CoverItem>();
+  return netease.artists(keyword, offset, limit);
+};
 
 /** 搜索歌单 */
-export const searchPlaylists = (
-  _platform: Platform,
+export const searchPlaylists = async (
+  platform: Platform,
   keyword: string,
   offset: number,
   limit: number,
-): Promise<SearchResult<CoverItem>> => netease.playlists(keyword, offset, limit);
+): Promise<SearchResult<CoverItem>> => {
+  if (platform === "bilibili") return emptyResult<CoverItem>();
+  return netease.playlists(keyword, offset, limit);
+};

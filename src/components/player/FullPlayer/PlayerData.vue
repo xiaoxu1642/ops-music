@@ -4,6 +4,7 @@ import type { SSelectOption } from "@/components/ui/SSelect.vue";
 import { useMediaStore } from "@/stores/media";
 import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
+import { LYRIC_SUPPORTED_PLATFORMS } from "@/types/settings";
 import { getQualityLabel, getQualityLevel } from "@/utils/quality";
 import {
   canNavigateToResource,
@@ -38,7 +39,10 @@ const artists = computed(() => getValidArtists(displayTrack.value?.artists));
 /** 歌词来源偏好下拉选项 */
 const lyricSourceOptions = computed<SSelectOption[]>(() => [
   { value: "auto", label: t("settings.lyricSourcePreference.auto") },
-  { value: "netease", label: t("settings.lyricSourcePreference.netease") },
+  ...LYRIC_SUPPORTED_PLATFORMS.map((platform) => ({
+    value: platform,
+    label: t(`settings.lyricSourcePreference.${platform}`),
+  })),
   { value: "self", label: t("settings.lyricSourcePreference.self") },
 ]);
 

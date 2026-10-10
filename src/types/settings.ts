@@ -29,7 +29,7 @@ export type SearchPlayBehavior = "current" | "all";
 /**
  * 歌词来源偏好
  * - auto：智能选择（按打分结果）
- * - Platform（当前仅 netease）：优先该平台
+ * - Platform（netease / bilibili）：优先该平台
  * - self：跟随歌曲自身来源平台
  */
 export type LyricSourcePreference = Platform | "auto" | "self";
@@ -68,10 +68,9 @@ export type LyricFormatOrder = LyricFormat[];
 
 /**
  * 歌词链路（lyrics IPC）已实现的平台。
- * B 站的歌词接口已在主进程就绪，但还没接进 `lyrics:matchById/ByQuery`，
- * 混进来只会让每次匹配多一次必然失败的 IPC；接入后加回这里即可。
+ * 同时驱动「歌词来源偏好」选项与默认音源顺序，新增平台要先接好主进程歌词桥再登记。
  */
-export const LYRIC_SUPPORTED_PLATFORMS: Platform[] = ["netease"];
+export const LYRIC_SUPPORTED_PLATFORMS: Platform[] = ["netease", "bilibili"];
 
 /** 默认音源顺序 */
 export const DEFAULT_LYRIC_SOURCE_ORDER: LyricSourceOrder = [...LYRIC_SUPPORTED_PLATFORMS];

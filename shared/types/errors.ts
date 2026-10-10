@@ -41,6 +41,8 @@ export enum ErrorCode {
   NETEASE_TRIAL_DISABLED = "NETEASE_TRIAL_DISABLED",
   /** 在线歌曲暂无可用官方音源 */
   NETEASE_UNAVAILABLE = "NETEASE_UNAVAILABLE",
+  /** B 站音频流未拿到本地代理地址（裸地址缺 Referer 必然 403，不能下发） */
+  BILIBILI_PROXY_MISSING = "BILIBILI_PROXY_MISSING",
 
   // 标签编辑相关
   /** 读取文件标签失败 */
