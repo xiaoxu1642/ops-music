@@ -22,7 +22,6 @@ const mocks = vi.hoisted(() => ({
       lyricSourceOrder: [],
       lyricFormatOrder: [],
       smartPreferOnline: false,
-      preferPluginLyric: false,
     },
     preset: { skipKeywordsSongs: false, skipTrackKeywords: [] },
   },
@@ -43,7 +42,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/stores/settings", () => ({ useSettingsStore: () => mocks.settings }));
 vi.mock("@/stores/status", () => ({ useStatusStore: () => mocks.status }));
 vi.mock("@/stores/media", () => ({ useMediaStore: () => ({ track: { id: "current" } }) }));
-vi.mock("@/stores/plugins", () => ({ usePluginsStore: () => ({ list: [] }) }));
 vi.mock("@/stores/queue", () => ({ queue: { value: [] } }));
 vi.mock("@/core/player/candidate", () => ({ getNextTrackCandidate: () => mocks.candidate }));
 vi.mock("@/services/audioSource", () => ({ resolveTrackSource: mocks.resolve }));

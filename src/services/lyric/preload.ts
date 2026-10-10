@@ -1,6 +1,5 @@
 import type { Track } from "@shared/types/player";
 import { useSettingsStore } from "@/stores/settings";
-import { usePluginsStore } from "@/stores/plugins";
 import { resolveLyricForPreload, type ResolvedLyric } from "./resolve";
 
 type PreloadedLyricResult = { hit: false } | { hit: true; lyric: ResolvedLyric };
@@ -27,22 +26,14 @@ const buildTrackKey = (track: Track): string =>
 /** 生成影响歌词解析结果的上下文键 */
 const buildContextKey = (): string => {
   const settings = useSettingsStore();
-  const plugins = usePluginsStore();
   return JSON.stringify([
     settings.lyric.lyricSourcePreference,
     settings.lyric.lyricSourceOrder,
     settings.lyric.lyricFormatOrder,
     settings.lyric.smartPreferOnline,
-    settings.lyric.preferPluginLyric,
     settings.system.lyric.enableOnlineTTMLLyric,
     settings.system.localLyric.enableLocalTTMLOverride,
     settings.system.localLyric.repoDir,
-    plugins.list.map((plugin) => [
-      plugin.manifest.id,
-      plugin.enabled,
-      plugin.status.state,
-      plugin.status.state === "ready" ? plugin.status.sources : null,
-    ]),
   ]);
 };
 

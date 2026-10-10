@@ -9,7 +9,6 @@ import {
 } from "@shared/types/settings";
 import { LibraryApi } from "@shared/types/library";
 import { NowPlayingApi } from "@shared/types/nowPlaying";
-import { PluginsApi } from "@shared/types/plugin";
 import { ApisApi } from "@shared/types/apis";
 import { LyricsApi } from "@shared/types/lyrics";
 import { DownloadApi } from "@shared/types/download";
@@ -62,7 +61,6 @@ declare global {
       window: WindowApi;
       taskbarLyric: TaskbarLyricApi;
       nowPlaying: NowPlayingApi;
-      plugins: PluginsApi;
       apis: ApisApi;
       cloud: CloudUploadApi;
       lyrics: LyricsApi;

@@ -172,7 +172,6 @@ export const useSettingsStore = defineStore(
       lyricSourceOrder: [...DEFAULT_LYRIC_SOURCE_ORDER],
       lyricFormatOrder: [...DEFAULT_LYRIC_FORMAT_ORDER],
       smartPreferOnline: false,
-      preferPluginLyric: false,
       detectBackgroundLyrics: true,
       cjkTransform: "none",
       adaptiveFontSize: true,

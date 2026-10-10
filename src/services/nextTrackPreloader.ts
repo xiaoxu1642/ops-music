@@ -9,7 +9,6 @@ import { getNextTrackCandidate } from "@/core/player/candidate";
 import { invalidatePreloadedLyric, preloadLyricForTrack } from "@/services/lyric/preload";
 import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
-import { usePluginsStore } from "@/stores/plugins";
 import { useMediaStore } from "@/stores/media";
 import * as queue from "@/stores/queue";
 
@@ -38,7 +37,6 @@ let stopContextWatch: (() => void) | null = null;
  */
 const buildContextKey = (track: Track): string => {
   const settings = useSettingsStore();
-  const plugins = usePluginsStore();
 
   const parts = [
     track.id,
@@ -51,16 +49,6 @@ const buildContextKey = (track: Track): string => {
     settings.player.transitionMode,
     settings.player.transitionPreference,
     settings.player.allowTrialPlay,
-    plugins.list
-      .map((plugin) =>
-        JSON.stringify([
-          plugin.manifest.id,
-          plugin.enabled,
-          plugin.status.state,
-          plugin.status.state === "ready" ? plugin.status.sources : null,
-        ]),
-      )
-      .join(";"),
   ];
 
   return parts.join("::");
@@ -312,7 +300,6 @@ export const installNextTrackPreloadWatchers = (): void => {
   if (stopContextWatch) return;
   const settings = useSettingsStore();
   const status = useStatusStore();
-  const plugins = usePluginsStore();
   stopContextWatch = watch(
     () => [
       settings.player.preloadNextTrack,
@@ -332,20 +319,9 @@ export const installNextTrackPreloadWatchers = (): void => {
       settings.lyric.lyricSourceOrder.join(","),
       settings.lyric.lyricFormatOrder.join(","),
       settings.lyric.smartPreferOnline,
-      settings.lyric.preferPluginLyric,
       settings.system.lyric.enableOnlineTTMLLyric,
       settings.system.localLyric.enableLocalTTMLOverride,
       settings.system.localLyric.repoDir,
-      plugins.list
-        .map((plugin) =>
-          JSON.stringify([
-            plugin.manifest.id,
-            plugin.enabled,
-            plugin.status.state,
-            plugin.status.state === "ready" ? plugin.status.sources : null,
-          ]),
-        )
-        .join(";"),
     ],
     scheduleNextTrackPreload,
     { flush: "post" },

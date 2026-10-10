@@ -1,26 +1,17 @@
 import type { Track } from "@shared/types/player";
-import type { Platform } from "@shared/types/platform";
 import { isPlatform } from "@shared/types/platform";
 import type { QualityLevel } from "@/utils/quality";
 import { useSettingsStore } from "@/stores/settings";
-import { usePluginsStore } from "@/stores/plugins";
 import { useUserStore } from "@/stores/user";
 import { resolveNeteaseUrl } from "@/apis/song/netease";
 import { ErrorCode } from "@shared/types/errors";
 import { handleError } from "@/utils/errors";
 
-/** 在线平台 source → 插件 source key；未列出的平台不参与插件兜底 */
-const PLATFORM_TO_PLUGIN_SOURCE: Partial<Record<Platform, string>> = {
-  netease: "wy",
-};
-
 /** 解析选项 */
 export interface ResolveTrackSourceOptions {
   /** 将解析失败原因交给播放流程，供提示和跳曲决策使用 */
   onError?: (error: string) => void;
-  /** 要跳过的插件 ID 列表 */
-  skipPluginIds?: readonly string[];
-  /** 是否跳过官方在线接口，直接进入插件兜底 */
+  /** 是否跳过官方在线接口 */
   skipOfficialOnline?: boolean;
   /** 是否静默解析 */
   silent?: boolean;
@@ -42,102 +33,13 @@ const cacheKeyForTrack = (track: Track, songLevel: QualityLevel): string | null 
 
 /** 在线 URL 解析结果 */
 export type OnlineResolveResult =
-  | {
-      ok: true;
-      url: string;
-      isTrial: boolean;
-      provider: "official" | "plugin" | "trial";
-      pluginId?: string;
-    }
+  | { ok: true; url: string; isTrial: boolean; provider: "official" | "trial" }
   | { ok: false; errorCode: ErrorCode };
-
-/**
- * 经插件解析在线音频源 URL
- * @param track - 要解析的 track
- * @param quality - 音质档位（由调用方传入，默认 hq）
- * @returns 解析结果，失败时带原因码
- */
-export const resolveByPlugin = async (
-  track: Track,
-  quality: QualityLevel = "hq",
-  skipPluginIds: readonly string[] = [],
-): Promise<OnlineResolveResult> => {
-  const fail = (errorCode: ErrorCode): OnlineResolveResult => ({ ok: false, errorCode });
-  if (!isPlatform(track.source)) return fail(ErrorCode.URL_RESOLVE_FAILED);
-  const pluginSource = PLATFORM_TO_PLUGIN_SOURCE[track.source];
-  // 未映射到插件 source 的平台不参与插件兜底，只能走内置接口
-  if (!pluginSource) return fail(ErrorCode.URL_RESOLVE_FAILED);
-  const skip = new Set(skipPluginIds);
-  const plugins = usePluginsStore();
-  const candidates = plugins.list.filter(
-    (info) =>
-      !skip.has(info.manifest.id) &&
-      info.enabled &&
-      info.status.state === "ready" &&
-      info.status.sources[pluginSource]?.actions.includes("musicUrl"),
-  );
-  if (candidates.length === 0) return fail(ErrorCode.NO_PLUGIN_AVAILABLE);
-  // 补齐 id / songmid / songId / hash / albumId 等字段
-  const totalSec = track.duration > 0 ? Math.round(track.duration / 1000) : 0;
-  const interval =
-    totalSec > 0
-      ? `${Math.floor(totalSec / 60)
-          .toString()
-          .padStart(2, "0")}:${(totalSec % 60).toString().padStart(2, "0")}`
-      : null;
-  const singer = track.artists.map((artist) => artist.name).join("/");
-  const songId = track.id;
-  // 插件的 hash 字段即 32 位十六进制歌曲标识，直接从 id 形状推断
-  const isHash = typeof songId === "string" && /^[0-9a-fA-F]{32}$/.test(songId);
-  const hash = isHash ? songId : undefined;
-  const musicInfo = {
-    id: songId,
-    songmid: songId,
-    songId,
-    name: track.title,
-    singer,
-    source: pluginSource,
-    interval,
-    img: track.cover ?? null,
-    ...(hash ? { hash } : {}),
-    albumId: track.album?.id ?? "",
-    albumName: track.album?.name ?? "",
-    meta: {
-      songId,
-      albumName: track.album?.name ?? "",
-      albumId: track.album?.id ?? "",
-      picUrl: track.cover ?? null,
-      ...(hash ? { hash } : {}),
-    },
-  };
-  for (const plugin of candidates) {
-    try {
-      const res = await window.api.plugins.resolveUrl({
-        pluginId: plugin.manifest.id,
-        source: pluginSource,
-        quality,
-        musicInfo,
-      });
-      if (res?.url) {
-        return {
-          ok: true,
-          url: res.url,
-          isTrial: false,
-          provider: "plugin",
-          pluginId: plugin.manifest.id,
-        };
-      }
-    } catch (err) {
-      console.warn("[plugin] resolveUrl failed", plugin.manifest.id, err);
-    }
-  }
-  return fail(ErrorCode.URL_RESOLVE_FAILED);
-};
 
 /**
  * 解析在线音频源 URL
  * @param track - 要解析的 track
- * @param songLevel - 在线歌曲音质档位（仅内置官方接口生效）
+ * @param songLevel - 在线歌曲音质档位
  */
 const resolveOnlineUrl = async (
   track: Track,
@@ -166,14 +68,12 @@ const resolveOnlineUrl = async (
       officialErrorCode = ErrorCode.NETWORK_ERROR;
     }
   }
-  const pluginResolved = await resolveByPlugin(track, songLevel, options.skipPluginIds ?? []);
-  if (pluginResolved.ok) return pluginResolved;
   if (trialUrl && settings.player.allowTrialPlay) {
     return { ok: true, url: trialUrl, isTrial: true, provider: "trial" };
   }
   if (trialUrl) return { ok: false, errorCode: ErrorCode.NETEASE_TRIAL_DISABLED };
   if (officialErrorCode) return { ok: false, errorCode: officialErrorCode };
-  return pluginResolved;
+  return { ok: false, errorCode: ErrorCode.URL_RESOLVE_FAILED };
 };
 
 /**
@@ -184,8 +84,7 @@ const resolveOnlineUrl = async (
 export interface ResolvedTrackSource {
   source: string;
   fromCache: boolean;
-  provider: "local" | "cache" | "official" | "plugin" | "trial";
-  pluginId?: string;
+  provider: "local" | "cache" | "official" | "trial";
   /**
    * 下载音源并返回可供原生预载使用的缓存路径
    * @param preloadId - 可选的预载消费者标识，用于缓存租约和独立取消
@@ -242,7 +141,6 @@ export const resolveTrackSource = async (
         source: url,
         fromCache: false,
         provider: resolved.provider,
-        pluginId: resolved.pluginId,
       };
       if (cacheEnabled && !resolved.isTrial) {
         result.cacheRequest = async (preloadId, signal) => {

@@ -4,7 +4,6 @@ import type { Platform } from "@shared/types/platform";
 import { isPlatform } from "@shared/types/platform";
 import { detectFormat } from "lyric-kit";
 import { useSettingsStore } from "@/stores/settings";
-import { usePluginsStore } from "@/stores/plugins";
 import { DEFAULT_LYRIC_FORMAT_ORDER, DEFAULT_LYRIC_SOURCE_ORDER } from "@/types/settings";
 import { requestPlatformLyric, requestLrclibLyric, requestTTMLOverlay } from "./request";
 
@@ -231,7 +230,7 @@ export const resolveLocalRepoLyric = async (track: Track): Promise<ResolvedLyric
 
 /**
  * LRCLIB 兜底歌词：歌词链路的最后一环
- * 平台 API、本地歌词库、在线 TTML 与插件都没给出歌词时才用，只有行级时间戳
+ * 平台 API、本地歌词库与在线 TTML 都没给出歌词时才用，只有行级时间戳
  * @param track - 歌曲信息
  * @returns 兜底歌词，未命中返回 null
  */
@@ -240,38 +239,6 @@ export const resolveLrclibLyric = async (track: Track): Promise<ResolvedLyric | 
   if (!resp.ok || !resp.data) return null;
   return { source: { source: "online", format: "lrc" }, input: { content: resp.data } };
 };
-
-/**
- * 从插件解析歌词
- * @param track - 歌曲信息
- * @returns 首个有效插件歌词，不存在则返回 null
- */
-export const resolvePluginLyric = async (track: Track): Promise<ResolvedLyric | null> => {
-  const plugins = usePluginsStore();
-  for (const info of plugins.list) {
-    if (!info.enabled || info.status.state !== "ready") continue;
-    for (const [source, cap] of Object.entries(info.status.sources)) {
-      if (!cap.actions.includes("musicLyric")) continue;
-      const resp = await window.api.plugins.matchLyric({
-        pluginId: info.manifest.id,
-        source,
-        track,
-      });
-      if (!resp.ok || !resp.data) continue;
-      const content = resp.data.awlyric ?? resp.data.lyric;
-      if (!content?.trim()) continue;
-      return {
-        source: { source: "online", format: detectFormat(content) },
-        input: { content, translation: resp.data.tlyric, romaji: resp.data.rlyric },
-      };
-    }
-  }
-  return null;
-};
-
-/** 插件歌词是否优先于内置来源 */
-export const isPluginLyricPreferred = (): boolean =>
-  useSettingsStore().lyric.preferPluginLyric === true;
 
 /**
  * 为下一首歌曲解析最终歌词结果
@@ -291,28 +258,11 @@ export const resolveLyricForPreload = async (
   if (!shouldContinue()) return null;
   if (localRepo) return localRepo;
 
-  // 插件优选：请求先行发出，与下方正常解析并发
-  const pluginTask = isPluginLyricPreferred() ? resolvePluginLyric(track) : null;
-
   const online = await resolveOnlineByPreference(track, {
     hasLocal: false,
     localFormat: null,
     shouldContinue,
   });
   if (!shouldContinue()) return null;
-  const normal: ResolvedLyric | null = online
-    ? { source: online.source, input: online.input }
-    : null;
-  if (pluginTask) {
-    const plugin = await pluginTask;
-    if (!shouldContinue()) return null;
-    if (plugin && isBetterFormat(plugin.source.format, normal?.source.format ?? null)) {
-      return plugin;
-    }
-    return normal ?? plugin ?? null;
-  }
-  if (normal) return normal;
-
-  const plugin = await resolvePluginLyric(track);
-  return shouldContinue() ? plugin : null;
+  return online ? { source: online.source, input: online.input } : null;
 };

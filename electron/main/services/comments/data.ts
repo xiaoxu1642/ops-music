@@ -4,7 +4,6 @@ import type {
   MusicCommentItem,
   MusicCommentPage,
 } from "@shared/types/comment";
-import type { PluginInfo } from "@shared/types/plugin";
 import { PLATFORM_SHORT_NAME } from "@shared/types/platform";
 
 interface NeteaseUser {
@@ -104,36 +103,10 @@ export const normalizeNeteaseCommentPage = (
 };
 
 /** 构建可用评论源 */
-export const buildCommentSources = (
-  plugins: Array<
-    Pick<PluginInfo, "enabled"> & {
-      manifest: Pick<PluginInfo["manifest"], "id" | "name">;
-      status: PluginInfo["status"];
-    }
-  >,
-): CommentSource[] => {
-  const sources: CommentSource[] = [
-    {
-      id: "builtin:netease",
-      name: PLATFORM_SHORT_NAME.netease,
-      kind: "builtin",
-      platform: "netease",
-    },
-  ];
-
-  for (const info of plugins) {
-    if (!info.enabled || info.status.state !== "ready") continue;
-    for (const [source, cap] of Object.entries(info.status.sources)) {
-      if (!cap.actions.includes("musicSearch") || !cap.actions.includes("musicComment")) continue;
-      sources.push({
-        id: `plugin:${info.manifest.id}:${source}`,
-        name: cap.name,
-        kind: "plugin",
-        pluginId: info.manifest.id,
-        pluginSource: source,
-      });
-    }
-  }
-
-  return sources;
-};
+export const buildCommentSources = (): CommentSource[] => [
+  {
+    id: "builtin:netease",
+    name: PLATFORM_SHORT_NAME.netease,
+    platform: "netease",
+  },
+];

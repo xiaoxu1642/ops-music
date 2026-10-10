@@ -2,13 +2,6 @@ import os from "os";
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
 import type { McpStatus, TaskbarLyricSettings } from "@shared/types/settings";
-import type {
-  PluginInfo,
-  PluginResolveUrlArgs,
-  PluginInvokeMenuArgs,
-  PluginMatchLyricArgs,
-  PluginMatchCoverArgs,
-} from "@shared/types/plugin";
 import type { HotkeyActionId, HotkeyBinding, HotkeyConflict } from "@shared/types/hotkey";
 import type { LoadOptions, TrackSource, TransitionPreference } from "@shared/types/player";
 import type { PlayEventInput, FavoriteEventInput } from "@shared/types/stats";
@@ -325,41 +318,6 @@ const api = {
     // 订阅任务栏歌词配置变化
     onConfigChange: (callback: (config: TaskbarLyricSettings) => void) =>
       subscribe<TaskbarLyricSettings>("taskbarLyric:configChange", callback),
-  },
-  plugins: {
-    // 列出所有已安装插件
-    list: () => ipcRenderer.invoke("plugin:list"),
-    // 从指定路径导入插件
-    install: (filePath: string) => ipcRenderer.invoke("plugin:install", filePath),
-    // 弹出原生文件选择框导入插件
-    pickAndInstall: () => ipcRenderer.invoke("plugin:pickAndInstall"),
-    // 从远端 URL 下载并导入
-    installFromUrl: (url: string) => ipcRenderer.invoke("plugin:installFromUrl", url),
-    // 卸载
-    uninstall: (id: string) => ipcRenderer.invoke("plugin:uninstall", id),
-    // 启用/禁用
-    setEnabled: (id: string, enabled: boolean) =>
-      ipcRenderer.invoke("plugin:setEnabled", id, enabled),
-    // 写入控制类插件配置项
-    setSetting: (id: string, key: string, value: unknown) =>
-      ipcRenderer.invoke("plugin:setSetting", id, key, value),
-    // 手动检查更新
-    checkUpdate: (id: string) => ipcRenderer.invoke("plugin:checkUpdate", id),
-    // 一键更新
-    applyUpdate: (id: string) => ipcRenderer.invoke("plugin:applyUpdate", id),
-    // 解析播放 URL
-    resolveUrl: (args: PluginResolveUrlArgs) => ipcRenderer.invoke("plugin:resolveUrl", args),
-    // 触发插件自定义菜单项
-    invokeMenu: (args: PluginInvokeMenuArgs) => ipcRenderer.invoke("plugin:invokeMenu", args),
-    // 经插件兜底匹配歌词
-    matchLyric: (args: PluginMatchLyricArgs) => ipcRenderer.invoke("plugin:matchLyric", args),
-    // 经插件兜底匹配封面
-    matchCover: (args: PluginMatchCoverArgs) => ipcRenderer.invoke("plugin:matchCover", args),
-    // 拉取插件市场列表
-    market: () => ipcRenderer.invoke("plugin:market"),
-    // 订阅插件状态变化
-    onStatus: (callback: (info: PluginInfo) => void) =>
-      subscribe<PluginInfo>("plugin:status", callback),
   },
   apis: {
     // 调用任意平台的任意接口

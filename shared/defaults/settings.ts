@@ -1,5 +1,4 @@
 import type { SystemConfig } from "../types/settings";
-import { defaultPluginsConfig } from "./plugin-api";
 import { defaultHotkeyConfig } from "./hotkeys";
 
 /** 默认配置 */
@@ -102,6 +101,5 @@ export const defaultSystemConfig: SystemConfig = {
       visible: false,
     },
   },
-  plugins: defaultPluginsConfig,
   hotkeys: defaultHotkeyConfig,
 };

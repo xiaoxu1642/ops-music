@@ -36,8 +36,6 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve(__dirname, "electron/main/index.ts"),
-          // 插件 host worker
-          "host.worker": resolve(__dirname, "electron/main/plugins/host.worker.ts"),
         },
       },
     },

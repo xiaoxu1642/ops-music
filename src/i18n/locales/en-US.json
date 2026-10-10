@@ -617,7 +617,6 @@
       "services": "Services",
       "download": "Downloads",
       "localCache": "Local & Cache",
-      "plugins": "Plugin Manager",
       "other": "Other",
       "about": "About"
     },
@@ -649,8 +648,6 @@
       "musicSpectrum": "Music Spectrum",
       "mcp": "MCP",
       "systemConfig": "System",
-      "pluginManage": "Import Plugins",
-      "pluginsList": "Plugin Management",
       "songCache": "Song Cache",
       "downloadLocation": "Download Settings",
       "downloadGeneral": "Download Options",
@@ -763,7 +760,7 @@
     },
     "allowTrialPlay": {
       "label": "Allow Trial Playback",
-      "description": "Play trial clips returned by the platform only when full sources and plugins are unavailable"
+      "description": "Play trial clips returned by the platform only when full sources are unavailable"
     },
     "preloadNextTrack": {
       "label": "Preload next track",
@@ -844,10 +841,6 @@
     "smartPreferOnline": {
       "label": "Auto-Upgrade Lyric Format",
       "description": "Fetch a higher-ranked format from the online source when the current one is low"
-    },
-    "preferPluginLyric": {
-      "label": "Prefer Plugin Lyrics",
-      "description": "Request plugin lyrics concurrently and auto-replace if a higher-ranked format is returned"
     },
     "detectBackgroundLyrics": {
       "label": "Auto-Detect Background Lyrics",
@@ -1453,85 +1446,6 @@
       "confirmDesc": "All playlists, sign-in state and caches will be wiped and settings reset. This cannot be undone.",
       "done": "All data has been cleared"
     },
-    "plugins": {
-      "securityWarningTitle": "Mind the security risks before installing",
-      "securityWarning": "Plugins are third-party code. The app sandboxes them as much as possible, but the risk cannot be fully eliminated — a malicious plugin may access your data or perform dangerous actions. Only install plugins from sources you trust.",
-      "hint": "Install from local file or URL",
-      "hintDetail": "Extend the app with plugins",
-      "importLocal": "Local",
-      "importFromUrl": "From URL",
-      "importUrlTitle": "Install plugin from URL",
-      "importUrlPlaceholder": "Paste https:// link to a .js script",
-      "importUrlSubmit": "Install",
-      "importUrlInvalid": "Please enter a valid http or https URL",
-      "market": "Plugin Market",
-      "install": "Install",
-      "installed": "Installed",
-      "marketEmpty": "No plugins available",
-      "marketError": "Failed to load",
-      "importSuccess": "Plugin imported",
-      "importFailed": "Failed to import plugin",
-      "empty": "No plugins installed",
-      "emptyHint": "Install a plugin from local file or URL to enable extended features",
-      "uninstall": "Uninstall",
-      "configSubtitle": "Plugin settings",
-      "uninstallConfirmTitle": "Uninstall Plugin",
-      "uninstallConfirm": "Are you sure you want to uninstall \"{name}\"? This action cannot be undone.",
-      "uninstallSuccess": "Plugin uninstalled",
-      "uninstallFailed": "Uninstall failed",
-      "by": "By",
-      "sources": "Sources",
-      "pendingUpdate": "Update",
-      "noChangelog": "No release notes",
-      "openUpdateUrl": "Open update page",
-      "checkUpdate": "Check update",
-      "checkUpdateFailed": "Update check failed",
-      "updateFound": "New version available",
-      "updateLatest": "Already up to date",
-      "update": "Update",
-      "updateSuccess": "Plugin updated",
-      "updateFailed": "Update failed, use \"Open update page\" to install manually",
-      "status": {
-        "ready": "Ready",
-        "loading": "Loading",
-        "error": "Error",
-        "disabled": "Disabled",
-        "unloaded": "Unloaded"
-      },
-      "sectionSource": "Source Plugins",
-      "sectionControl": "Control Plugins",
-      "detail": {
-        "title": "Plugin Details",
-        "intro": "About",
-        "grants": "Permissions",
-        "contributes": "Capabilities",
-        "info": "Info",
-        "noDescription": "No description",
-        "grantNone": "This plugin declares no permissions",
-        "autoGranted": "Auto-granted",
-        "sources": "Sources",
-        "events": "Events",
-        "controls": "Playback control",
-        "controlsYes": "Yes",
-        "settingsCount": "Settings",
-        "menus": "Menu items",
-        "id": "ID",
-        "author": "Author",
-        "apiLevel": "API level",
-        "installed": "Installed",
-        "updated": "Updated",
-        "homepage": "Homepage"
-      },
-      "grant": {
-        "network": { "label": "Network", "desc": "Can make network requests" },
-        "control": { "label": "Control", "desc": "Can control the player" },
-        "ui": { "label": "Interface", "desc": "Can extend or modify the app interface" }
-      }
-    },
-    "pluginManager": {
-      "label": "Plugin Manager",
-      "description": "Import, enable, or uninstall extension scripts"
-    },
     "enableLocalTTMLOverride": {
       "label": "Enable Local Lyric Library",
       "description": "Match .ttml / .lrc / .txt in a chosen folder by song metadata; takes priority over online lyrics when found"
@@ -1775,7 +1689,6 @@
     "NETWORK_ERROR": "Failed to reach audio source, check network or try another",
     "NETWORK_TIMEOUT": "Audio source timed out, check network or try another",
     "URL_RESOLVE_FAILED": "Failed to get playback URL",
-    "NO_PLUGIN_AVAILABLE": "No plugin available for this platform",
     "NETEASE_LOGIN_EXPIRED": "Login expired; switched to guest mode",
     "NETEASE_VIP_REQUIRED": "This track requires a membership or separate purchase",
     "NETEASE_TRIAL_DISABLED": "Only a trial is available; enable trial playback in settings",

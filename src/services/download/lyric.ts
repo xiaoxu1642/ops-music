@@ -9,11 +9,8 @@ import type { LyricFormat, LyricInput } from "@shared/types/lyrics";
 import { isPlatform } from "@shared/types/platform";
 import { buildDownloadLyric } from "@/utils/lyric/serialize";
 import {
-  isBetterFormat,
-  isPluginLyricPreferred,
   resolveLocalRepoLyric,
   resolveOnlineByPreference,
-  resolvePluginLyric,
   type ResolvedLyric,
 } from "@/services/lyric/resolve";
 
@@ -46,16 +43,8 @@ export const resolveDownloadLyric = async (track: Track): Promise<DownloadLyric 
 
   // 在线平台
   if (isPlatform(track.source)) {
-    // 插件优选：请求先行发出，与正常来源并发
-    const pluginTask = isPluginLyricPreferred() ? resolvePluginLyric(track) : null;
     const online = await resolveOnlineByPreference(track, { hasLocal: false, localFormat: null });
-    const onlineLyric = toUsableDownloadLyric(online);
-    if (pluginTask) {
-      const plugin = toUsableDownloadLyric(await pluginTask);
-      if (plugin && isBetterFormat(plugin.format, onlineLyric?.format ?? null)) return plugin;
-      return onlineLyric ?? plugin ?? null;
-    }
-    return onlineLyric ?? toUsableDownloadLyric(await resolvePluginLyric(track));
+    return toUsableDownloadLyric(online);
   }
 
   return null;

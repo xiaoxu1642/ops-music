@@ -21,7 +21,6 @@ vi.mock("@/services/lyric/preload", () => ({
 const mockResolveOnlineByPreference = vi.fn();
 const mockResolveTTMLOverlay = vi.fn();
 const mockResolveLocalRepoLyric = vi.fn();
-const mockResolvePluginLyric = vi.fn();
 const mockResolveLrclibLyric = vi.fn();
 
 vi.mock("@/services/lyric/resolve", async (importOriginal) => {
@@ -31,7 +30,6 @@ vi.mock("@/services/lyric/resolve", async (importOriginal) => {
     resolveOnlineByPreference: (...args: unknown[]) => mockResolveOnlineByPreference(...args),
     resolveTTMLOverlay: (...args: unknown[]) => mockResolveTTMLOverlay(...args),
     resolveLocalRepoLyric: (...args: unknown[]) => mockResolveLocalRepoLyric(...args),
-    resolvePluginLyric: (...args: unknown[]) => mockResolvePluginLyric(...args),
     resolveLrclibLyric: (...args: unknown[]) => mockResolveLrclibLyric(...args),
   };
 });
@@ -62,9 +60,6 @@ const mockWindowApi = {
     updatePlaybackState: vi.fn(),
     updateLyricLine: vi.fn(),
   },
-  plugins: {
-    matchLyric: vi.fn(),
-  },
 };
 
 // @ts-expect-error test mock
@@ -80,7 +75,6 @@ describe("lyric loader", () => {
     mockResolveOnlineByPreference.mockResolvedValue(null);
     mockResolveTTMLOverlay.mockResolvedValue(null);
     mockResolveLocalRepoLyric.mockResolvedValue(null);
-    mockResolvePluginLyric.mockResolvedValue(null);
     mockResolveLrclibLyric.mockResolvedValue(null);
 
     // @ts-expect-error test mock
@@ -286,31 +280,6 @@ describe("lyric loader", () => {
     expect(mockResolveOnlineByPreference).not.toHaveBeenCalled();
   });
 
-  it("插件歌词优选：开启插件优先时，插件较快返回可率先上屏展示", async () => {
-    const settings = useSettingsStore();
-    settings.lyric.preferPluginLyric = true;
-
-    const media = useMediaStore();
-    const track = createTrack("song_7");
-    media.track = track;
-
-    mockResolvePluginLyric.mockResolvedValue({
-      source: { source: "online", format: "lrc" },
-      input: { content: "[00:01.00]插件极速歌词" },
-    });
-
-    mockResolveOnlineByPreference.mockImplementation(async () => {
-      // 模拟内置平台较慢，等插件执行完
-      await Promise.resolve();
-      return null;
-    });
-
-    await loadForTrack(null);
-
-    expect(media.activeLyric).not.toBeNull();
-    expect(media.parsedLyric[0].words[0].word).toContain("插件极速歌词");
-  });
-
   it("TTML 拉取去重：onCandidate 与最终结果先后到达时，仅发起一次 TTML 请求", async () => {
     const media = useMediaStore();
     media.track = createTrack("song_8");
@@ -334,50 +303,6 @@ describe("lyric loader", () => {
 
     expect(media.activeLyric?.format).toBe("yrc");
     expect(mockResolveTTMLOverlay).toHaveBeenCalledTimes(1);
-  });
-
-  it("插件优选防降级：插件优质逐词歌词先上屏，内置平台迟到的普通 LRC 不覆盖", async () => {
-    const settings = useSettingsStore();
-    settings.lyric.preferPluginLyric = true;
-
-    const media = useMediaStore();
-    media.track = createTrack("song_9");
-
-    mockResolvePluginLyric.mockResolvedValue({
-      source: { source: "online", format: "qrc" },
-      input: { content: "[1000,1000]插件优质逐词歌词(1000,1000)" },
-    });
-    mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "lrc", platform: "netease" },
-      input: { content: "[00:01.00]内置普通LRC" },
-    });
-
-    await loadForTrack(null);
-
-    expect(media.activeLyric?.format).toBe("qrc");
-    expect(media.parsedLyric[0].words[0].word).toContain("插件优质逐词歌词");
-  });
-
-  it("插件优选可被升级：插件普通 LRC 先上屏，内置平台更优 YRC 后到时热替换", async () => {
-    const settings = useSettingsStore();
-    settings.lyric.preferPluginLyric = true;
-
-    const media = useMediaStore();
-    media.track = createTrack("song_10");
-
-    mockResolvePluginLyric.mockResolvedValue({
-      source: { source: "online", format: "lrc" },
-      input: { content: "[00:01.00]插件普通LRC" },
-    });
-    mockResolveOnlineByPreference.mockResolvedValue({
-      source: { source: "online", format: "yrc", platform: "netease" },
-      input: { content: "[0,3000](0,1500,0)内置优质YRC(1500,1500,0)替换" },
-    });
-
-    await loadForTrack(null);
-
-    expect(media.activeLyric?.format).toBe("yrc");
-    expect(media.parsedLyric[0].words[0].word).toContain("内置优质YRC");
   });
 
   it("切歌竞态 Token 隔离：快速切歌时，上一首延迟到达的响应绝不污染新歌", async () => {

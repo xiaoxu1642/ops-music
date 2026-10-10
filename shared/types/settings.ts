@@ -1,6 +1,5 @@
-import type { PluginsConfig, PluginQuality } from "./plugin";
 import type { HotkeyConfig } from "./hotkey";
-import type { DownloadLyricFormat, DownloadFolderScheme } from "./download";
+import type { DownloadLyricFormat, DownloadQuality, DownloadFolderScheme } from "./download";
 
 /** 支持的语言代码 */
 export type LocaleCode = "zh-CN" | "en-US";
@@ -196,7 +195,7 @@ export interface DownloadSettings {
   /** 下载目录；null 使用系统下载目录下的应用子目录 */
   dir: string | null;
   /** 下载音质 */
-  quality: PluginQuality;
+  quality: DownloadQuality;
   /** 模拟播放下载：网易云用播放接口替代下载接口，避免占用每日下载次数 */
   usePlaybackForDownload: boolean;
   /** 文件名模板，支持 {artist} {title} {album}；不含子目录 */
@@ -285,8 +284,6 @@ export interface SystemConfig {
   };
   /** 窗口几何状态（运行时自动记录，非用户主动配置） */
   windowStates: WindowStates;
-  /** 插件系统配置 */
-  plugins: PluginsConfig;
   /** 快捷键配置（独立于其他配置，由 hotkey 模块独占） */
   hotkeys: HotkeyConfig;
 }

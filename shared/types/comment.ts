@@ -1,9 +1,6 @@
 import type { Track } from "./player";
 import type { Platform } from "./platform";
 
-/** 评论来源类型 */
-export type CommentSourceKind = "builtin" | "plugin";
-
 /** 评论分页类型 */
 export type CommentTab = "hot" | "new";
 
@@ -11,12 +8,9 @@ export type CommentTab = "hot" | "new";
 export interface CommentSource {
   id: string;
   name: string;
-  kind: CommentSourceKind;
   platform?: Platform;
   /** 该来源支持的评论标签，未声明时默认全部支持 */
   tabs?: CommentTab[];
-  pluginId?: string;
-  pluginSource?: string;
 }
 
 /** 单条歌曲评论 */

@@ -29,10 +29,8 @@ export enum ErrorCode {
   NETWORK_TIMEOUT = "NETWORK_TIMEOUT",
 
   // 在线源相关
-  /** 无法获取播放地址（API + 插件都失败） */
+  /** 无法获取播放地址 */
   URL_RESOLVE_FAILED = "URL_RESOLVE_FAILED",
-  /** 未找到支持该平台的插件 */
-  NO_PLUGIN_AVAILABLE = "NO_PLUGIN_AVAILABLE",
   /** 在线平台登录态已失效 */
   NETEASE_LOGIN_EXPIRED = "NETEASE_LOGIN_EXPIRED",
   /** 在线歌曲需要会员或单独购买 */

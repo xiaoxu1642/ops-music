@@ -1,7 +1,5 @@
 import type { Track } from "@shared/types/player";
 import type { QualityLevel } from "@/utils/quality";
-import { isPlatform } from "@shared/types/platform";
-import { resolveByPlugin } from "@/services/audioSource";
 import { resolveNeteaseDownloadUrl } from "@/apis/song/netease";
 
 /** 下载源解析结果 */
@@ -17,26 +15,20 @@ export interface DownloadSource {
  * 按下载音质解析歌曲下载地址
  * @param track - 要下载的歌曲
  * @param level - 下载音质档位
- * @returns 下载源；无法下载（VIP/试听/无插件）返回 null
+ * @returns 下载源；无法下载（VIP/试听）返回 null
  */
 export const resolveDownloadSource = async (
   track: Track,
   level: QualityLevel,
   usePlaybackForDownload: boolean,
 ): Promise<DownloadSource | null> => {
-  // 官方接口
   if (track.source === "netease") {
     try {
       const resolved = await resolveNeteaseDownloadUrl(track, level, usePlaybackForDownload);
       if (resolved) return resolved;
     } catch {
-      // 官方失败回落插件
+      // 官方接口异常按无下载源处理
     }
-  }
-  // 官方未命中时走插件兜底
-  if (isPlatform(track.source)) {
-    const res = await resolveByPlugin(track, level);
-    if (res.ok && !res.isTrial) return { url: res.url };
   }
   return null;
 };

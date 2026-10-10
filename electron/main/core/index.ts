@@ -14,11 +14,6 @@ import { initGlobalHotkey } from "@main/services/globalHotkey";
 import { initDatabase, closeDatabase } from "@main/database";
 import { init as initSongCache } from "@main/services/songCache";
 import { init as initDownload } from "@main/services/downloadManager";
-import { pluginRegistry } from "@main/plugins/registry";
-import {
-  init as initPlaybackBridge,
-  dispose as disposePlaybackBridge,
-} from "@main/plugins/playbackBridge";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
 import { coreLog, initLogger } from "@main/utils/logger";
@@ -121,10 +116,6 @@ export const initApp = (): void => {
     // 启动下载服务
     void initDownload();
     initMedia();
-    // 初始化插件系统
-    pluginRegistry.init();
-    // 初始化播放事件桥（需在 pluginRegistry.init 之后，读 hasEnabledControlPlugin）
-    initPlaybackBridge();
     // 恢复歌词相关窗口
     restoreLyricWindows();
     // 注册全局快捷键
@@ -153,7 +144,5 @@ export const initApp = (): void => {
     shutdownMedia();
     closeDatabase();
     void stopMcpServer();
-    void pluginRegistry.shutdown();
-    disposePlaybackBridge();
   });
 };

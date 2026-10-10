@@ -7,14 +7,12 @@ import type { RepeatMode, ShuffleMode } from "@/stores/status";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
 import { useStatusStore } from "@/stores/status";
-import { usePluginsStore } from "@/stores/plugins";
 import { useHistoryStore } from "@/stores/history";
 import { useLibraryStore } from "@/stores/library";
 import * as queue from "@/stores/queue";
 import * as fm from "./fm";
 import * as playback from "@/services/playback";
 import * as lyricLoader from "@/services/lyric/loader";
-import * as coverLoader from "@/services/coverLoader";
 import * as abLoop from "@/services/abLoop";
 import * as autoClose from "@/services/autoClose";
 import * as cacheScheduler from "@/services/cacheScheduler";
@@ -53,10 +51,8 @@ interface LoadRuntimeOptions {
 
 /** 单次音源兜底过程的重试状态 */
 interface SourceRetryState {
-  /** 是否已放弃官方在线接口，后续仅尝试插件 */
+  /** 是否已放弃官方在线接口 */
   skipOfficialOnline: boolean;
-  /** 已尝试且需跳过的插件 ID */
-  skippedPluginIds: Set<string>;
 }
 
 /**
@@ -166,7 +162,6 @@ export const load = async (
   if (isOnline) {
     void lyricLoader.loadForTrack(null);
     extractColorFromUrl(meta?.cover ?? meta?.coverOriginal ?? null);
-    if (meta) void coverLoader.loadCoverForTrack(meta);
   }
   try {
     const result =
@@ -194,7 +189,6 @@ export const load = async (
       if (!isOnline) {
         lyricLoader.loadForTrack(detail);
         extractColorFromUrl(enriched?.cover ?? null);
-        if (enriched) void coverLoader.loadCoverForTrack(enriched);
       }
       const dur = enriched?.duration ?? mediaInfo.duration;
       status.duration = dur;
@@ -221,7 +215,6 @@ export const load = async (
 /** 创建音源重试状态 */
 const createSourceRetryState = (): SourceRetryState => ({
   skipOfficialOnline: false,
-  skippedPluginIds: new Set<string>(),
 });
 
 /**
@@ -238,7 +231,6 @@ const resolveTrackSourceWithRetry = (
     silent: true,
     onError,
     skipOfficialOnline: retry.skipOfficialOnline,
-    skipPluginIds: [...retry.skippedPluginIds],
   });
 
 /**
@@ -253,10 +245,6 @@ const markRetryableSourceFailure = (
 ): boolean => {
   if (resolved.provider === "official" && !retry.skipOfficialOnline) {
     retry.skipOfficialOnline = true;
-    return true;
-  }
-  if (resolved.provider === "plugin" && resolved.pluginId) {
-    retry.skippedPluginIds.add(resolved.pluginId);
     return true;
   }
   return false;
@@ -295,7 +283,7 @@ const loadTrackSourceWithFallback = async (
       }));
     firstTry = null;
     if (!shouldContinue()) return { status: "cancelled" };
-    // 没有可用插件不代表原音源失败原因，优先保留实际加载错误
+    // 解析失败不代表原音源加载失败原因，优先保留实际加载错误
     if (!resolved) return lastFailure ?? { status: "unresolved", error: resolutionError };
     const result = await load(resolved.source, autoPlay, track, {
       preparedId: usingInitial ? preparedId : undefined,
@@ -1319,8 +1307,6 @@ export const initPlayer = async (): Promise<void> => {
   // 先从主进程同步后端配置，确保 system 设置可用
   const settings = useSettingsStore();
   await settings.syncSystem();
-  // 插件 store 同理：在线歌曲 URL 兜底走插件，列表必须在 loadTrack 前就绪
-  void usePluginsStore().load();
   await queue.restoreQueue();
   const status = useStatusStore();
   // 兼容移除“不循环”前持久化的旧状态

@@ -8,7 +8,6 @@ import hotkeysCategory from "./categories/hotkeys";
 import servicesCategory from "./categories/services";
 import downloadCategory from "./categories/download";
 import localCacheCategory from "./categories/localCache";
-import pluginsCategory from "./categories/plugins";
 import otherCategory from "./categories/other";
 import AboutSettings from "@/components/settings/custom/AboutSettings.vue";
 import IconLucideInfo from "~icons/lucide/info";
@@ -23,7 +22,6 @@ export const settingsSchema: SettingCategory[] = [
   servicesCategory,
   downloadCategory,
   localCacheCategory,
-  pluginsCategory,
   otherCategory,
   { id: "about", icon: IconLucideInfo, component: AboutSettings },
 ];

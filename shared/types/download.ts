@@ -4,7 +4,9 @@
  */
 
 import type { Track } from "./player";
-import type { PluginQuality } from "./plugin";
+
+/** 在线音质档位；与渲染层 src/utils/quality.ts 的 QualityLevel、网易云接口档位一一对应 */
+export type DownloadQuality = "hi-res" | "lossless" | "hq" | "sq" | "lq";
 
 /** 下载歌词文件保存格式：逐行 LRC / 逐字增强 LRC */
 export type DownloadLyricFormat = "lrc" | "enhanced-lrc";
@@ -33,7 +35,7 @@ export interface DownloadRequest {
   /** 渲染层生成的 UUID */
   taskId: string;
   track: Track;
-  qualityLevel: PluginQuality;
+  qualityLevel: DownloadQuality;
   /** 已解析的音频 URL，批量整批入队时可缺省 */
   url?: string;
   /** 已知格式（netease 的 flac/mp3），用于确定扩展名 */
@@ -56,7 +58,7 @@ export interface DownloadTask {
   taskId: string;
   status: DownloadStatus;
   track: Track;
-  qualityLevel: PluginQuality;
+  qualityLevel: DownloadQuality;
   /** 已接收字节 */
   received: number;
   /** 总字节（未知为 0） */

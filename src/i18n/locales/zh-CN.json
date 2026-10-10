@@ -608,7 +608,6 @@
       "services": "服务",
       "download": "下载配置",
       "localCache": "本地与缓存",
-      "plugins": "插件管理",
       "other": "其他设置",
       "about": "关于软件"
     },
@@ -640,8 +639,6 @@
       "musicSpectrum": "音乐频谱",
       "mcp": "MCP",
       "systemConfig": "系统配置",
-      "pluginManage": "导入插件",
-      "pluginsList": "插件管理",
       "songCache": "歌曲缓存",
       "cache": "缓存管理",
       "database": "数据库管理",
@@ -754,7 +751,7 @@
     },
     "allowTrialPlay": {
       "label": "允许播放试听",
-      "description": "完整音源和插件都不可用时，允许播放平台返回的试听片段"
+      "description": "完整音源不可用时，允许播放平台返回的试听片段"
     },
     "preloadNextTrack": {
       "label": "预载下一首歌曲",
@@ -835,10 +832,6 @@
     "smartPreferOnline": {
       "label": "自动升级歌词格式",
       "description": "当前歌词格式较低时，从在线音源获取更高级的格式覆盖"
-    },
-    "preferPluginLyric": {
-      "label": "优先使用插件歌词",
-      "description": "开启后同时请求插件歌词，若返回更优格式则自动替换"
     },
     "detectBackgroundLyrics": {
       "label": "自动识别背景歌词",
@@ -1444,85 +1437,6 @@
       "confirmDesc": "将清空全部歌单、登录状态、缓存并重置设置，操作不可恢复",
       "done": "全部数据已清除"
     },
-    "plugins": {
-      "securityWarningTitle": "安装前请注意安全风险",
-      "securityWarning": "插件为第三方代码，软件已尽可能做了沙箱隔离，但仍无法完全杜绝风险，恶意插件可能访问你的数据或执行危险操作。请仅安装来自可信来源的插件。",
-      "hint": "从本地或在线安装",
-      "hintDetail": "通过插件扩展软件功能",
-      "importLocal": "本地导入",
-      "importFromUrl": "在线导入",
-      "importUrlTitle": "从 URL 导入插件",
-      "importUrlPlaceholder": "粘贴 .js 脚本的 https:// 链接",
-      "importUrlSubmit": "导入",
-      "importUrlInvalid": "请输入合法的 http 或 https 链接",
-      "market": "插件市场",
-      "install": "安装",
-      "installed": "已安装",
-      "marketEmpty": "暂无插件",
-      "marketError": "加载失败",
-      "importSuccess": "插件导入成功",
-      "importFailed": "插件导入失败",
-      "empty": "暂无已安装的插件",
-      "emptyHint": "从本地或在线导入插件以启用扩展能力",
-      "uninstall": "卸载",
-      "configSubtitle": "插件配置",
-      "uninstallConfirmTitle": "卸载插件",
-      "uninstallConfirm": "确定要卸载插件「{name}」吗？此操作不可撤销。",
-      "uninstallSuccess": "插件已卸载",
-      "uninstallFailed": "卸载失败",
-      "by": "作者",
-      "sources": "支持源",
-      "pendingUpdate": "待更新",
-      "noChangelog": "暂无更新说明",
-      "openUpdateUrl": "查看更新",
-      "checkUpdate": "检查更新",
-      "checkUpdateFailed": "检查更新失败",
-      "updateFound": "发现新版本",
-      "updateLatest": "已是最新版本",
-      "update": "更新",
-      "updateSuccess": "插件已更新",
-      "updateFailed": "更新失败，可点「查看更新」手动安装",
-      "status": {
-        "ready": "已就绪",
-        "loading": "加载中",
-        "error": "错误",
-        "disabled": "已禁用",
-        "unloaded": "未加载"
-      },
-      "sectionSource": "音源插件",
-      "sectionControl": "控制插件",
-      "detail": {
-        "title": "插件详情",
-        "intro": "简介",
-        "grants": "权限",
-        "contributes": "能力",
-        "info": "信息",
-        "noDescription": "暂无简介",
-        "grantNone": "该插件未声明任何权限",
-        "autoGranted": "自动授予",
-        "sources": "音源",
-        "events": "事件",
-        "controls": "反向控制",
-        "controlsYes": "是",
-        "settingsCount": "设置项",
-        "menus": "菜单项",
-        "id": "ID",
-        "author": "作者",
-        "apiLevel": "API 级别",
-        "installed": "安装",
-        "updated": "更新",
-        "homepage": "主页"
-      },
-      "grant": {
-        "network": { "label": "联网", "desc": "插件可发起网络请求" },
-        "control": { "label": "控制", "desc": "插件可控制播放器" },
-        "ui": { "label": "界面", "desc": "插件可扩展或修改应用界面" }
-      }
-    },
-    "pluginManager": {
-      "label": "插件管理",
-      "description": "导入、启用或卸载扩展脚本"
-    },
     "enableLocalTTMLOverride": {
       "label": "启用本地歌词库",
       "description": "从指定目录按歌曲元信息匹配 .ttml / .lrc / .txt，命中后优先于在线歌词"
@@ -1766,7 +1680,6 @@
     "NETWORK_ERROR": "音源连接失败，请检查网络或更换音源",
     "NETWORK_TIMEOUT": "音源响应超时，请检查网络或更换音源",
     "URL_RESOLVE_FAILED": "无法获取播放地址",
-    "NO_PLUGIN_AVAILABLE": "未找到支持该平台的插件",
     "NETEASE_LOGIN_EXPIRED": "登录已失效，已切换为游客模式",
     "NETEASE_VIP_REQUIRED": "该歌曲需要会员或单独购买",
     "NETEASE_TRIAL_DISABLED": "该歌曲仅提供试听，请在设置中允许试听播放",

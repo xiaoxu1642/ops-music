@@ -60,7 +60,6 @@ vi.mock("@/stores/media", () => ({
     },
   }),
 }));
-vi.mock("@/stores/plugins", () => ({ usePluginsStore: vi.fn() }));
 vi.mock("@/stores/history", () => ({ useHistoryStore: () => ({ record: vi.fn() }) }));
 vi.mock("@/stores/library", () => ({ useLibraryStore: vi.fn() }));
 vi.mock("@/stores/queue", () => ({
@@ -79,7 +78,6 @@ vi.mock("@/services/playback", () => ({
   setSeeking: vi.fn(),
 }));
 vi.mock("@/services/lyric/loader", () => ({ beginLoad: vi.fn(), loadForTrack: vi.fn() }));
-vi.mock("@/services/coverLoader", () => ({ loadCoverForTrack: vi.fn() }));
 vi.mock("@/services/abLoop", () => ({ reset: vi.fn() }));
 vi.mock("@/services/cacheScheduler", () => ({ cancel: vi.fn(), schedule: vi.fn() }));
 vi.mock("@/services/deviceVolume", () => ({ getDeviceVolume: vi.fn(), setDeviceVolume: vi.fn() }));
@@ -158,14 +156,14 @@ describe("切歌消费真实预载", () => {
     expect(timer.mock.calls.some((call) => call[1] === 1000)).toBe(false);
   });
 
-  it("换源耗尽时保留原加载错误，不替换为缺少插件", async () => {
+  it("换源耗尽时保留原加载错误，不替换为解析失败原因", async () => {
     mocks.resolve.mockResolvedValueOnce({
       source: "https://music/next",
       fromCache: false,
       provider: "official",
     });
     mocks.resolve.mockImplementationOnce((_track, options) => {
-      options.onError("NO_PLUGIN_AVAILABLE");
+      options.onError("URL_RESOLVE_FAILED");
       return null;
     });
     mocks.load.mockResolvedValueOnce({ success: false, error: "FILE_DECODE_ERROR" });

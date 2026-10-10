@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/stores/settings", () => ({
   useSettingsStore: () => ({ player: { songLevel: "hq", allowTrialPlay: false }, system: {} }),
 }));
-vi.mock("@/stores/plugins", () => ({ usePluginsStore: () => ({ list: [] }) }));
 vi.mock("@/stores/user", () => ({ useUserStore: () => ({ isLoggedIn: false }) }));
 vi.mock("@/apis/song/netease", () => ({ resolveNeteaseUrl: mocks.netease }));
 vi.mock("@/utils/errors", () => ({ handleError: mocks.error }));
@@ -19,7 +18,7 @@ describe("音源解析失败原因", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("netease API 异常不会被无插件覆盖", async () => {
+  it("netease API 异常不会被空音源覆盖", async () => {
     mocks.netease.mockRejectedValueOnce(new Error("fetch failed"));
     const onError = vi.fn();
     const track: Track = { id: "1", title: "test", source: "netease", artists: [], duration: 1000 };

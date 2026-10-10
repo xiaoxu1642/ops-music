@@ -88,8 +88,7 @@ Declarative — defined in `src/settings/schema.ts`, types in `src/types/setting
 │   └── settings.json       # Main config (electron/main/store/)
 ├── database/library.db     # Music library (better-sqlite3, WAL)
 ├── cache/                  # covers/ (cover:// protocol) + artists/ backgrounds/ songs/
-├── logs/                   # App logs + native/
-└── plugins/                # scripts/ data/ logs/
+└── logs/                   # App logs + native/
 
 # All paths are defined centrally in electron/main/utils/paths.ts
 ```

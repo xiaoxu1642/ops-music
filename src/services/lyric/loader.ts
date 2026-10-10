@@ -11,11 +11,9 @@ import { DEFAULT_LYRIC_FORMAT_ORDER } from "@/types/settings";
 import {
   embeddedLyricFromDetail,
   isBetterFormat,
-  isPluginLyricPreferred,
   resolveLrclibLyric,
   resolveLocalRepoLyric,
   resolveOnlineByPreference,
-  resolvePluginLyric,
   resolveTTMLOverlay,
   type LocalLyric,
   type OnlineResult,
@@ -199,7 +197,7 @@ const applyOnline = (
   const preference = useSettingsStore().lyric.lyricSourcePreference;
   // 仅自动模式是智能选择，其余（含跟随自身）均为用户显式指令，来源权威高于格式优劣
   const isExplicit = preference !== "auto";
-  // 自动模式下，若当前已展示更优歌词（如候选抢占或插件优选），不降级覆盖
+  // 自动模式下，若当前已展示更优歌词（如候选抢占后先上屏），不降级覆盖
   if (!isExplicit && current && !isBetterFormat(online.source.format, current.format)) {
     return;
   }
@@ -227,20 +225,7 @@ const tryLocalRepo = async (token: number, track: Track): Promise<boolean> => {
 };
 
 /**
- * 插件兜底匹配歌词：内置平台都没歌词时，向声明 musicLyric 的插件源逐个兜底
- * @param token - 竞态 token
- * @param track - 歌曲信息
- * @returns 是否已提交有效歌词
- */
-const tryPluginFallback = async (token: number, track: Track): Promise<boolean> => {
-  if (isPluginLyricPreferred()) return false;
-  const resolved = await resolvePluginLyric(track);
-  if (token !== currentToken) return false;
-  return resolved ? commitResolvedAndHasParsed(token, resolved) : false;
-};
-
-/**
- * LRCLIB 末位兜底：平台 API、本地歌词库、在线 TTML 与插件都没给出歌词时才请求
+ * LRCLIB 末位兜底：平台 API、本地歌词库与在线 TTML 都没给出歌词时才请求
  * 只有行级时间戳，因此不参与格式竞争，只在屏幕本来没有歌词时提交
  * @param token - 竞态 token
  * @param track - 歌曲信息
@@ -254,60 +239,30 @@ const lrclibLastResort = async (token: number, track: Track): Promise<boolean> =
 };
 
 /**
- * 插件优先加载
- * 插件请求与正常流程并发发出，任意一方就绪且更优时立即抢占展示
- * @param token - 竞态 token
- * @param track - 歌曲信息
- * @param run - 正常加载流程
- */
-const withPluginPrefer = async (
-  token: number,
-  track: Track,
-  run: () => Promise<void>,
-): Promise<void> => {
-  if (!isPluginLyricPreferred()) {
-    await run();
-    return;
-  }
-  const pluginTask = resolvePluginLyric(track).then((plugin) => {
-    if (plugin && token === currentToken) {
-      commitIfBetter(token, plugin.source, plugin.input);
-    }
-  });
-  await run();
-  await pluginTask;
-};
-
-/**
  * 在线平台歌曲歌词加载
  * @param token - 竞态 token
  * @param track - 歌曲信息
  */
-const loadPlatformLyric = (token: number, track: Track): Promise<void> =>
-  withPluginPrefer(token, track, async () => {
-    const online = await resolveOnlineByPreference(track, {
-      hasLocal: false,
-      localFormat: null,
-      onCandidate: (result) => {
-        if (commitIfBetter(token, result.source, result.input)) {
-          tryApplyTTMLOverlay(token, track, result);
-        }
-      },
-      shouldContinue: () => token === currentToken,
-    });
-    if (token !== currentToken) return;
-    if (online) {
-      applyOnline(token, track, online, null);
-      return;
-    }
-    if (
-      useMediaStore().parsedLyric.length === 0 &&
-      !(await tryPluginFallback(token, track)) &&
-      !(await lrclibLastResort(token, track))
-    ) {
-      commit(token, null, null);
-    }
+const loadPlatformLyric = async (token: number, track: Track): Promise<void> => {
+  const online = await resolveOnlineByPreference(track, {
+    hasLocal: false,
+    localFormat: null,
+    onCandidate: (result) => {
+      if (commitIfBetter(token, result.source, result.input)) {
+        tryApplyTTMLOverlay(token, track, result);
+      }
+    },
+    shouldContinue: () => token === currentToken,
   });
+  if (token !== currentToken) return;
+  if (online) {
+    applyOnline(token, track, online, null);
+    return;
+  }
+  if (useMediaStore().parsedLyric.length === 0 && !(await lrclibLastResort(token, track))) {
+    commit(token, null, null);
+  }
+};
 
 /** 开启新一轮加载周期 */
 export const beginLoad = (): number => {
@@ -324,7 +279,7 @@ export const beginLoad = (): number => {
  *    - 默认顺序下，track.platform 与候选平台一致时走 matchById
  *    - 不一致则走 matchByQuery
  * 3. 本地歌曲：本地有先立即 commit 显示；再按偏好查在线，命中热替换
- * 4. 本地 + 在线都无：插件兜底，再 LRCLIB 兜底，仍没有则 commit null 收尾 loading
+ * 4. 本地 + 在线都无：LRCLIB 兜底，仍没有则 commit null 收尾 loading
  *
  * @param detail - 歌曲详细信息
  */
@@ -367,32 +322,29 @@ export const loadForTrack = async (detail: TrackDetail | null): Promise<void> =>
     const hasUsableLocal = !!local && media.parsedLyric.length > 0;
     const localFormat = local?.source.format ?? null;
 
-    await withPluginPrefer(token, track, async () => {
-      // 按偏好获取歌词
-      const online = await resolveOnlineByPreference(track, {
-        hasLocal: hasUsableLocal,
-        localFormat,
-        onCandidate: (result) => {
-          if (commitIfBetter(token, result.source, result.input)) {
-            tryApplyTTMLOverlay(token, track, result);
-          }
-        },
-        shouldContinue: () => token === currentToken,
-      });
-      if (token !== currentToken) return;
-      // id 回查本地 TTML 库
-      if (online && (await tryLocalRepo(token, track))) return;
-      if (online) {
-        applyOnline(token, track, online, local);
-      } else if (
-        !hasUsableLocal &&
-        useMediaStore().parsedLyric.length === 0 &&
-        !(await tryPluginFallback(token, track)) &&
-        !(await lrclibLastResort(token, track))
-      ) {
-        commit(token, null, null);
-      }
+    // 按偏好获取歌词
+    const online = await resolveOnlineByPreference(track, {
+      hasLocal: hasUsableLocal,
+      localFormat,
+      onCandidate: (result) => {
+        if (commitIfBetter(token, result.source, result.input)) {
+          tryApplyTTMLOverlay(token, track, result);
+        }
+      },
+      shouldContinue: () => token === currentToken,
     });
+    if (token !== currentToken) return;
+    // id 回查本地 TTML 库
+    if (online && (await tryLocalRepo(token, track))) return;
+    if (online) {
+      applyOnline(token, track, online, local);
+    } else if (
+      !hasUsableLocal &&
+      useMediaStore().parsedLyric.length === 0 &&
+      !(await lrclibLastResort(token, track))
+    ) {
+      commit(token, null, null);
+    }
   } catch (err) {
     console.error("[lyricLoader] loadForTrack failed:", err);
     commit(token, null, null);
@@ -421,28 +373,26 @@ const refreshPreference = async (): Promise<void> => {
   const localFormat = local?.source.format ?? null;
   const showingOnline = media.activeLyric?.source === "online";
 
-  await withPluginPrefer(token, track, async () => {
-    /** 按偏好获取歌词 */
-    const online = await resolveOnlineByPreference(track, {
-      hasLocal: !!local,
-      localFormat,
-      onCandidate: (result) => {
-        if (commitIfBetter(token, result.source, result.input)) {
-          tryApplyTTMLOverlay(token, track, result);
-        }
-      },
-      shouldContinue: () => token === currentToken,
-    });
-    if (token !== currentToken) return;
-    if (online) {
-      applyOnline(token, track, online, local);
-      return;
-    }
-    // 目标是本地
-    if (!showingOnline) return;
-    if (local) commitLocal(token, local);
-    else commit(token, null, null);
+  /** 按偏好获取歌词 */
+  const online = await resolveOnlineByPreference(track, {
+    hasLocal: !!local,
+    localFormat,
+    onCandidate: (result) => {
+      if (commitIfBetter(token, result.source, result.input)) {
+        tryApplyTTMLOverlay(token, track, result);
+      }
+    },
+    shouldContinue: () => token === currentToken,
   });
+  if (token !== currentToken) return;
+  if (online) {
+    applyOnline(token, track, online, local);
+    return;
+  }
+  // 目标是本地
+  if (!showingOnline) return;
+  if (local) commitLocal(token, local);
+  else commit(token, null, null);
 };
 
 /** 监听歌词偏好变化 */
@@ -452,7 +402,6 @@ export const watchLyricPreference = (): void => {
     () => [
       settings.lyric.lyricSourcePreference,
       settings.lyric.smartPreferOnline,
-      settings.lyric.preferPluginLyric,
       settings.lyric.detectBackgroundLyrics,
       settings.system.lyric.enableOnlineTTMLLyric,
       settings.system.localLyric.enableLocalTTMLOverride,
