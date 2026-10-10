@@ -558,7 +558,6 @@
       "externalLyric": "外部歌词",
       "appearance": "外观设置",
       "hotkeys": "快捷键配置",
-      "download": "下载配置",
       "localCache": "本地与缓存",
       "other": "其他设置",
       "about": "关于软件"
@@ -589,9 +588,6 @@
       "songCache": "歌曲缓存",
       "cache": "缓存管理",
       "database": "数据库管理",
-      "downloadLocation": "下载配置",
-      "downloadGeneral": "下载选项",
-      "downloadTags": "写入内容",
       "backupReset": "备份与重置",
       "preset": "强迫症配置",
       "envInfo": "环境信息"
