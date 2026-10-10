@@ -41,7 +41,7 @@ const reconcileOrder = <T>(stored: T[], all: readonly T[]): T[] => {
  * @param stored - 存档分组
  * @returns 对账后的分组
  */
-const reconcileNavGroups = (stored: unknown): SidebarNavGroup[] => {
+export const reconcileNavGroups = (stored: unknown): SidebarNavGroup[] => {
   const all = DEFAULT_SIDEBAR_NAV_GROUPS.flatMap((group) => group.keys);
   const seen = new Set<string>();
   const groups: SidebarNavGroup[] = [];
@@ -72,7 +72,7 @@ const reconcileNavGroups = (stored: unknown): SidebarNavGroup[] => {
  * @param stored - 存档隐藏键
  * @returns 对账后的隐藏键
  */
-const reconcileHiddenKeys = (stored: string[]): string[] => {
+export const reconcileHiddenKeys = (stored: string[]): string[] => {
   const valid = new Set([
     ...DEFAULT_SIDEBAR_NAV_GROUPS.flatMap((group) => group.keys),
     SIDEBAR_GROUP_MY_PLAYLISTS,

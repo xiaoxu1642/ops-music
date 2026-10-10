@@ -218,6 +218,11 @@ const navItems = computed<SMenuItem[]>(() => {
 
 const showMy = computed(() => !hiddenKeys.value.has(SIDEBAR_GROUP_MY_PLAYLISTS));
 
+/** 侧栏滚动区样式：折叠态隐藏滚动条，展开态预留槽位避免行宽跳动 */
+const sidebarScrollClass = computed(() =>
+  appearance.sidebarCollapsed ? "[&::-webkit-scrollbar]:hidden" : "[scrollbar-gutter:stable]",
+);
+
 /** 收藏分组沿用原逻辑：仅在线歌单来源、未被隐藏且列表非空时才渲染 */
 const showSubscribed = computed(
   () =>
@@ -226,16 +231,21 @@ const showSubscribed = computed(
     subscribedItems.value.length > 0,
 );
 
-/** 固定导航 + 我的歌单：数量有界，保持普通渲染 */
-const fixedMenuItems = computed<SMenuItem[]>(() => {
+/** 导航区：固定内容 + 与歌单区之间的分隔线（导航项数量有界，但仍允许自身滚动） */
+const navSectionItems = computed<SMenuItem[]>(() => {
   const items = [...navItems.value];
   if ((showMy.value || showSubscribed.value) && items[items.length - 1]?.type !== "divider")
     items.push({ key: "divider-playlist", type: "divider" });
-  if (showMy.value) {
-    items.push({ key: "my-playlist-group", type: "group", render: renderMyHeader });
-    items.push(...myPlaylistItems.value);
-  }
   return items;
+});
+
+/** 我的歌单区块：分组头 + 行，独立滚动区 */
+const mySectionItems = computed<SMenuItem[]>(() => {
+  if (!showMy.value) return [];
+  return [
+    { key: "my-playlist-group", type: "group", render: renderMyHeader },
+    ...myPlaylistItems.value,
+  ];
 });
 
 /** 收藏分组头：沿用 SMenu 的 group/divider 渲染，保留折叠时的收起动画 */
@@ -293,7 +303,7 @@ const activeKey = computed(() => {
     return "/library";
   // 歌手详情页归属歌手列表
   if (route.path.startsWith("/artist/local/")) return "/artists/local";
-  const items = [...fixedMenuItems.value, ...subscribedItems.value].filter(
+  const items = [...navItems.value, ...myPlaylistItems.value, ...subscribedItems.value].filter(
     (item) => !item.type || item.type === "item",
   );
   return (
@@ -367,18 +377,22 @@ onMounted(() => {
         :class="appearance.sidebarCollapsed ? 'px-2' : 'px-3'"
         @contextmenu.capture="onMenuContextMenu"
       >
-        <!-- 固定导航与我的歌单：内容有界，给足空间并允许自身滚动；
-             shrink 让它在窗口很矮时把空间让给下方虚拟列表，避免我的歌单被顶出可视区 -->
+        <!-- 三块区域各自独立滚动：导航有界、我的歌单独立一区、收藏歌单虚拟化 -->
+        <div class="shrink min-h-[72px] max-h-[45%] overflow-y-auto" :class="sidebarScrollClass">
+          <SMenu
+            :items="navSectionItems"
+            :model-value="activeKey"
+            :collapsed="appearance.sidebarCollapsed"
+            @select="onSelect"
+          />
+        </div>
         <div
-          class="shrink min-h-[96px] max-h-[75%] overflow-y-auto"
-          :class="
-            appearance.sidebarCollapsed
-              ? '[&::-webkit-scrollbar]:hidden'
-              : '[scrollbar-gutter:stable]'
-          "
+          v-if="showMy"
+          class="shrink min-h-[72px] max-h-[35%] overflow-y-auto"
+          :class="sidebarScrollClass"
         >
           <SMenu
-            :items="fixedMenuItems"
+            :items="mySectionItems"
             :model-value="activeKey"
             :collapsed="appearance.sidebarCollapsed"
             @select="onSelect"
@@ -387,7 +401,7 @@ onMounted(() => {
         <!-- 收藏歌单随订阅数无限增长，只渲染可视行并在触底时续拉下一页 -->
         <SVirtualList
           v-if="showSubscribed"
-          class="min-h-0 flex-1"
+          class="min-h-[72px] flex-1"
           :items="subscribedItems"
           :item-height="subscribedRowHeight"
           item-fixed
