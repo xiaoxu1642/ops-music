@@ -21,6 +21,7 @@ import {
 } from "@/apis/user/netease";
 import {
   fetchPlaylist,
+  fetchPlaylistSubscribed,
   createPlaylist as apiCreatePlaylist,
   deletePlaylist as apiDeletePlaylist,
   updatePlaylistName,
@@ -44,6 +45,9 @@ const LIKED_SONG_IDS_CACHE_KEY = "liked-song-ids";
 const PLAYLISTS_CACHE_KEY = "playlists";
 /** 云盘曲目缓存 */
 const CLOUD_CACHE_KEY = "cloud-tracks";
+
+/** 订阅状态内存缓存上限 */
+const SUBSCRIBE_STATE_CACHE_LIMIT = 64;
 
 interface LikedPlaylistCache {
   playlistId: string;
@@ -154,6 +158,52 @@ export const useUserStore = defineStore(
       return playlists.value.slice(n > 0 ? n : 1);
     });
 
+    /** 不在已加载分页中的歌单收藏状态缓存（id → subscribed），随 clearContent 清空 */
+    const playlistSubscribeStates = new Map<string, boolean>();
+
+    /**
+     * 从已加载分页解析歌单收藏状态
+     * 已加载列表只是「我喜欢 + 自建 + 收藏」的连续前缀，落在收藏段即已收藏
+     * @param playlistId 歌单 id
+     * @returns true 已收藏 / false 未收藏或自建 / undefined 不在已加载分页中
+     */
+    const resolveLoadedPlaylistSubscribe = (playlistId: string): boolean | undefined => {
+      if (!playlists.value.some((item) => item.id === playlistId)) return undefined;
+      return subscribedPlaylists.value.some((item) => item.id === playlistId);
+    };
+
+    /**
+     * 记录收藏状态，超出上限时丢弃最早条目
+     * @param playlistId 歌单 id
+     * @param subscribed 是否已收藏
+     */
+    const rememberPlaylistSubscribe = (playlistId: string, subscribed: boolean): void => {
+      playlistSubscribeStates.delete(playlistId);
+      playlistSubscribeStates.set(playlistId, subscribed);
+      if (playlistSubscribeStates.size > SUBSCRIBE_STATE_CACHE_LIMIT) {
+        const oldest = playlistSubscribeStates.keys().next().value;
+        if (oldest !== undefined) playlistSubscribeStates.delete(oldest);
+      }
+    };
+
+    /**
+     * 解析歌单收藏状态
+     * 分页内按位置判定，分页外查内存缓存，仍未命中才拉单歌单详情
+     * @param playlistId 歌单 id
+     * @returns true 已收藏 / false 未收藏 / undefined 无法判定（未登录）
+     */
+    const resolvePlaylistSubscribe = async (playlistId: string): Promise<boolean | undefined> => {
+      const loaded = resolveLoadedPlaylistSubscribe(playlistId);
+      if (loaded !== undefined) return loaded;
+      if (!profile.value) return undefined;
+      const cached = playlistSubscribeStates.get(playlistId);
+      if (cached !== undefined) return cached;
+      const subscribed = await fetchPlaylistSubscribed(playlistId);
+      if (subscribed === undefined) return undefined;
+      rememberPlaylistSubscribe(playlistId, subscribed);
+      return subscribed;
+    };
+
     /** 是否红心 */
     const isLiked = (trackId: string): boolean => likedSongIds.value.has(trackId);
 
@@ -203,6 +253,7 @@ export const useUserStore = defineStore(
       playlistPage.value = emptyPlaylistPage;
       subscribedLoading.value = false;
       playlistsLoaded.value = false;
+      playlistSubscribeStates.clear();
       likedSongIds.value = new Set();
       albums.value = [];
       artists.value = [];
@@ -650,6 +701,7 @@ export const useUserStore = defineStore(
       subscribe: boolean,
     ): Promise<void> => {
       await subscribePlaylist(playlistId, subscribe);
+      rememberPlaylistSubscribe(playlistId, subscribe);
       await refreshPlaylists();
     };
 
@@ -754,6 +806,8 @@ export const useUserStore = defineStore(
       likedPlaylistLoading,
       createdPlaylists,
       subscribedPlaylists,
+      resolveLoadedPlaylistSubscribe,
+      resolvePlaylistSubscribe,
       isLiked,
       loadContent,
       toggleLike,

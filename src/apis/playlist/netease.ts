@@ -55,6 +55,18 @@ export const fetchPlaylist = async (
 };
 
 /**
+ * 查询单歌单是否已被当前账号收藏
+ * `/playlist/detail` 原始响应自带 subscribed 标志，toPlaylist 未保留，这里直接读原始字段
+ * @param id 歌单 id
+ * @returns 已收藏 true / 未收藏 false / 响应缺字段时为 undefined
+ */
+export const fetchPlaylistSubscribed = async (id: string): Promise<boolean | undefined> => {
+  const body = await neteaseApi.playlist_detail({ id });
+  const subscribed = body?.playlist?.subscribed;
+  return typeof subscribed === "boolean" ? subscribed : undefined;
+};
+
+/**
  * 新建歌单
  * @param name 歌单名
  * @param privacy 0 公开 / 10 私密
