@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { usePluginsStore } from "@/stores/plugins";
 import { toast } from "@/composables/useToast";
-import { isExternalUrl, openExternal } from "@/utils/url";
+import { isExternalUrl } from "@/utils/url";
 
 defineOptions({ inheritAttrs: false });
-
-/** 插件开发文档地址 */
-const DOCS_URL = "https://splayer-next.imsyy.top/plugins/";
 
 const { t } = useI18n();
 const pluginsStore = usePluginsStore();
@@ -71,12 +68,6 @@ const handleImportFromUrl = async (): Promise<void> => {
         </div>
         <div class="text-sm text-on-surface-variant/70 mt-0.5 flex items-center gap-1 flex-wrap">
           <span>{{ t("settings.plugins.hintDetail") }}</span>
-          <a
-            class="text-primary cursor-pointer hover:underline inline-flex items-center gap-0.5"
-            @click="openExternal(DOCS_URL)"
-          >
-            {{ t("settings.plugins.docs") }}
-          </a>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
