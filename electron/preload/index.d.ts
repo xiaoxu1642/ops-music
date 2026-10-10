@@ -16,8 +16,6 @@ import { WindowApi, TaskbarLyricApi } from "@shared/types/window";
 import { HotkeyApi } from "@shared/types/hotkey";
 import { IpcResponse } from "@shared/types/player";
 import { StatsApi } from "@shared/types/stats";
-import { CloudUploadApi } from "@shared/types/cloudUpload";
-import { CommentsApi } from "@shared/types/comment";
 import { PlaylistApi } from "@shared/types/playlist";
 import { OpenccApi } from "@shared/types/opencc";
 
@@ -62,10 +60,8 @@ declare global {
       taskbarLyric: TaskbarLyricApi;
       nowPlaying: NowPlayingApi;
       apis: ApisApi;
-      cloud: CloudUploadApi;
       lyrics: LyricsApi;
       opencc: OpenccApi;
-      comments: CommentsApi;
       download: DownloadApi;
       theme: {
         pickBackgroundImage: () => Promise<string | null>;

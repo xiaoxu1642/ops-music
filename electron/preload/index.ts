@@ -6,8 +6,6 @@ import type { HotkeyActionId, HotkeyBinding, HotkeyConflict } from "@shared/type
 import type { LoadOptions, TrackSource, TransitionPreference } from "@shared/types/player";
 import type { PlayEventInput, FavoriteEventInput } from "@shared/types/stats";
 import type { TagEditRequest } from "@shared/types/tagEditor";
-import type { CloudUploadProgress } from "@shared/types/cloudUpload";
-import type { MusicCommentQuery } from "@shared/types/comment";
 import type {
   LegacyPlaylistRecord,
   PlaylistCreateInput,
@@ -331,16 +329,6 @@ const api = {
     setCookie: (platform: string, cookie: string) =>
       ipcRenderer.invoke("apis:setCookie", platform, cookie),
   },
-  cloud: {
-    // 弹出文件选择器选择待上传歌曲
-    pickSongs: () => ipcRenderer.invoke("cloud:pickSongs"),
-    // 上传单首(path + 队列项 id)
-    uploadSong: (path: string, uploadId: string) =>
-      ipcRenderer.invoke("cloud:uploadSong", path, uploadId),
-    // 订阅上传进度
-    onUploadProgress: (callback: (progress: CloudUploadProgress) => void) =>
-      subscribe<CloudUploadProgress>("cloud:upload-progress", callback),
-  },
   lyrics: {
     // 按 id 直取某平台歌词
     matchById: (platform: string, id: string) =>
@@ -364,10 +352,6 @@ const api = {
     // 批量转换文本
     convertBatch: (texts: string[], config: CjkTransformMode): Promise<string[]> =>
       ipcRenderer.invoke("opencc:convertBatch", texts, config),
-  },
-  comments: {
-    sources: () => ipcRenderer.invoke("comments:sources"),
-    get: (args: MusicCommentQuery) => ipcRenderer.invoke("comments:get", args),
   },
   download: {
     // 入队下载

@@ -12,8 +12,6 @@ import { registerCacheIpc } from "./cache";
 import { registerDownloadIpc } from "./download";
 import { registerMcpIpc } from "./mcp";
 import { registerStatsIpc } from "./stats";
-import { registerCloudIpc } from "./cloud";
-import { registerCommentsIpc } from "./comments";
 import { registerPlaylistIpc } from "./playlist";
 import { registerOpenccIpc } from "./opencc";
 
@@ -26,8 +24,6 @@ export const registerIpcHandlers = (): void => {
   registerNowPlayingIpc();
   registerWindowIpc();
   registerApisIpc();
-  registerCloudIpc();
-  registerCommentsIpc();
   registerLyricsIpc();
   registerOpenccIpc();
   registerHotkeyIpc();

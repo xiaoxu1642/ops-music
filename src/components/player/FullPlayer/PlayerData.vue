@@ -81,7 +81,6 @@ const goToResource = (target: ResourceNavigationTarget | null): void => {
 
 /** 来源标签 */
 const sourceLabel = computed(() => {
-  if (displayTrack.value?.cloud) return "CLOUD";
   const source = displayTrack.value?.source;
   if (!source) return "LOCAL";
   if (source === "local") return "LOCAL";

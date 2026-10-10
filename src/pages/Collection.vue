@@ -97,7 +97,6 @@ const typeLabel = computed(() => {
     album: t("collection.album"),
     playlist: t("collection.playlist"),
     radio: t("collection.radio"),
-    cloud: t("cloud.title"),
   };
   return map[type] ?? "";
 });
@@ -133,7 +132,7 @@ const updateTimeText = computed(() => {
 
 const playbackContext = computed<PlaybackContext | undefined>(() => {
   const current = collection.value;
-  if (!current || current.type === "cloud") return undefined;
+  if (!current) return undefined;
   return {
     provider: current.source,
     originId: current.id,
@@ -200,7 +199,7 @@ const moreMenuItems = computed<DropdownMenuItem[]>(() => {
           key: "copyUrl",
           label: t(`collection.context.${type}.copyUrl`),
           icon: markRaw(IconCopy),
-          show: isOnline && type !== "cloud",
+          show: isOnline,
         },
       ],
     },
@@ -286,7 +285,6 @@ onBeforeUnmount(() => {
                     <IconLucideDisc3 v-if="type === 'album'" class="size-4" />
                     <IconLucideListMusic v-else-if="type === 'playlist'" class="size-4" />
                     <IconLucideRadio v-else-if="type === 'radio'" class="size-4" />
-                    <IconLucideCloud v-else class="size-4" />
                   </span>
                 </STooltip>
               </div>

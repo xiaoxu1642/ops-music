@@ -16,7 +16,6 @@ import type { NeteaseModule } from "../core/types";
 const artistSongs: NeteaseModule = (query, request) => {
   const data = {
     id: query.id,
-    private_cloud: "true",
     work_type: 1,
     order: query.order ?? "hot",
     offset: query.offset ?? 0,

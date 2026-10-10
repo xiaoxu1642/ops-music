@@ -3,7 +3,7 @@ import type { Artist } from "@shared/types/player";
 import { artistNames } from "./metadata";
 
 describe("播放元数据歌手名称", () => {
-  it("兼容缓存中空名称的云盘歌手，并保留有效名称", () => {
+  it("兼容缓存中空名称的歌手，并保留有效名称", () => {
     const artists = [{ name: null }, {}, { name: " " }, { name: " 歌手 " }] as unknown as Artist[];
 
     expect(artistNames(artists)).toEqual(["歌手"]);

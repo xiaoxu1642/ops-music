@@ -1,10 +1,4 @@
-import type {
-  PlayerState,
-  AudioDevice,
-  RepeatMode,
-  ShuffleMode,
-  Track,
-} from "@shared/types/player";
+import type { PlayerState, AudioDevice, RepeatMode, ShuffleMode } from "@shared/types/player";
 import type { Platform } from "@shared/types/platform";
 import type { ContentScope } from "@/types/collection";
 import type { SortField, SortOrder } from "@/types/list";
@@ -40,10 +34,6 @@ export const useStatusStore = defineStore(
     const fullQueueOpen = ref(false);
     /** 搜索弹窗状态 */
     const searchOpen = ref(false);
-    /** 评论弹窗状态 */
-    const commentsOpen = ref(false);
-    /** 评论弹窗当前歌曲 */
-    const commentsTrack = shallowRef<Track | null>(null);
     /** 音频输出信息弹窗状态 */
     const audioInfoOpen = ref(false);
     /** 全屏播放器是否展示歌词 */
@@ -111,12 +101,6 @@ export const useStatusStore = defineStore(
     /** 当前队列项对应的播放来源上下文 */
     const currentPlaybackContext = computed(() => queue.getQueueItem(playIndex.value)?.context);
 
-    /** 打开指定歌曲评论 */
-    const showComments = (track: Track): void => {
-      commentsTrack.value = track;
-      commentsOpen.value = true;
-    };
-
     return {
       state,
       position,
@@ -133,8 +117,6 @@ export const useStatusStore = defineStore(
       outerQueueOpen,
       fullQueueOpen,
       searchOpen,
-      commentsOpen,
-      commentsTrack,
       audioInfoOpen,
       showLyric,
       outputDevices,
@@ -158,7 +140,6 @@ export const useStatusStore = defineStore(
       sortOrder,
       currentTrack,
       currentPlaybackContext,
-      showComments,
     };
   },
   {

@@ -22,14 +22,6 @@ import register_anonimous from "./register_anonimous";
 
 // 用户
 import user_account from "./user_account";
-import user_cloud from "./user_cloud";
-import user_cloud_del from "./user_cloud_del";
-import cloud_upload_check from "./cloud_upload_check";
-import cloud_nos_token from "./cloud_nos_token";
-import cloud_upload_info from "./cloud_upload_info";
-import cloud_pub from "./cloud_pub";
-import cloud_upload_check_v2 from "./cloud_upload_check_v2";
-import cloud_song_import from "./cloud_song_import";
 import user_detail from "./user_detail";
 import user_detail_new from "./user_detail_new";
 import user_followeds from "./user_followeds";
@@ -53,11 +45,6 @@ import search_suggest_pc from "./search_suggest_pc";
 // 歌词
 import lyric from "./lyric";
 import lyric_new from "./lyric_new";
-import cloud_lyric_get from "./cloud_lyric_get";
-
-// 评论
-import comment_music from "./comment_music";
-import comment_hot from "./comment_hot";
 
 // 播放
 import song_detail from "./song_detail";
@@ -119,14 +106,6 @@ export const modules: Record<string, NeteaseModule> = {
   register_anonimous,
 
   user_account,
-  user_cloud,
-  user_cloud_del,
-  cloud_upload_check,
-  cloud_nos_token,
-  cloud_upload_info,
-  cloud_pub,
-  cloud_upload_check_v2,
-  cloud_song_import,
   user_detail,
   user_detail_new,
   user_followeds,
@@ -148,10 +127,6 @@ export const modules: Record<string, NeteaseModule> = {
 
   lyric,
   lyric_new,
-  cloud_lyric_get,
-
-  comment_music,
-  comment_hot,
 
   song_detail,
   song_url,

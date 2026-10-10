@@ -5,7 +5,6 @@ import type { CollectionType } from "@/types/collection";
 import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
 import * as player from "@/core/player";
 import { useSettingsStore } from "@/stores/settings";
-import { useStatusStore } from "@/stores/status";
 import { useCopyText } from "@/composables/useCopyText";
 import { toast } from "@/composables/useToast";
 import { buildDownloadQualityItems } from "@/composables/useDownload";
@@ -19,9 +18,7 @@ import IconDownload from "~icons/lucide/download";
 import IconCopy from "~icons/lucide/copy";
 import IconTrash2 from "~icons/lucide/trash-2";
 import IconListMinus from "~icons/lucide/list-minus";
-import IconCloudOff from "~icons/lucide/cloud-off";
 import IconSearch from "~icons/lucide/search";
-import IconMessageCircle from "~icons/lucide/message-circle";
 import IconMoreHorizontal from "~icons/lucide/more-horizontal";
 
 export interface TrackMenuOptions {
@@ -43,8 +40,6 @@ export interface TrackMenuOptions {
   onEditTags?: (track: Track) => void;
   /** 下载回调；quality 为空表示用设置中的默认音质 */
   onDownload?: (track: Track, quality?: QualityLevel) => void;
-  /** 从云盘删除回调 */
-  onRemoveFromCloud?: (track: Track) => void;
 }
 
 /**
@@ -58,11 +53,9 @@ export const useTrackMenu = (
 ) => {
   const { t } = useI18n();
   const router = useRouter();
-  const status = useStatusStore();
   const settings = useSettingsStore();
   const { copy } = useCopyText();
   const isPlaylist = options.collectionType === "playlist";
-  const isCloudView = options.collectionType === "cloud";
   const showPlay = !options.hidePlayActions;
   const canRemove = options.canRemove !== false;
   // 菜单项
@@ -70,7 +63,6 @@ export const useTrackMenu = (
     const source = track.value?.source;
     const isLocal = source === "local";
     const isCue = !!track.value?.cuePath;
-    const showCloudRemove = isCloudView && track.value?.cloud === true;
     const canAddToPlaylist = source === "local" || source === "netease";
     const isOnline = source !== "local";
     const base: DropdownMenuItem[] = [
@@ -130,22 +122,10 @@ export const useTrackMenu = (
         show: isLocal && !isCue,
       },
       {
-        key: "removeFromCloud",
-        label: t("cloud.removeAction"),
-        icon: markRaw(IconCloudOff),
-        separator: true,
-        show: showCloudRemove,
-      },
-      {
         key: "searchSame",
         label: t("songList.context.searchSame"),
         icon: markRaw(IconSearch),
         separator: true,
-      },
-      {
-        key: "comments",
-        label: t("comments.name"),
-        icon: markRaw(IconMessageCircle),
       },
       {
         key: "more",
@@ -213,14 +193,8 @@ export const useTrackMenu = (
       case "editTags":
         options.onEditTags?.(current);
         break;
-      case "removeFromCloud":
-        options.onRemoveFromCloud?.(current);
-        break;
       case "searchSame":
         router.push({ path: "/search", query: { q: current.title } });
-        break;
-      case "comments":
-        status.showComments(current);
         break;
       case "copyTitle":
         await copy(current.title);

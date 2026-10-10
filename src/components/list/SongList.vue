@@ -27,8 +27,6 @@ import IconLucideDownload from "~icons/lucide/download";
 import IconLucideTrash2 from "~icons/lucide/trash-2";
 import IconLucideArrowLeftRight from "~icons/lucide/arrow-left-right";
 import IconLucideX from "~icons/lucide/x";
-import IconLucideCloud from "~icons/lucide/cloud";
-import IconLucideCloudOff from "~icons/lucide/cloud-off";
 import IconFavorite from "~icons/material-symbols/favorite-rounded";
 import IconFavoriteOutline from "~icons/material-symbols/favorite-outline-rounded";
 
@@ -254,7 +252,6 @@ const { items: contextMenuItems, handleSelect: onContextMenu } = useTrackMenu(co
   onAddToPlaylist: (track) => openPicker([track]),
   onRemove: (track) => batch.requestDelete([track], "remove"),
   onDeleteFile: (track) => batch.requestDelete([track], "file"),
-  onRemoveFromCloud: (track) => batch.requestDelete([track], "cloud"),
   onEditTags: (track) => {
     tagEditorTrack.value = track;
     tagEditorOpen.value = true;
@@ -411,17 +408,6 @@ defineExpose({
                 <span>
                   {{ t("collection.removeFrom", { type: batch.collectionTypeLabel.value }) }}
                 </span>
-              </SButton>
-              <SButton
-                v-if="batch.canRemoveFromCloud.value"
-                type="error"
-                variant="ghost"
-                size="small"
-                :disabled="batch.selectedCount.value === 0"
-                @click="batch.batchRemoveFromCloud"
-              >
-                <template #icon><IconLucideCloudOff class="size-3.5" /></template>
-                <span>{{ t("cloud.removeAction") }}</span>
               </SButton>
               <SButton
                 v-if="source === 'local'"
@@ -591,13 +577,6 @@ defineExpose({
                     >
                       {{ item.title }}
                     </span>
-                    <IconLucideCloud
-                      v-if="item.cloud"
-                      class="size-3.5 shrink-0 self-center"
-                      :class="
-                        playingId === item.id ? 'text-primary/60' : 'text-on-surface-variant/60'
-                      "
-                    />
                     <span
                       v-if="item.comment && settings.preset.showSubtitle"
                       class="flex-1 min-w-0 text-base truncate"

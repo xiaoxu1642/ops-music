@@ -126,8 +126,6 @@ export interface Track {
   quality?: AudioQuality;
   /** 付费标记 */
   fee?: TrackFee;
-  /** 云盘歌曲 */
-  cloud?: boolean;
 }
 
 /** 播放队列项，将曲目元数据与本次播放上下文分离 */

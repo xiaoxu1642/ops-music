@@ -100,17 +100,6 @@
     "totalArtists": "{count} artists",
     "totalPlaylists": "{count} playlists"
   },
-  "comments": {
-    "name": "Song Comments",
-    "title": "Comments for \"{name}\"",
-    "hot": "Top Comments",
-    "new": "Latest Comments",
-    "loading": "Loading comments...",
-    "empty": "No comments yet",
-    "noSource": "No comment source available",
-    "location": "From {location}",
-    "page": "Page {page} / {total}"
-  },
   "equalizer": {
     "title": "Equalizer",
     "preamp": "Preamp",
@@ -173,7 +162,6 @@
     "history": "Play History",
     "download": "Downloads",
     "favorites": "Favorites",
-    "cloud": "My Cloud",
     "stats": "Stats",
     "reload": "Reload",
     "devtools": "Developer Tools",
@@ -498,31 +486,6 @@
       "needLogin": "Please log in first",
       "unsupported": "This source does not support liking",
       "failed": "Action failed, please try again"
-    }
-  },
-  "cloud": {
-    "title": "My Cloud",
-    "empty": "No songs in your cloud yet",
-    "needLogin": "Sign in to view your cloud library",
-    "removeAction": "Remove from cloud",
-    "removeTitle": "Remove from Cloud",
-    "removeConfirmOne": "Remove \"{title}\" from your cloud? This cannot be undone.",
-    "removeConfirm": "Remove {count} songs from your cloud? This cannot be undone.",
-    "upload": {
-      "button": "Upload",
-      "title": "Upload to Cloud",
-      "selectFile": "Select files",
-      "emptyHint": "Click Select files to add songs",
-      "clearFinished": "Clear finished",
-      "instant": "Instant",
-      "done": "Done",
-      "reading": "Reading",
-      "retry": "Retry",
-      "remove": "Remove",
-      "capacityFull": "Not enough cloud space",
-      "riskTip": "Uploading may get your account flagged or restricted, so use it with care. After uploading, the cloud needs some time to match the song — refresh again later to check.",
-      "error": "Upload failed",
-      "errorWithCode": "Upload failed ({code})"
     }
   },
   "history": {
@@ -1628,11 +1591,6 @@
         "copyTitle": "Copy Radio Title",
         "copyId": "Copy Radio ID",
         "copyUrl": "Share Radio Link"
-      },
-      "cloud": {
-        "copyTitle": "Copy Cloud Title",
-        "copyId": "Copy Cloud ID",
-        "copyUrl": "Share Cloud Link"
       }
     }
   },

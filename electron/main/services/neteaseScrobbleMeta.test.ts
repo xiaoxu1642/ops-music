@@ -134,7 +134,7 @@ describe("网易云听歌打卡元数据", () => {
   it("应用页面来源不改变网易云打卡来源", () => {
     const value = toNeteaseScrobbleTrack(
       track,
-      { originId: "cloud", originType: "page", originName: "我的云盘" },
+      { originId: "liked", originType: "page", originName: "我喜欢的音乐" },
       180000,
     );
 

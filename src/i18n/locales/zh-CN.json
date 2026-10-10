@@ -91,17 +91,6 @@
     "totalArtists": "共 {count} 位歌手",
     "totalPlaylists": "共 {count} 个歌单"
   },
-  "comments": {
-    "name": "歌曲评论",
-    "title": "「{name}」的评论",
-    "hot": "热门评论",
-    "new": "最新评论",
-    "loading": "评论加载中...",
-    "empty": "暂无评论",
-    "noSource": "没有可用的评论来源",
-    "location": "来自{location}",
-    "page": "第 {page} / {total} 页"
-  },
   "equalizer": {
     "title": "均衡器",
     "preamp": "前级",
@@ -164,7 +153,6 @@
     "history": "播放历史",
     "download": "下载管理",
     "favorites": "我的收藏",
-    "cloud": "我的云盘",
     "stats": "统计",
     "reload": "热重载",
     "devtools": "开发者工具",
@@ -489,31 +477,6 @@
       "needLogin": "请先登录账号",
       "unsupported": "该来源暂不支持喜欢",
       "failed": "操作失败，请稍后重试"
-    }
-  },
-  "cloud": {
-    "title": "我的云盘",
-    "empty": "云盘里还没有歌曲",
-    "needLogin": "登录后才能查看云盘歌曲",
-    "removeAction": "从云盘删除",
-    "removeTitle": "删除云盘歌曲",
-    "removeConfirmOne": "确认从云盘删除「{title}」？此操作不可撤销",
-    "removeConfirm": "确认从云盘删除选中的 {count} 首歌？此操作不可撤销",
-    "upload": {
-      "button": "上传",
-      "title": "上传到云盘",
-      "selectFile": "选择文件",
-      "emptyHint": "点击「选择文件」添加要上传的歌曲",
-      "clearFinished": "清除已完成",
-      "instant": "秒传",
-      "done": "完成",
-      "reading": "读取中",
-      "retry": "重试",
-      "remove": "移除",
-      "capacityFull": "云盘空间不足",
-      "riskTip": "上传操作可能会导致账号被风控，请谨慎使用。上传完成后云端需要一段时间进行匹配，可稍后再刷新查看",
-      "error": "上传失败",
-      "errorWithCode": "上传失败（{code}）"
     }
   },
   "history": {
@@ -1619,11 +1582,6 @@
         "copyTitle": "复制电台名称",
         "copyId": "复制电台 ID",
         "copyUrl": "分享电台链接"
-      },
-      "cloud": {
-        "copyTitle": "复制云盘名称",
-        "copyId": "复制云盘 ID",
-        "copyUrl": "分享云盘链接"
       }
     }
   },

@@ -5,7 +5,7 @@ import router from "@/router";
 export type NavigableResourceType = Exclude<PlaybackOriginType, "track" | "page">;
 
 /** 可作为播放来源的应用页面 */
-export type PlaybackSourcePage = "library" | "liked" | "cloud" | "history";
+export type PlaybackSourcePage = "library" | "liked" | "history";
 
 /** 应用内资源跳转目标 */
 export type ResourceNavigationTarget =
@@ -21,7 +21,7 @@ export type ResourceNavigationTarget =
       name?: string;
     };
 
-const playbackSourcePages = new Set<PlaybackSourcePage>(["library", "liked", "cloud", "history"]);
+const playbackSourcePages = new Set<PlaybackSourcePage>(["library", "liked", "history"]);
 
 /**
  * 解析资源详情页使用的 ID
