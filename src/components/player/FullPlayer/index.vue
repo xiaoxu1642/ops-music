@@ -237,6 +237,9 @@ const toggleLyric = (): void => {
             >
               <template #icon><IconLucideTextQuote /></template>
             </SButton>
+            <SButton type="cover" variant="ghost" circle :size="40" @click="collapse">
+              <template #icon><IconLucideChevronDown /></template>
+            </SButton>
           </div>
           <div class="app-no-drag flex items-center gap-3">
             <SButton type="cover" variant="ghost" circle :size="40" @click="toggleFullscreen">
@@ -342,9 +345,6 @@ const toggleLyric = (): void => {
           @mouseleave="onBarLeave"
         >
           <div class="flex-1 min-w-0 flex items-center justify-start gap-2">
-            <SButton type="cover" variant="ghost" size="large" circle @click="collapse">
-              <template #icon><IconLucideChevronDown /></template>
-            </SButton>
             <SButton
               type="cover"
               variant="ghost"
