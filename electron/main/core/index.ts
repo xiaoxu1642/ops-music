@@ -1,5 +1,5 @@
 import { app, BrowserWindow, screen } from "electron";
-import { electronApp } from "@electron-toolkit/utils";
+import { electronApp, is } from "@electron-toolkit/utils";
 import {
   createMainWindow,
   restoreLyricWindows,
@@ -50,6 +50,31 @@ const logProcessMemory = (): void => {
 };
 
 /**
+ * 拦截已退役功能的系统快捷键（替代 electron-toolkit 的 watchWindowShortcuts）：
+ * 界面缩放已退役，锁定 100%，拦截缩放快捷键；生产环境拦截页面重载与工具调出组合键，
+ * 开发者工具统一走 F12（见 createMainWindow）
+ */
+const guardRetiredShortcuts = (): void => {
+  app.on("browser-window-created", (_event, window) => {
+    window.webContents.on("before-input-event", (event, input) => {
+      if (input.type !== "keyDown") return;
+      const withControl = input.control || input.meta;
+      if (input.code === "Minus" && withControl) event.preventDefault();
+      if (input.code === "Equal" && input.shift && withControl) event.preventDefault();
+      if (!is.dev) {
+        if (input.code === "KeyR" && withControl) event.preventDefault();
+        if (
+          input.code === "KeyI" &&
+          ((input.alt && input.meta) || (input.control && input.shift))
+        ) {
+          event.preventDefault();
+        }
+      }
+    });
+  });
+};
+
+/**
  * 初始化应用
  */
 export const initApp = (): void => {
@@ -62,6 +87,8 @@ export const initApp = (): void => {
     app.quit();
     return;
   }
+  // 拦截已退役快捷键
+  guardRetiredShortcuts();
   // 已有实例运行时再次启动：聚焦主窗口
   app.on("second-instance", () => {
     focusMainWindow();
