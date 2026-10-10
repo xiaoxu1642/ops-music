@@ -4,6 +4,17 @@
  * 与 `@main/apis/bilibili/core/types.ts` 的归一化结构对齐，只保留渲染层实际消费的字段
  */
 
+/** nav 归一化结果：登录态与账号身份 */
+export interface BilibiliNavBody {
+  isLogin: boolean;
+  mid: number;
+  uname: string;
+  face: string;
+}
+
+/** 已登录的 B 站身份 */
+export type BilibiliProfile = Omit<BilibiliNavBody, "isLogin">;
+
 /** 搜索归一化条目 */
 export interface BilibiliSearchItem {
   bvid: string;

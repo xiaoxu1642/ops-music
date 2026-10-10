@@ -324,7 +324,11 @@
     "logout": "Sign out",
     "logoutConfirmTitle": "Sign out",
     "logoutConfirmDesc": "Sign out of the current account?",
-    "logoutDone": "Signed out"
+    "logoutDone": "Signed out",
+    "bilibiliTitle": "Bilibili account",
+    "bilibiliLogin": "Web sign-in",
+    "bilibiliWaiting": "Waiting for sign-in…",
+    "bilibiliLogoutConfirmDesc": "Sign out of your Bilibili account?"
   },
   "search": {
     "title": "Search",
