@@ -1,12 +1,12 @@
 # Type Reference
 
-These are the objects delivered to plugin callbacks and handlers. A `?` marks an optional field.
+Core data types used by the application and the MCP interface. A `?` marks an optional field.
 
 ## Tracks
 
 ### Track
 
-The `track` payload for [`trackChange`](/en/plugins/control#playback-events) and [`menuClick`](/en/plugins/control#menu-extensions).
+Complete information about one track.
 
 | Field           | Type                               | Description                            |
 | --------------- | ---------------------------------- | -------------------------------------- |
@@ -32,11 +32,10 @@ The `track` payload for [`trackChange`](/en/plugins/control#playback-events) and
 | `ctime`         | `number?`                          | Creation time in Unix milliseconds     |
 | `quality`       | [`AudioQuality`](#audioquality)`?` | Audio quality                          |
 | `fee`           | [`TrackFee`](#trackfee)`?`         | Access fee flag                        |
-| `cloud`         | `boolean?`                         | Whether this is a cloud-library track  |
 
 ### TrackSource
 
-`"local"` for local files, or the built-in online platform `"netease"`. This project removed the QQ Music, Kugou, and streaming-server sources. Plugin source keys are not stored as `TrackSource`.
+`"local"` for local files, or the built-in online platform `"netease"`.
 
 ### TrackFee
 
@@ -76,7 +75,7 @@ NetEase-compatible fee flag: `0` free, `1` VIP, `4` purchase required, and `8` q
 
 ### LyricLine
 
-One parsed lyric line. The `lines` payload in [`lyricChange`](/en/plugins/control#playback-events) is `LyricLine[]`.
+One parsed lyric line.
 
 | Field             | Type                                     | Description                             |
 | ----------------- | ---------------------------------------- | --------------------------------------- |

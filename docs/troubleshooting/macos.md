@@ -42,11 +42,3 @@ SPlayer-Next 在 macOS 上**支持系统级媒体集成**：通过 `media-ctrl` 
 
 1. 关闭其他可能占用媒体键的应用；
 2. 检查 **系统设置** → **键盘** → **键盘快捷键** 中的媒体键设置。
-
-## 更新问题
-
-### 自动更新失败
-
-1. 手动从 [GitHub Releases](https://github.com/SPlayer-Dev/SPlayer-Next/releases) 下载最新版本；
-2. 删除旧版本后重新安装；
-3. 检查网络连接是否正常。

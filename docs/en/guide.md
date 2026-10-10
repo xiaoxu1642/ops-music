@@ -44,10 +44,6 @@ Only **taskbar lyrics (Windows)** remain: the current line is drawn inside the W
 - **Tray:** The app keeps running in the tray after the main window is closed, with playback and taskbar-lyric toggles in the menu.
 - **Global shortcuts:** Bind global playback shortcuts under **Settings → Hotkey Settings**.
 
-## Plugins
-
-The plugin system extends music sources and playback control. See [Using Plugins](/en/plugins-usage) and [Plugin Development](/en/plugins/).
-
 ## External control
 
 A local MCP service with its own switch lets AI clients inspect and control playback. See the [MCP interface](/en/mcp). The external HTTP and WebSocket APIs were removed as part of this project's scope cut.

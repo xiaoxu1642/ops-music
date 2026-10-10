@@ -18,7 +18,7 @@ This policy explains how SPlayer Next processes, stores, and protects informatio
 
 ### 2.1 Information you provide
 
-- **Preferences:** Language, theme, shortcuts, audio output device, local scan folders, plugin sources, and lyric service addresses. These are stored on your device only and remain under your control.
+- **Preferences:** Language, theme, shortcuts, audio output device, local scan folders, and lyric service addresses. These are stored on your device only and remain under your control.
 
 ### 2.2 Local runtime and cache data
 
@@ -29,10 +29,9 @@ This policy explains how SPlayer Next processes, stores, and protects informatio
 
 The software processes this information to play and organize media, restore your configuration, and maintain local security and stability. It does not use your data for advertising, profiling, or marketing, and does not sell or rent it.
 
-## 4. Third-party services and extensions
+## 4. Third-party services
 
-1. **Plugins and source extensions:** The optional plugin market performs automated checks and maintainer review, but this is not a complete security audit or endorsement. Community plugins can make their own network requests and process data. Review their source, permissions, and origin before use.
-2. **Online music platforms:** When you sign in or browse, the app talks directly to the platform's public endpoints. That platform's own terms and privacy policy apply.
+1. **Online music platforms:** When you sign in or browse, the app talks directly to the platform's public endpoints. That platform's own terms and privacy policy apply.
 
 ## 5. Storage, retention, and protection
 

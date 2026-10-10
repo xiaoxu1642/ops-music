@@ -16,15 +16,14 @@ SPlayer Next is a free and open-source cross-platform desktop music player. Read
 - **User / you:** Any individual or organization that installs or uses the software.
 - **Local content:** Audio stored on your devices or storage you are authorized to access.
 - **Online platform:** A public online music service operated independently by a third party.
-- **Third-party plugin / source:** A community script imported locally or from the network, including compatible LX Music scripts.
 
 ## 2. Nature of the software
 
-The software is a client-side tool for decoding, playing, organizing, and managing local audio and, when configured by you, interacting with online platforms and plugins.
+The software is a client-side tool for decoding, playing, organizing, and managing local audio and, when configured by you, interacting with online platforms.
 
 It is free software provided without a promise of commercial service, continued maintenance, or support for a particular purpose. Rights to use, copy, modify, and redistribute it are governed by AGPL-3.0.
 
-The software itself does not provide, host, or distribute audio content and does not include online accounts, third-party sources, or copyrighted catalogs. Content and metadata come from your local files, configured services, or plugins, and no warranty is made about them.
+The software itself does not provide, host, or distribute audio content and does not include online accounts, third-party sources, or copyrighted catalogs. Content and metadata come from your local files or configured services, and no warranty is made about them.
 
 ## 3. AGPL-3.0 license
 
@@ -46,17 +45,11 @@ You must not use the software to violate applicable law, infringe third-party ri
 
 The software provides general client capabilities that request data when initiated by you. Third-party platforms are independently operated and are not affiliated with or authorized by the developers. Their terms, privacy policies, copyright rules, access controls, and availability apply.
 
-### 5.2 Plugins and sources
-
-The software includes an open extension mechanism and optional plugin market. Market entries index third-party submissions; they are not authored or operated by the SPlayer Next developers unless explicitly stated.
-
-Market submissions receive automated checks and maintainer review, but this is not a complete security audit, legal determination, or endorsement. Locally or remotely imported plugins do not pass through market review. Plugins are executable code that can make network requests and persist data, so inspect their source and permissions and install only trusted plugins.
-
-### 5.3 Copyrighted data
+### 5.2 Copyrighted data
 
 The developers claim no ownership over track URLs, metadata, lyrics, covers, or other third-party content. Your access, storage, use, and distribution must comply with applicable law, authorization from rights holders, and platform terms. Technical capability does not grant rights to third-party content.
 
-### 5.4 MCP interface and automation
+### 5.3 MCP interface and automation
 
 The MCP (Model Context Protocol) interface is a neutral local control mechanism. You are responsible for actions, data changes, and security risks caused by AI agents, automation scripts, or other clients using it.
 
@@ -96,7 +89,7 @@ Electron, Vue, FFmpeg, rodio, and other dependencies retain their own copyrights
 
 The software is provided **“AS IS” and “AS AVAILABLE”**, without express or implied warranties, including merchantability, fitness for a particular purpose, non-infringement, uninterrupted availability, security, compatibility, or data integrity, to the maximum extent permitted by law.
 
-The developers are not responsible for data loss, device failures, interruption, security incidents, third-party service changes, plugin behavior, or unlawful use, except where liability cannot legally be excluded.
+The developers are not responsible for data loss, device failures, interruption, security incidents, third-party service changes, or unlawful use, except where liability cannot legally be excluded.
 
 ## 14. Limitation of liability
 

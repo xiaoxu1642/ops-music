@@ -24,15 +24,15 @@ features:
     title: Expressive lyrics
     details: LRC, QRC, YRC, and TTML with word-by-word highlighting and translations, optional online word-level lyrics from the AMLL TTML DB, and Windows taskbar lyrics.
   - icon: 📁
-    title: Local library and downloads
-    details: Scan local folders into a library, edit tags and cover art, download with embedded metadata and lyric files, and manage cache and listening stats.
+    title: NetEase and local library
+    details: Search and play from NetEase Cloud Music, or scan local folders into a library with editable tags and cover art; the download manager embeds metadata and lyrics, plus cache management and listening stats.
   - icon: 🎧
     title: System integration
     details: Windows SMTC gives lock-screen, notification, and media-key control, with a tray icon and global shortcuts.
   - icon: 🎨
     title: Adaptive themes
     details: Cover-driven colors, Light, Dark, and Auto modes, spectrum visualization, and carefully polished details.
-  - icon: 🧩
-    title: Extensible by design
-    details: Built-in plugins extend music sources and playback control, and a local MCP interface lets AI clients inspect and control playback.
+  - icon: 🤖
+    title: MCP interface
+    details: A built-in local MCP service lets AI clients inspect playback, search the library, and control the player.
 ---

@@ -68,20 +68,8 @@ const config: Configuration = {
     icon: "public/icons/logo.ico",
     artifactName: "${productName}-${version}-${arch}.${ext}",
     forceCodeSigning: false,
-    target: ["nsis", "portable"],
-  },
-  nsis: {
-    oneClick: false,
-    guid: "com.ops.music",
-    installerIcon: "public/icons/favicon.ico",
-    uninstallerIcon: "public/icons/favicon.ico",
-    artifactName: "${productName}-${version}-${arch}-setup.${ext}",
-    shortcutName: "Ops Music",
-    uninstallDisplayName: "Ops Music",
-    createDesktopShortcut: "always",
-    allowElevation: true,
-    allowToChangeInstallationDirectory: true,
-    license: "build/license.txt",
+    // 只出免安装版；安装器（NSIS）链路已退役
+    target: ["portable"],
   },
   portable: {
     artifactName: "${productName}-${version}-${arch}-portable.${ext}",

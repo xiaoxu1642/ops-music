@@ -10,7 +10,7 @@
 
 [![License](https://img.shields.io/github/license/xiaoxu1642/ops-music)](./LICENSE)
 
-**简体中文** | [English](./README.md)
+**简体中文**
 
 </div>
 
@@ -19,7 +19,7 @@
 ## 来源与许可
 
 - **基线项目**：[SPlayer-Next](https://github.com/SPlayer-Dev/SPlayer-Next)（作者 imsyy，AGPL-3.0）。SPlayer-Next 本身是 [SPlayer](https://github.com/SPlayer-Dev/SPlayer) 的继任版本。本项目沿用 AGPL-3.0，`LICENSE` 未改动。
-- **二改内容**：更名为 Ops Music，只面向 Windows；移除听歌识曲、字体配置、桌面歌词、灵动岛、外部 HTTP/WS API、Last.fm、Discord RPC、检查更新、流媒体服务器等功能；保留任务栏歌词、在线逐字歌词与系统媒体控制（SMTC）。
+- **二改内容**：更名为 Ops Music，只面向 Windows；移除听歌识曲、字体配置、桌面歌词、灵动岛、外部 HTTP/WS API、Last.fm、Discord RPC、检查更新、流媒体服务器、lx-music 插件系统、网易云云盘、歌曲评论、歌词海报导出、orpheus 深链与音频文件关联等功能；保留任务栏歌词、在线逐字歌词与系统媒体控制（SMTC）。只发布免安装版。
 - **原生模块**：音频解码/标签/封面由 SPlayer-Next 的 Rust `audio-engine`（FFmpeg + lofty）提供，系统媒体控件由其 `media-ctrl`（WinRT SMTC）提供。
 
 ---
@@ -38,7 +38,7 @@
 - 🎧 **系统媒体集成** —— Windows SMTC（锁屏、通知栏、媒体键）、托盘菜单与全局快捷键
 - ⚡ **高性能音频引擎** —— FFmpeg + Rust
 - 🎨 **自适应主题** —— 基于封面取色，Light / Dark / Auto
-- 🧩 **可扩展** —— lx-music（`user_api`）插件音源与面向 AI 客户端的本机 MCP 接口
+- 🧩 **可扩展** —— 面向 AI 客户端的本机 MCP 接口
 
 ## 开发
 

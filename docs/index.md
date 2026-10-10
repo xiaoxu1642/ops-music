@@ -25,15 +25,15 @@ features:
     title: 丰富的歌词展现
     details: 支持 LRC / QRC / YRC / TTML 多种歌词，逐字高亮与翻译，可选接入 AMLL TTML DB 在线逐字歌词，并支持 Windows 任务栏歌词。
   - icon: 📁
-    title: 本地曲库与下载
-    details: 扫描本地文件夹建立曲库，编辑标签与封面；内置下载管理器写入标签、封面与歌词，并提供缓存管理与听歌统计。
+    title: 网易云与本地曲库
+    details: 内置网易云音乐在线搜索与播放，也可扫描本地文件夹建立曲库，支持编辑标签与封面；下载管理器写入标签、封面与歌词，并提供缓存管理与听歌统计。
   - icon: 🎧
     title: 系统级集成
     details: 对接 Windows SMTC，锁屏、通知栏、耳机线控皆可掌控；托盘常驻与全局快捷键随时控制播放。
   - icon: 🎨
     title: 自适应主题
     details: 封面取色驱动全站着色，Light / Dark / Auto 自动切换，音乐频谱可视化，细节处处打磨。
-  - icon: 🧩
-    title: 可扩展能力
-    details: 内置插件系统，可编写脚本扩展音源与控制；另有本机 MCP 接口，供 AI 客户端查询状态与控制播放。
+  - icon: 🤖
+    title: MCP 接口
+    details: 内置本机 MCP 服务，支持 AI 客户端查询播放状态、搜索曲库并控制播放。
 ---
