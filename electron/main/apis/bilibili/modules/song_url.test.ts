@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { after, describe, it } from "node:test";
 import songUrl from "./song_url";
 import { AUDIO_QUALITY_LABEL, ENDPOINT, FNVAL_DASH, UNKNOWN_QUALITY_LABEL } from "../core/config";
 import type { BilibiliHttp, BilibiliRequestResponse, BilibiliStream } from "../core/types";
+import { stopBilibiliProxy } from "../../../services/bilibiliProxy";
+
+// 取流会签发本地代理地址并按需起服务，用例跑完必须收掉，否则测试进程不退出
+after(() => {
+  stopBilibiliProxy();
+});
 
 const res = (body: Record<string, unknown>): BilibiliRequestResponse => ({
   status: 200,

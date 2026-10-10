@@ -4,9 +4,9 @@
  * 与 Otter 同口径：先 `fnval=16` 拿 DASH，按 bandwidth 取最高一档音频；
  * DASH 拿不到再降级 `fnval=0` 的 durl 分段。
  *
- * 返回的是站方裸地址 + 取流必需头。**播放链路不能直接用这个地址**：
- * `ffmpeg_audio` 的 HTTP 源不把 Referer/UA 带出站，B 站对无 Referer 的取流一律 403/-352，
- * 所以这里只产出元数据，由后续的 127.0.0.1 本地代理批次按 `headers` 转发Range请求。
+ * 返回站方裸地址 + 取流必需头，并附上本地代理签发的 `proxyUrl`。
+ * **播放链路必须用 `proxyUrl`**：`ffmpeg_audio` 的 HTTP 源不把 Referer/UA 带出站，
+ * B 站对无 Referer 的取流一律 403/-352，裸地址只有配合 headers 经代理转发才可用。
  */
 
 import {
@@ -18,6 +18,7 @@ import {
   USER_AGENT,
 } from "../core/config";
 import { normalizeResourceUrl } from "../core/url";
+import { createProxiedStreamUrl } from "@main/services/bilibiliProxy";
 import type {
   BilibiliDashAudioEntry,
   BilibiliModule,
@@ -91,6 +92,12 @@ const selectDurl = (response: BilibiliPlayUrlResponse, referer: string): Bilibil
   };
 };
 
+/** 给选出的流签发本地代理地址；代理不可用时保持裸地址，播放侧会显式失败而不是静默播放 403 页 */
+const attachProxyUrl = async (stream: BilibiliStream): Promise<BilibiliStream> => {
+  const proxyUrl = await createProxiedStreamUrl(stream);
+  return { ...stream, proxyUrl };
+};
+
 const song_url: BilibiliModule = async (query, http) => {
   const bvid = String(query.bvid ?? "");
   const cookie = query.cookie as Record<string, string> | undefined;
@@ -105,7 +112,7 @@ const song_url: BilibiliModule = async (query, http) => {
   try {
     const res = await http.wbi(ENDPOINT.playurl, params, options);
     const stream = selectDash(res.body as BilibiliPlayUrlResponse, referer);
-    if (stream) return { status: 200, body: stream, cookie: res.cookie };
+    if (stream) return { status: 200, body: await attachProxyUrl(stream), cookie: res.cookie };
   } catch (err) {
     dashError = err;
   }
@@ -121,7 +128,7 @@ const song_url: BilibiliModule = async (query, http) => {
     throw new Error(`bilibili 未取到音频地址：${bvid}/${cid}（${dashMsg}）`);
   }
 
-  return { status: 200, body: stream, cookie: durlRes.cookie };
+  return { status: 200, body: await attachProxyUrl(stream), cookie: durlRes.cookie };
 };
 
 export default song_url;

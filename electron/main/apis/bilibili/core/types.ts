@@ -207,11 +207,13 @@ export interface BilibiliVideoDetail {
 }
 
 /**
- * 音频流归一化结果：`url` 是站方裸地址，必须配合 `headers` 才能取到流，
- * 交给后续的 127.0.0.1 代理消费。
+ * 音频流归一化结果：`url` 是站方裸地址，必须配合 `headers` 才能取到流；
+ * `proxyUrl` 是主进程本地代理签发的可播地址，播放侧优先用它（裸地址仅供诊断）。
  */
 export interface BilibiliStream {
   url: string;
+  /** 本地代理地址，播放侧取 `proxyUrl ?? url` */
+  proxyUrl?: string;
   /** 容器格式，供解码侧选择 demuxer */
   format: "m4s" | "m4a" | "flv";
   /** 站方音质档位码 */
