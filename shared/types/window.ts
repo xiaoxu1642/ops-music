@@ -49,6 +49,8 @@ export interface TaskbarLyricApi {
   onConfigChange: (callback: (config: TaskbarLyricSettings) => void) => () => void;
   /** 订阅悬停态变化（主进程按光标位置轮询判定，渲染端据此展开/收起） */
   onHoverChange: (callback: (hovered: boolean) => void) => () => void;
+  /** 订阅暂停 30s 折叠态变化（true = 仅封面，渲染端据此隐藏/恢复歌词区） */
+  onCollapseChange: (callback: (collapsed: boolean) => void) => () => void;
   /** 上报内容需要的实际窗口宽度 */
   setContentWidth: (width: number) => void;
 }

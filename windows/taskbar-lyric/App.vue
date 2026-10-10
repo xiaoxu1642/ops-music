@@ -35,6 +35,11 @@ const taskbarIsLight = ref(false);
  * 悬停 = 展开态（封面 + 上一首/播放暂停/下一首 + 歌词），离开即收起
  */
 const isHovered = ref(false);
+/**
+ * 折叠态（暂停满 30s）同样由主进程广播：折叠 = 只保留封面；
+ * 折叠期间悬停也只展示控件（无歌词），恢复播放由主进程广播解除
+ */
+const isCollapsed = ref(false);
 const maxLayoutWidth = ref(400);
 const wrapperRef = ref<HTMLElement | null>(null);
 let widthReportRaf = 0;
@@ -75,6 +80,16 @@ const reportContentWidth = (): void => {
   const coverWidth = config.showCover
     ? (wrapper.querySelector<HTMLElement>(".cover-wrapper")?.offsetWidth ?? 0)
     : 0;
+
+  if (isCollapsed.value) {
+    // 折叠态只显示封面（悬停展开控件走上面的展开分支），宽度收敛到封面 + 内边距
+    const targetWidth = Math.ceil(Math.min(maxLayoutWidth.value, horizontalPadding + coverWidth));
+    if (targetWidth === lastReportedWidth) return;
+    lastReportedWidth = targetWidth;
+    window.api.taskbarLyric.setContentWidth(targetWidth);
+    return;
+  }
+
   const lyricArea = wrapper.querySelector<HTMLElement>(".lyric-area");
   const lyricStyle = lyricArea ? getComputedStyle(lyricArea) : null;
   const lyricMargins = lyricStyle
@@ -197,6 +212,11 @@ onMounted(async () => {
       isHovered.value = hovered;
       nextTick(scheduleContentWidthReport);
     }),
+    window.api.taskbarLyric.onCollapseChange((collapsed) => {
+      if (collapsed === isCollapsed.value) return;
+      isCollapsed.value = collapsed;
+      nextTick(scheduleContentWidthReport);
+    }),
   );
 
   try {
@@ -256,8 +276,8 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- 文本区：歌词常驻；播放中逐字扫光，暂停时定格在当前位置且不跑动画 -->
-      <div class="lyric-area">
+      <!-- 文本区：歌词常驻；播放中逐字扫光，暂停时定格在当前位置且不跑动画；折叠态整区隐藏 -->
+      <div v-if="!isCollapsed" class="lyric-area">
         <TransitionGroup
           tag="div"
           name="line"

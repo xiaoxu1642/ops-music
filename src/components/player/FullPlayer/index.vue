@@ -1,6 +1,6 @@
 <script lang="ts">
 /** 全屏播放器收起后歌词引擎实例的宽限销毁时长（毫秒）：宽限内重开则取消销毁 */
-export const LYRIC_PAGE_DESTROY_GRACE_MS = 10_000;
+export const LYRIC_PAGE_DESTROY_GRACE_MS = 5_000;
 </script>
 
 <script setup lang="ts">
