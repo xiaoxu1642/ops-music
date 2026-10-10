@@ -67,10 +67,11 @@ export type LyricSourceOrder = Platform[];
 export type LyricFormatOrder = LyricFormat[];
 
 /**
- * 歌词链路（lyrics IPC）已实现的平台。
- * 同时驱动「歌词来源偏好」选项与默认音源顺序，新增平台要先接好主进程歌词桥再登记。
+ * 参与「歌词来源偏好 / 音源顺序」的平台：只有这些平台提供跨源模糊兜底搜索。
+ * B 站不在其中——它只按 bvid 提供自身视频字幕，不做按歌名搜视频。
+ * 新增平台要先接好主进程的 matchByQuery 桥再登记。
  */
-export const LYRIC_SUPPORTED_PLATFORMS: Platform[] = ["netease", "bilibili"];
+export const LYRIC_SUPPORTED_PLATFORMS: Platform[] = ["netease"];
 
 /** 默认音源顺序 */
 export const DEFAULT_LYRIC_SOURCE_ORDER: LyricSourceOrder = [...LYRIC_SUPPORTED_PLATFORMS];

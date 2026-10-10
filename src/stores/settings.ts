@@ -11,12 +11,12 @@ import {
   DEFAULT_LYRIC_FORMAT_ORDER,
   DEFAULT_LYRIC_SOURCE_ORDER,
   DEFAULT_SIDEBAR_NAV_GROUPS,
+  LYRIC_SUPPORTED_PLATFORMS,
   SIDEBAR_GROUP_MY_PLAYLISTS,
   SIDEBAR_GROUP_SUBSCRIBED,
   SPRING_PRESETS,
 } from "@/types/settings";
 import type { SystemConfig, LocaleCode } from "@shared/types/settings";
-import { ALL_PLATFORMS } from "@shared/types/platform";
 import { defaultSystemConfig } from "@shared/defaults/settings";
 import { setByPath } from "@shared/utils/path";
 import { DEFAULT_SKIP_TRACK_KEYWORDS } from "@/utils/preset/skipKeywords";
@@ -347,7 +347,7 @@ export const useSettingsStore = defineStore(
         if (!Array.isArray(preset.skipTrackKeywords)) {
           preset.skipTrackKeywords = [...DEFAULT_SKIP_TRACK_KEYWORDS];
         }
-        lyric.lyricSourceOrder = reconcileOrder(lyric.lyricSourceOrder, ALL_PLATFORMS);
+        lyric.lyricSourceOrder = reconcileOrder(lyric.lyricSourceOrder, LYRIC_SUPPORTED_PLATFORMS);
         lyric.lyricFormatOrder = reconcileOrder(lyric.lyricFormatOrder, DEFAULT_LYRIC_FORMAT_ORDER);
         appearance.sidebarNavGroups = reconcileNavGroups(appearance.sidebarNavGroups ?? []);
         appearance.sidebarHiddenKeys = reconcileHiddenKeys(appearance.sidebarHiddenKeys ?? []);

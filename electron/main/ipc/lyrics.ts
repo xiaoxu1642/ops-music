@@ -1,8 +1,8 @@
 /**
  * 歌词匹配 IPC
  *
- * - lyrics:matchById(platform, id)         按 id 直取
- * - lyrics:matchByQuery(platform, track)   按 Track 元数据模糊搜索
+ * - lyrics:matchById(platform, id)         按 id 直取（含 B 站自身视频字幕）
+ * - lyrics:matchByQuery(platform, track)   按 Track 元数据模糊搜索（跨源兜底，B 站不参与）
  * - lyrics:fetchTTMLOverlay(track)         抓 AMLL TTML DB 的高质量 TTML
  * - lyrics:matchLocalLyric(track)          本地歌词库（.ttml / .lrc / .txt）匹配
  * - lyrics:matchLrclib(track)              LRCLIB 最后兜底
@@ -62,14 +62,12 @@ const resolveById = async (platform: Platform, id: string): Promise<LyricMatchRe
   }
 };
 
-/** 按 Track 元数据 fuzzy 匹配 */
+/** 按 Track 元数据 fuzzy 匹配（跨源兜底；B 站只有自身字幕，不支持按歌名搜） */
 const resolveByQuery = async (platform: Platform, track: Track): Promise<LyricMatchResponse> => {
   try {
     switch (platform) {
       case "netease":
         return { ok: true, data: await netease.getByQuery(track) };
-      case "bilibili":
-        return { ok: true, data: await bilibili.getByQuery(track) };
       default:
         return { ok: false, error: `unsupported platform: ${platform}` };
     }

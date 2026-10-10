@@ -69,11 +69,12 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     });
 
     expect(result).toBeNull();
-    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(2);
-    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("bilibili", expect.anything());
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
+    expect(mockRequestPlatformLyric).toHaveBeenCalledWith("netease", expect.anything());
+    expect(mockRequestPlatformLyric).not.toHaveBeenCalledWith("bilibili", expect.anything());
   });
 
-  it("显式偏好 NCM：查无此歌时回退其余音源，均未命中返回 null", async () => {
+  it("显式偏好 NCM：查无此歌时返回 null（无其他兜底平台可回退）", async () => {
     const settings = useSettingsStore();
     settings.lyric.lyricSourcePreference = "netease";
     mockRequestPlatformLyric.mockResolvedValue(null);
@@ -84,7 +85,7 @@ describe("resolveOnlineByPreference 单音源解析", () => {
     });
 
     expect(result).toBeNull();
-    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(2);
+    expect(mockRequestPlatformLyric).toHaveBeenCalledTimes(1);
   });
 
   it("跟随自身：本地曲目没有对应平台，不发起在线请求", async () => {
