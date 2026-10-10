@@ -2,7 +2,7 @@
 
 ## Developer Tools
 
-Open **Developer Tools** from the gear menu in the upper-right corner. In development builds, press `Ctrl + Shift + I` on Windows/Linux or `Cmd + Option + I` on macOS.
+Press `F12` to open or close **Developer Tools**.
 
 | Panel           | Purpose                           |
 | --------------- | --------------------------------- |
