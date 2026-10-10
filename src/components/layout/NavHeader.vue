@@ -1,33 +1,10 @@
 <script setup lang="ts">
 import { useSettingsDialog } from "@/settings/useSettingsDialog";
 import { useWindowControls } from "@/composables/useWindowControls";
-import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
-import IconRefreshCw from "~icons/lucide/refresh-cw";
-import IconTerminal from "~icons/lucide/terminal";
-import IconSettings from "~icons/lucide/settings";
-import IconScaling from "~icons/lucide/scaling";
 
 const router = useRouter();
-const { t } = useI18n();
 const { show: showSettings } = useSettingsDialog();
 const { isBorderless } = useWindowControls();
-
-/** 界面缩放弹窗开关 */
-const uiZoomOpen = ref(false);
-
-const menuItems = computed<DropdownMenuItem[]>(() => [
-  { key: "uiZoom", label: t("uiZoom.title"), icon: IconScaling },
-  { key: "reload", label: t("nav.reload"), icon: IconRefreshCw, separator: true },
-  { key: "devtools", label: t("nav.devtools"), icon: IconTerminal },
-  { key: "settings", label: t("nav.globalSettings"), icon: IconSettings },
-]);
-
-const onMenuSelect = (key: string): void => {
-  if (key === "reload") location.reload();
-  else if (key === "devtools") window.api.system.toggleDevTools();
-  else if (key === "uiZoom") uiZoomOpen.value = true;
-  else if (key === "settings") showSettings();
-};
 </script>
 
 <template>
@@ -61,16 +38,17 @@ const onMenuSelect = (key: string): void => {
     <!-- 右侧 -->
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
       <NavUser />
-      <SDropdownMenu :items="menuItems" @select="onMenuSelect">
-        <template #trigger>
-          <SButton class="app-no-drag shrink-0" variant="tertiary" circle :size="40">
-            <template #icon><IconLucideSettings /></template>
-          </SButton>
-        </template>
-      </SDropdownMenu>
+      <SButton
+        class="app-no-drag shrink-0"
+        variant="tertiary"
+        circle
+        :size="40"
+        @click="showSettings()"
+      >
+        <template #icon><IconLucideSettings /></template>
+      </SButton>
       <SDivider v-if="isBorderless" vertical />
       <WindowControls />
     </div>
-    <UiZoomDialog v-model:open="uiZoomOpen" />
   </div>
 </template>

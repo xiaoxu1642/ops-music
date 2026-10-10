@@ -1,5 +1,5 @@
 import { app, BrowserWindow, screen } from "electron";
-import { electronApp, optimizer } from "@electron-toolkit/utils";
+import { electronApp } from "@electron-toolkit/utils";
 import {
   createMainWindow,
   restoreLyricWindows,
@@ -73,9 +73,6 @@ export const initApp = (): void => {
     electronApp.setAppUserModelId("com.ops.music");
     // 注册 cache:// 协议处理
     handleCacheProtocol();
-    app.on("browser-window-created", (_, window) => {
-      optimizer.watchWindowShortcuts(window);
-    });
     // 注册 IPC
     registerIpcHandlers();
     // 初始化数据库

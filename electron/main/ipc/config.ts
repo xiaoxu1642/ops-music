@@ -11,7 +11,7 @@ import {
   setPreampGain,
   setExclusiveMode,
 } from "@main/services/engine";
-import { setTaskbarProgress, applyMainWindowZoom, applyTaskbarLyricLayout } from "@main/window";
+import { setTaskbarProgress, applyTaskbarLyricLayout } from "@main/window";
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
 import { setTaskbarThumbnailEnabled } from "@main/services/thumbnail";
@@ -49,9 +49,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
       break;
     case "system.taskbarThumbnailCover":
       setTaskbarThumbnailEnabled(value as boolean);
-      break;
-    case "system.uiZoom":
-      applyMainWindowZoom();
       break;
     case "taskbarLyric.position":
     case "taskbarLyric.autoMaxWidth":

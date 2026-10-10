@@ -143,11 +143,6 @@
     "plus": "+{n}s",
     "warningBLessThanA": "B 点必须晚于 A 点，循环未启用"
   },
-  "uiZoom": {
-    "title": "界面缩放",
-    "range": "可调节范围：50% - 200%",
-    "reset": "恢复默认"
-  },
   "nav": {
     "home": "首页",
     "library": "音乐库",
@@ -156,9 +151,6 @@
     "download": "下载管理",
     "favorites": "我的收藏",
     "stats": "统计",
-    "reload": "热重载",
-    "devtools": "开发者工具",
-    "globalSettings": "全局设置",
     "searchPlaceholder": "搜索歌曲、歌手或专辑",
     "searchEmpty": "输入关键词开始搜索",
     "searchGoto": "搜索「{keyword}」",

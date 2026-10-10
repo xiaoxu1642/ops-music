@@ -205,8 +205,6 @@ export interface SystemConfig {
     taskbarProgress: boolean;
     /** 悬停任务栏时以专辑封面作为窗口预览（仅 Windows） */
     taskbarThumbnailCover: boolean;
-    /** 界面缩放百分比（50-200，默认 100） */
-    uiZoom: number;
     /** 首启引导是否已完成 */
     onboardingCompleted: boolean;
     /** 用户已同意的协议版本号 */

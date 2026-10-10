@@ -27,7 +27,6 @@ declare global {
           arch: string;
           release: string;
         };
-        toggleDevTools: () => Promise<void>;
         showInExplorer: (filePath: string) => Promise<void>;
         openLogsDir: () => Promise<string>;
         focusMainWindow: () => Promise<void>;
