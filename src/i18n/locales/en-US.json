@@ -628,8 +628,6 @@
     "section": {
       "aboutApp": "About",
       "specialThanks": "Special Thanks",
-      "developers": "Developers",
-      "community": "Community",
       "language": "Language",
       "playControl": "Playback Control",
       "playbackTransition": "Playback Transition",
@@ -670,9 +668,6 @@
     },
     "about": {
       "openLogs": "Open Logs",
-      "officialSite": "Official Site",
-      "showMore": "More Contributors",
-      "collapse": "Collapse",
       "commit": "Commit",
       "date": "Date"
     },

@@ -619,8 +619,6 @@
     "section": {
       "aboutApp": "关于软件",
       "specialThanks": "特别致谢",
-      "developers": "开发人员",
-      "community": "社区与资讯",
       "language": "语言",
       "playControl": "播放控制",
       "playbackTransition": "播放过渡",
@@ -661,9 +659,6 @@
     },
     "about": {
       "openLogs": "打开日志",
-      "officialSite": "官方网站",
-      "showMore": "更多贡献者",
-      "collapse": "收起",
       "commit": "提交",
       "date": "日期"
     },

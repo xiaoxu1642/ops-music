@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import { getContributors, type Contributor } from "@/apis/github";
 import { useCopyText } from "@/composables/useCopyText";
 import { openExternal } from "@/utils/url";
 import {
   APP_VERSION,
   REPO_URL,
   REPO_NAME,
-  HOMEPAGE_URL,
-  COPYRIGHT_HOLDER,
   IS_APPX,
   COMMIT_HASH,
   COMMIT_DATE,
 } from "@/utils/config";
-import IconLucideGithub from "~icons/lucide/github";
-import IconLucideRss from "~icons/lucide/rss";
 import IconLucideArrowUpRight from "~icons/lucide/arrow-up-right";
-import IconLucideChevronDown from "~icons/lucide/chevron-down";
 
 const props = defineProps<{ highlightKey?: string }>();
 
@@ -91,29 +85,6 @@ const dependencies: Dependency[] = [
     url: "https://github.com/neteasecloudmusicapienhanced/api-enhanced",
   },
 ];
-
-/** 社区与资讯入口 */
-const community = computed(() => [
-  { name: REPO_NAME, url: REPO_URL, icon: IconLucideGithub },
-  { name: t("settings.about.officialSite"), url: HOMEPAGE_URL, icon: IconLucideRss },
-]);
-
-const developers = ref<Contributor[]>([]);
-const showAllDevelopers = ref(false);
-
-/** 默认仅展示前 6 位，其余折叠 */
-const visibleDevelopers = computed(() =>
-  showAllDevelopers.value ? developers.value : developers.value.slice(0, 6),
-);
-const hasMoreDevelopers = computed(() => developers.value.length > 6);
-
-onMounted(async () => {
-  try {
-    developers.value = await getContributors();
-  } catch (error) {
-    console.error("获取贡献者失败:", error);
-  }
-});
 </script>
 
 <template>
@@ -181,90 +152,11 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 开发人员 -->
-    <section v-if="developers.length > 0">
-      <h3
-        class="animate-slide-in-item flex items-center gap-2 text-lg font-semibold text-on-surface mb-3 px-1"
-        :style="itemStyle(4)"
-      >
-        <span class="w-0.75 h-4 rounded-full bg-primary" />
-        {{ t("settings.section.developers") }}
-      </h3>
-      <div
-        class="animate-slide-in-item grid grid-cols-2 sm:grid-cols-3 gap-2.5"
-        :style="itemStyle(5)"
-      >
-        <SCard
-          v-for="dev in visibleDevelopers"
-          :key="dev.login"
-          variant="settings"
-          hoverable
-          :bordered="false"
-          size="small"
-          class="flex items-center gap-2.5"
-          @click="openExternal(dev.htmlUrl)"
-        >
-          <SImg
-            :src="dev.avatar"
-            fallback="./images/avatar.jpg"
-            class="size-9 rounded-full shrink-0"
-          />
-          <div class="min-w-0">
-            <div class="text-sm font-medium text-on-surface truncate">{{ dev.login }}</div>
-            <div class="text-xs text-on-surface-variant/60 truncate">
-              {{ dev.login === COPYRIGHT_HOLDER ? "Author" : "Contributor" }}
-            </div>
-          </div>
-        </SCard>
-      </div>
-      <SButton
-        v-if="hasMoreDevelopers"
-        variant="text"
-        size="small"
-        class="animate-slide-in-item mt-3"
-        :style="itemStyle(5)"
-        @click="showAllDevelopers = !showAllDevelopers"
-      >
-        {{ showAllDevelopers ? t("settings.about.collapse") : t("settings.about.showMore") }}
-        <template #icon>
-          <IconLucideChevronDown
-            class="transition-transform"
-            :class="showAllDevelopers && 'rotate-180'"
-          />
-        </template>
-      </SButton>
-    </section>
-
-    <!-- 社区与资讯 -->
-    <section>
-      <h3
-        class="animate-slide-in-item flex items-center gap-2 text-lg font-semibold text-on-surface mb-3 px-1"
-        :style="itemStyle(6)"
-      >
-        <span class="w-0.75 h-4 rounded-full bg-primary" />
-        {{ t("settings.section.community") }}
-      </h3>
-      <div class="animate-slide-in-item grid grid-cols-3 gap-2.5" :style="itemStyle(7)">
-        <SCard
-          v-for="item in community"
-          :key="item.name"
-          variant="settings"
-          hoverable
-          :bordered="false"
-          class="flex items-center gap-2.5"
-          @click="openExternal(item.url)"
-        >
-          <component :is="item.icon" class="size-5 text-on-surface-variant shrink-0" />
-          <span class="text-sm font-medium text-on-surface truncate">{{ item.name }}</span>
-        </SCard>
-      </div>
-    </section>
-
     <!-- 环境信息 -->
     <section>
       <div
         class="animate-slide-in-item flex items-center justify-between mb-3 px-1"
-        :style="itemStyle(8)"
+        :style="itemStyle(4)"
       >
         <h3 class="flex items-center gap-2 text-lg font-semibold text-on-surface">
           <span class="w-0.75 h-4 rounded-full bg-primary" />
@@ -279,7 +171,7 @@ onMounted(async () => {
         :bordered="false"
         radius="xl"
         class="animate-slide-in-item break-all select-text space-y-1.5"
-        :style="itemStyle(9)"
+        :style="itemStyle(5)"
       >
         <div
           v-for="item in envItems"

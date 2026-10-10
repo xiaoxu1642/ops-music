@@ -11,15 +11,15 @@
   "author": {
     "name": "Ops Music",
     "email": "",
-    "url": ""
+    "url": "https://github.com/xiaoxu1642/ops-music"
   },
-  "homepage": "",
+  "homepage": "https://github.com/xiaoxu1642/ops-music",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/xiaoxu1642/ops-music"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/xiaoxu1642/ops-music/issues"
   },
   "license": "AGPL-3.0",
   "license-file": "LICENSE",
