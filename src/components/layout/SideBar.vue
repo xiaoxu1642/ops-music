@@ -367,8 +367,10 @@ onMounted(() => {
         :class="appearance.sidebarCollapsed ? 'px-2' : 'px-3'"
         @contextmenu.capture="onMenuContextMenu"
       >
+        <!-- 固定导航与我的歌单：内容有界，给足空间并允许自身滚动；
+             shrink 让它在窗口很矮时把空间让给下方虚拟列表，避免我的歌单被顶出可视区 -->
         <div
-          class="shrink-0 max-h-[60%] overflow-y-auto"
+          class="shrink min-h-[96px] max-h-[75%] overflow-y-auto"
           :class="
             appearance.sidebarCollapsed
               ? '[&::-webkit-scrollbar]:hidden'
