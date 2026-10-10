@@ -110,10 +110,6 @@ const api = {
     getStatus: () => ipcRenderer.invoke("player:getStatus"),
     // 获取当前真实的音频流与输出参数
     getStreamInfo: () => ipcRenderer.invoke("player:getStreamInfo"),
-    // 获取 FFT 频谱数据
-    getFftData: () => ipcRenderer.invoke("player:getFftData"),
-    // 启用/禁用 FFT 频谱推送
-    setFftEnabled: (enabled: boolean) => ipcRenderer.invoke("player:setFftEnabled", enabled),
     // 启用/禁用音量均衡
     setNormalizationEnabled: (enabled: boolean) =>
       ipcRenderer.invoke("player:setNormalizationEnabled", enabled),

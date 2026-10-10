@@ -19,8 +19,6 @@ pub enum PlayerEvent {
         reason: Option<String>,
         fade_seconds: Option<f64>,
     },
-    /// FFT 频谱数据推送
-    FftData { ldata: Vec<f32>, rdata: Vec<f32> },
     /// 输出流停滞（输出回调长时间未消费样本，需要外部重建输出）
     OutputStalled,
     /// 输出流在运行期失效（CPAL 流错误），由 JS 侧触发输出重建

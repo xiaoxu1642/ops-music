@@ -105,18 +105,6 @@ impl AudioPlayer {
         self.inner.lock().stream_info()
     }
 
-    /// 启用/禁用 FFT 频谱推送（前端需要显示频谱时启用，不显示时禁用以节省性能）
-    #[napi]
-    pub fn set_fft_enabled(&self, enabled: bool) {
-        self.inner.lock().set_fft_enabled(enabled);
-    }
-
-    /// 获取 FFT 推送开关状态
-    #[napi]
-    pub fn get_fft_enabled(&self) -> bool {
-        self.inner.lock().fft_enabled()
-    }
-
     /// 启用/禁用音量归一化（实时响度均衡）
     #[napi]
     pub fn set_normalization_enabled(&self, enabled: bool) {
@@ -169,15 +157,6 @@ impl AudioPlayer {
     #[napi]
     pub fn get_preamp_gain(&self) -> f64 {
         self.inner.lock().preamp_gain() as f64
-    }
-
-    /// 获取 FFT 频谱数据（128 个频段，值域 0.0 ~ 1.0）
-    #[napi]
-    pub fn get_fft_data(&self) -> JsFftData {
-        let (ldata, rdata) = self.inner.lock().fft_data();
-        let ldata = ldata.into_iter().map(|v| v as f64).collect();
-        let rdata = rdata.into_iter().map(|v| v as f64).collect();
-        JsFftData { ldata, rdata }
     }
 
     /// 返回 load 时缓存的原始封面数据（用于 SMTC / 全屏播放器）

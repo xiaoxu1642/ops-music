@@ -144,7 +144,6 @@ impl TransitionSource {
         let channels = u64::from(shared.channels());
         let energy_window_samples = (u64::from(shared.sample_rate()) / 20).max(1) * channels;
         let max_intro_samples = u64::from(shared.sample_rate()) * u64::from(shared.channels()) * 2;
-        fft.set_sample_rate(shared.sample_rate());
         Self {
             speed_ratio: 1.0,
             fft_enabled: fft.is_enabled(),

@@ -21,7 +21,6 @@ use super::{InnerPlayer, PlayerEvent, PlayerState};
 pub struct OldThreads {
     pub decoder_thread: Option<JoinHandle<decoder::DecoderData>>,
     pub position_timer: Option<JoinHandle<()>>,
-    pub fft_timer: Option<JoinHandle<()>>,
     pub fade_handle: Option<JoinHandle<()>>,
 }
 
@@ -29,10 +28,7 @@ impl OldThreads {
     /// 在工作线程上 join 所有旧 timer/fade，返回旧解码线程 handle 供调用方继续使用
     /// 忽略 join 错误：辅助线程 panic 不阻止新加载，主播放路径不依赖它们
     pub fn join_aux(self) -> Option<JoinHandle<decoder::DecoderData>> {
-        for h in [self.position_timer, self.fft_timer, self.fade_handle]
-            .into_iter()
-            .flatten()
-        {
+        for h in [self.position_timer, self.fade_handle].into_iter().flatten() {
             let _ = h.join();
         }
         self.decoder_thread
@@ -96,9 +92,6 @@ impl InnerPlayer {
         if let Some(flag) = self.position_timer_stop.take() {
             flag.store(true, Ordering::Relaxed);
         }
-        if let Some(flag) = self.fft_timer_stop.take() {
-            flag.store(true, Ordering::Relaxed);
-        }
 
         if let Some(ref shared) = self.shared {
             shared.stop();
@@ -119,7 +112,6 @@ impl InnerPlayer {
         let old_threads = OldThreads {
             decoder_thread: self.decoder_thread.take(),
             position_timer: self.position_timer_handle.take(),
-            fft_timer: self.fft_timer_handle.take(),
             fade_handle: self.fade_handle.take(),
         };
         (old_threads, token)
@@ -172,9 +164,6 @@ impl InnerPlayer {
         if let Some(flag) = self.position_timer_stop.take() {
             flag.store(true, Ordering::Relaxed);
         }
-        if let Some(flag) = self.fft_timer_stop.take() {
-            flag.store(true, Ordering::Relaxed);
-        }
 
         if let Some(ref shared) = self.shared {
             shared.stop();
@@ -186,7 +175,6 @@ impl InnerPlayer {
         let old_threads = OldThreads {
             decoder_thread: self.decoder_thread.take(),
             position_timer: self.position_timer_handle.take(),
-            fft_timer: self.fft_timer_handle.take(),
             fade_handle: self.fade_handle.take(),
         };
 
@@ -261,7 +249,6 @@ impl InnerPlayer {
                 state: PlayerState::Playing,
             });
             self.start_position_timer();
-            self.start_fft_timer();
         }
 
         Ok(true)
@@ -329,7 +316,6 @@ impl InnerPlayer {
                 state: PlayerState::Playing,
             });
             self.start_position_timer();
-            self.start_fft_timer();
         } else {
             self.state = PlayerState::Paused;
             self.emit(PlayerEvent::StateChanged {

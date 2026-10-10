@@ -216,10 +216,6 @@ export interface PlayerSettings {
   playerBgFlowSpeed: number;
   /** 流体背景渲染缩放 */
   playerBgRenderScale: number;
-  /** 暂停播放时冻结流体背景 */
-  playerBgFreezeOnPause: boolean;
-  /** 流体背景随低频节拍脉动 */
-  playerBgBeat: boolean;
   /** 全屏播放器封面布局 */
   coverLayout: CoverLayout;
   /** 播放页封面/歌词分栏占比（0-1，封面侧宽度） */
@@ -238,12 +234,6 @@ export interface PlayerSettings {
   pauseOnDeviceSwitch: boolean;
   /** 是否为不同输出设备独立记忆音量 */
   rememberDeviceVolume: boolean;
-  /** 是否启用音乐频谱可视化 */
-  enableSpectrum: boolean;
-  /** 频谱单条宽度（px） */
-  spectrumBarWidth: number;
-  /** 是否反转频谱方向（启用后低频位于频谱两端） */
-  reverseSpectrum: boolean;
   /** 在线歌曲音质偏好；实际可用级别取决于账号权限 */
   songLevel: QualityLevel;
   /** 允许完整音源不可用时播放试听片段 */

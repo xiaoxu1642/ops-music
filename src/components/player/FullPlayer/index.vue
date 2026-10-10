@@ -1,9 +1,15 @@
+<script lang="ts">
+/** 全屏播放器收起后歌词引擎实例的宽限销毁时长（毫秒）：宽限内重开则取消销毁 */
+export const LYRIC_PAGE_DESTROY_GRACE_MS = 10_000;
+</script>
+
 <script setup lang="ts">
 import { useStatusStore } from "@/stores/status";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
 import { usePlaybackTime } from "@/composables/usePlaybackTime";
 import { getCurrentTime } from "@/services/playback";
+import { createGraceDestroyScheduler } from "@/utils/graceDestroy";
 import type { QualityLevel } from "@/utils/quality";
 import { useFavorite } from "@/composables/useFavorite";
 import { useDownload, buildDownloadQualityItems } from "@/composables/useDownload";
@@ -57,18 +63,20 @@ const { start: startTick, stop: stopTick } = usePlaybackTime((currentMs) => {
   }
 });
 
-/** 展开后 */
-const onAfterEnter = () => {
+/** 收起满宽限期仍未重开时卸载歌词引擎，触发 AMLL/DefaultLyrics 的真正 dispose */
+const destroyScheduler = createGraceDestroyScheduler(() => {
+  lyricMounted.value = false;
+}, LYRIC_PAGE_DESTROY_GRACE_MS);
+
+/** 展开动画开始时就挂载歌词并立即开始渲染，不把首帧推迟到过渡结束 */
+const onBeforeEnter = () => {
+  destroyScheduler.cancel();
+  initialLyricTimeMs.value = getCurrentTime() + status.lyricOffsetMs;
+  lyricMounted.value = true;
   nextTick(() => {
     lyricRef.value?.resume();
     startTick();
   });
-};
-
-/** 展开动画开始时就挂载歌词，给引擎预留初始化时间 */
-const onBeforeEnter = () => {
-  initialLyricTimeMs.value = getCurrentTime() + status.lyricOffsetMs;
-  lyricMounted.value = true;
 };
 
 /** 收起前 */
@@ -77,10 +85,12 @@ const onBeforeLeave = () => {
   stopTick();
 };
 
-/** 收起后 */
+/** 收起后：宽限期内未重开才销毁，重开会由 beforeEnter 取消 */
 const onAfterLeave = () => {
-  lyricMounted.value = false;
+  if (!status.isPlayerExpanded) destroyScheduler.schedule();
 };
+
+onBeforeUnmount(() => destroyScheduler.cancel());
 
 // 重新挂载时，刷新初始时间
 watch(hasLyric, (value) => {
@@ -184,7 +194,6 @@ const toggleLyric = (): void => {
       leave-active-class="transition-transform duration-500 ease-[cubic-bezier(0.7,0,0.3,1)]"
       enter-from-class="translate-y-full"
       leave-to-class="translate-y-full"
-      @after-enter="onAfterEnter"
       @before-enter="onBeforeEnter"
       @before-leave="onBeforeLeave"
       @after-leave="onAfterLeave"
@@ -203,11 +212,6 @@ const toggleLyric = (): void => {
         <div v-if="fullscreenCover" class="absolute inset-y-0 left-0 w-[60%]">
           <PlayerCover fullscreen />
         </div>
-        <!-- 底部频谱 -->
-        <BottomSpectrum
-          v-if="isPlayerExpanded && settings.player.enableSpectrum"
-          :show="isPlaying && immersive"
-        />
         <!-- 顶/底栏渐变遮罩（全屏封面模式） -->
         <div
           v-if="fullscreenCover"

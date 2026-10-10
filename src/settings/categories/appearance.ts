@@ -1,6 +1,7 @@
 import type { SettingCategory } from "@/types/settings-schema";
 import { useSettingsStore } from "@/stores/settings";
 import { useThemeStore } from "@/stores/theme";
+import { PLAYER_BG_DEFAULT_RENDER_SCALE, PLAYER_BG_MAX_FPS } from "@/utils/playerBackground";
 import BackgroundImagePicker from "@/components/settings/custom/BackgroundImagePicker.vue";
 import SidebarCustomizeConfig from "@/components/settings/custom/SidebarCustomizeConfig.vue";
 import IconLucidePalette from "~icons/lucide/palette";
@@ -254,34 +255,21 @@ const appearanceCategory: SettingCategory = {
               key: "playerBgRenderScale",
               type: "slider",
               binding: { store: "settings", path: "player.playerBgRenderScale" },
-              min: 0.5,
+              min: PLAYER_BG_DEFAULT_RENDER_SCALE,
               max: 2,
-              step: 0.1,
-              defaultValue: 0.5,
-              marks: { 0.5: "0.5", 1: "1", 2: "2" },
+              step: 0.05,
+              defaultValue: PLAYER_BG_DEFAULT_RENDER_SCALE,
+              marks: { [PLAYER_BG_DEFAULT_RENDER_SCALE]: "0.35", 1: "1", 2: "2" },
             },
             {
               key: "playerBgFps",
               type: "slider",
               binding: { store: "settings", path: "player.playerBgFps" },
               min: 24,
-              max: 120,
+              max: PLAYER_BG_MAX_FPS,
               step: 2,
-              defaultValue: 30,
-              marks: { 24: "24", 60: "60", 120: "120" },
-            },
-            {
-              key: "playerBgFreezeOnPause",
-              type: "switch",
-              binding: { store: "settings", path: "player.playerBgFreezeOnPause" },
-              defaultValue: false,
-            },
-            {
-              key: "playerBgBeat",
-              type: "switch",
-              binding: { store: "settings", path: "player.playerBgBeat" },
-              visible: () => useSettingsStore().player.playerBgRenderer === "mesh",
-              defaultValue: false,
+              defaultValue: PLAYER_BG_MAX_FPS,
+              marks: { 24: "24", [PLAYER_BG_MAX_FPS]: "30" },
             },
           ],
         },

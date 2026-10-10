@@ -62,11 +62,6 @@ pub struct InnerPlayer {
     /// 渐变取消信号和线程句柄
     fade_cancel: Option<Arc<AtomicBool>>,
     fade_handle: Option<JoinHandle<()>>,
-    /// FFT 推送开关（前端需要显示频谱时才启用）
-    fft_enabled: Arc<AtomicBool>,
-    /// FFT 推送定时器的停止信号和线程句柄
-    fft_timer_stop: Option<Arc<AtomicBool>>,
-    fft_timer_handle: Option<JoinHandle<()>>,
     /// 用户选择的输出设备（设备 ID，None = 跟随系统默认）
     selected_device: Option<String>,
     /// 音量归一化开关
@@ -167,9 +162,6 @@ impl InnerPlayer {
             position_timer_handle: None,
             fade_cancel: None,
             fade_handle: None,
-            fft_enabled: Arc::new(AtomicBool::new(false)),
-            fft_timer_stop: None,
-            fft_timer_handle: None,
             selected_device: None,
             normalization_enabled: false,
             equalizer: Arc::new(Mutex::new(Equalizer::new(
@@ -214,7 +206,6 @@ impl InnerPlayer {
     /// 注册事件回调（支持热替换：先停止旧的定时器/渐变，确保旧回调的 Arc 引用尽快释放）
     pub fn set_event_callback(&mut self, cb: EventEmitter) {
         self.stop_position_timer();
-        self.stop_fft_timer();
         self.cancel_fade();
         self.event_callback = Some(cb);
     }
@@ -298,7 +289,6 @@ impl InnerPlayer {
                     state: PlayerState::Playing,
                 });
                 self.start_position_timer();
-                self.start_fft_timer();
 
                 // 非阻塞渐入
                 self.start_fade(0.0, self.target_volume, None);
@@ -336,7 +326,6 @@ impl InnerPlayer {
 
         // 渐出已在后台运行，再同步停止定时器（join 开销不会影响音频淡出时序）
         self.stop_position_timer();
-        self.stop_fft_timer();
     }
 
     /// 立即暂停播放，用于切换输出设备前阻止短暂串音
@@ -353,7 +342,6 @@ impl InnerPlayer {
             state: PlayerState::Paused,
         });
         self.stop_position_timer();
-        self.stop_fft_timer();
     }
 
     /// 恢复失败后保留当前曲目与位置，播放器进入暂停态
@@ -393,7 +381,6 @@ impl InnerPlayer {
         self.cancel_fade();
         // 2. 停止定时器并等待线程退出（释放 Arc<Shared> 和 Arc<EventEmitter>）
         self.stop_position_timer();
-        self.stop_fft_timer();
         // 3. 通知解码线程停止
         if let Some(ref shared) = self.shared {
             shared.stop();
@@ -454,11 +441,6 @@ impl InnerPlayer {
     /// 获取当前播放状态
     pub fn state(&self) -> PlayerState {
         self.state
-    }
-
-    /// 获取 FFT 频谱数据（128 个频段）
-    pub fn fft_data(&self) -> (Vec<f32>, Vec<f32>) {
-        self.fft.analyze()
     }
 
     /// 获取缓存的原始封面数据（load 时一次性提取）

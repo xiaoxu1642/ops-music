@@ -40,7 +40,6 @@ fn wasapi_exclusive_progresses_under_cpu_load() {
         )
         .unwrap();
         let fft = Arc::new(FftAnalyzer::new());
-        fft.set_enabled(true);
         let (output, shared, playback) = PlaybackHandle::prepare(output, fft).unwrap();
         assert_eq!(errors.load(Ordering::Relaxed), 0, "测试要求实际独占输出");
 

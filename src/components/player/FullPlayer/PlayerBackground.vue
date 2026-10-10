@@ -2,6 +2,7 @@
 import { useSettingsStore } from "@/stores/settings";
 import { useMediaStore } from "@/stores/media";
 import { useStatusStore } from "@/stores/status";
+import { clampPlayerBgFps } from "@/utils/playerBackground";
 import DEFAULT_COVER from "@/assets/images/song.jpg";
 import BackgroundRender from "./BackgroundRender.vue";
 
@@ -36,12 +37,21 @@ watch(
 
 onBeforeUnmount(() => clearTimeout(bgReadyTimer));
 
-// 流体背景播放态
-const bgPlaying = computed(() => {
+// 流体背景播放态：暂停或窗口隐藏时整体销毁渲染器，只留静态封面
+const visibility = useDocumentVisibility();
+const bgAnimated = computed(() => {
   if (!status.isPlayerExpanded) return false;
-  if (!status.isPlaying && settings.player.playerBgFreezeOnPause) return false;
-  return true;
+  if (visibility.value === "hidden") return false;
+  return status.isPlaying;
 });
+
+/** 帧率上限由 clamp 兜底，历史配置可能保存更大的值 */
+const bgFps = computed(() => clampPlayerBgFps(settings.player.playerBgFps));
+
+/** 静态降级使用的封面：走 300px 缩略图，避免解码大图 */
+const staticCover = computed(
+  () => media.track?.cover || media.track?.coverOriginal || DEFAULT_COVER,
+);
 
 // 模糊模式：双缓冲层，切歌时交叉淡入淡出
 const initialCover = media.track?.cover || media.track?.coverOriginal || DEFAULT_COVER;
@@ -125,15 +135,15 @@ onBeforeUnmount(() => {
   <Transition v-else-if="bgType === 'animation'" name="bg-fade">
     <div v-if="bgReady" class="absolute inset-0 overflow-hidden -z-1">
       <BackgroundRender
+        v-if="bgAnimated"
         :album="media.track?.cover || DEFAULT_COVER"
-        :playing="bgPlaying"
-        :fps="settings.player.playerBgFps"
+        :fps="bgFps"
         :flow-speed="settings.player.playerBgFlowSpeed"
         :render-scale="settings.player.playerBgRenderScale"
         :has-lyric="media.parsedLyric.length > 0"
-        :enable-beat="settings.player.playerBgBeat"
         :render-engine="settings.player.playerBgRenderer"
       />
+      <img v-else class="bg-static" :src="staticCover" decoding="async" alt="" />
     </div>
   </Transition>
 </template>
@@ -199,5 +209,14 @@ onBeforeUnmount(() => {
 .bg-fade-enter-from,
 .bg-fade-leave-to {
   opacity: 0;
+}
+
+/* 暂停/窗口隐藏时的静态封面降级 */
+.bg-static {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

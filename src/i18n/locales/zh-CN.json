@@ -595,7 +595,6 @@
       "media": "媒体控制",
       "device": "输出设备",
       "hotkeys": "快捷键",
-      "musicSpectrum": "音乐频谱",
       "mcp": "MCP",
       "systemConfig": "系统配置",
       "songCache": "歌曲缓存",
@@ -758,18 +757,6 @@
     "snapToLyric": {
       "label": "进度调节吸附最近歌词",
       "description": "调节进度时自动吸附到最近的歌词行"
-    },
-    "enableSpectrum": {
-      "label": "启用音乐频谱",
-      "description": "实时频谱分析会持续占用一定的 CPU，性能敏感设备建议关闭"
-    },
-    "spectrumBarWidth": {
-      "label": "频谱条宽度",
-      "description": "数值越小柱条越细越密"
-    },
-    "reverseSpectrum": {
-      "label": "频谱反向",
-      "description": "启用后频率从中间向两侧递减，否则递增"
     },
     "lyricSourcePreference": {
       "label": "歌词来源偏好",
@@ -1170,14 +1157,6 @@
     "playerBgFps": {
       "label": "动画帧率",
       "description": "流体背景的渲染帧率，越高越流畅但更耗性能"
-    },
-    "playerBgFreezeOnPause": {
-      "label": "暂停时冻结",
-      "description": "暂停播放时同时停止流体背景动画"
-    },
-    "playerBgBeat": {
-      "label": "背景跳动",
-      "description": "使流体背景随音乐低频节拍产生脉动效果"
     },
     "coverLayout": {
       "label": "封面布局",

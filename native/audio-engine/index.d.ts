@@ -26,10 +26,6 @@ export declare class AudioPlayer {
   getStatus(): JsPlayerStatus
   /** 获取当前真实的音频流与输出参数 */
   getStreamInfo(): JsAudioStreamInfo
-  /** 启用/禁用 FFT 频谱推送（前端需要显示频谱时启用，不显示时禁用以节省性能） */
-  setFftEnabled(enabled: boolean): void
-  /** 获取 FFT 推送开关状态 */
-  getFftEnabled(): boolean
   /** 启用/禁用音量归一化（实时响度均衡） */
   setNormalizationEnabled(enabled: boolean): void
   /** 获取音量归一化开关状态 */
@@ -46,8 +42,6 @@ export declare class AudioPlayer {
   setPreampGain(preampDb: number): void
   /** 获取前级增益（dB） */
   getPreampGain(): number
-  /** 获取 FFT 频谱数据（128 个频段，值域 0.0 ~ 1.0） */
-  getFftData(): JsFftData
   /**
    * 返回 load 时缓存的原始封面数据（用于 SMTC / 全屏播放器）
    * 封面在 load 阶段从已打开的 FFmpeg 上下文一次性提取，不再重复打开文件
@@ -217,12 +211,6 @@ export interface JsExternalLyric {
   path: string
 }
 
-/** FFT 双声道频谱数据 */
-export interface JsFftData {
-  ldata: Array<number>
-  rdata: Array<number>
-}
-
 /** 歌曲完整元信息，返回给 JS 侧（load 时一次性返回） */
 export interface JsMusicMetadata {
   /** 复用了预载 PCM 时的起点（秒），普通加载为空 */
@@ -256,7 +244,7 @@ export interface JsMusicMetadata {
 
 /** 播放器事件，推送给 JS 侧 */
 export interface JsPlayerEvent {
-  /** 事件类型："stateChanged" | "ended" | "sourceError" | "position" | "transitionChanged" | "fftData" | "outputStalled" | "outputFailed" | "outputFallback" */
+  /** 事件类型："stateChanged" | "ended" | "sourceError" | "position" | "transitionChanged" | "outputStalled" | "outputFailed" | "outputFallback" */
   type: string
   /** 状态（仅 stateChanged 时有值） */
   state?: string
@@ -270,8 +258,6 @@ export interface JsPlayerEvent {
   transitionReason?: string
   /** 计划交叉淡化时长（秒，仅 transitionChanged 开始时有值） */
   transitionFadeSeconds?: number
-  /** FFT 频谱数据（仅 fftData 时有值，128 个频段，值域 0.0 ~ 1.0） */
-  fftData?: JsFftData
   /** 回退原因分类键（仅 outputFallback 时有值：deviceBusy / formatUnsupported / unavailable） */
   reason?: string
 }

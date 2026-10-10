@@ -216,11 +216,6 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
         sendToMain("player:event", transitionEvent);
         break;
       }
-      case "fftData": {
-        const fftEvent = { type: "fftData", data: event.fftData ?? { ldata: [], rdata: [] } };
-        if (getMainWindow()?.isVisible()) sendToMain("player:event", fftEvent);
-        break;
-      }
       case "outputFailed": {
         // 运行期流错误（CPAL/Rodio），重建输出流恢复播放
         playerLog.warn("检测到音频输出流错误，触发恢复");
@@ -729,21 +724,6 @@ export const registerPlayerIpc = (): void => {
     } catch (error) {
       return fail(ErrorCode.UNKNOWN, error);
     }
-  });
-
-  // 启用/禁用 FFT 频谱推送（前端组件挂载时启用，卸载时禁用）
-  ipcMain.handle("player:setFftEnabled", (_event, enabled: boolean) => {
-    try {
-      getPlayer().setFftEnabled(enabled);
-      return { success: true };
-    } catch (error) {
-      return fail(ErrorCode.UNKNOWN, error);
-    }
-  });
-
-  // 获取 FFT 频谱数据（128 个频段，值域 0.0 ~ 1.0）
-  ipcMain.handle("player:getFftData", () => {
-    return { success: true, data: getPlayer().getFftData() };
   });
 
   // 按需读取外部歌词文件内容

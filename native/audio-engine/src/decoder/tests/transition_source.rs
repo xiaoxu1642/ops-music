@@ -292,27 +292,6 @@ fn outgoing_eof_does_not_jump_incoming_gain_to_full_volume() {
 }
 
 #[test]
-fn fft_observes_the_mixed_output_instead_of_each_deck() {
-    let first = stereo_buffered(vec![0.5; 5000]);
-    let second = stereo_buffered(vec![-0.5; 5000]);
-    let fft = Arc::new(FftAnalyzer::new());
-    fft.set_enabled(true);
-    let reference = FftAnalyzer::new();
-    reference.set_enabled(true);
-    reference.set_sample_rate(1000);
-    let mut source = TransitionSource::new(first, Arc::clone(&fft));
-    source
-        .control()
-        .queue(second, plan(0, 4000, 0.025, 3))
-        .unwrap();
-    source.begin_callback();
-    let output: Vec<_> = (0..4096).map(|_| source.next().unwrap()).collect();
-    source.begin_callback();
-    reference.push_interleaved_samples(&output);
-    assert_eq!(fft.analyze(), reference.analyze());
-}
-
-#[test]
 fn changing_speed_preserves_gain_and_scales_remaining_fade() {
     let fft = Arc::new(FftAnalyzer::new());
     let mut source = TransitionSource::new(buffered(vec![0.6; 1000]), fft);

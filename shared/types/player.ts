@@ -222,16 +222,9 @@ export type PlayerEvent =
   | { type: "setRepeat"; data: { mode: RepeatMode } }
   | { type: "addToQueue"; data: { tracks: Track[]; position: "next" | "end" } }
   | { type: "toggleLike" }
-  | { type: "fftData"; data: FftData }
   | { type: "error"; error: string }
   | { type: "deviceChanged"; data: { defaultDevice: string | null } }
   | { type: "outputFallback"; data: { reason: string } };
-
-/** FFT 数据 */
-export interface FftData {
-  ldata: number[];
-  rdata: number[];
-}
 
 /** IPC 响应包装 */
 export interface IpcResponse<T = void> {
@@ -327,10 +320,6 @@ export interface PlayerApi {
   getStatus: () => Promise<IpcResponse<PlayerStatus>>;
   /** 获取当前真实的音频流与输出参数 */
   getStreamInfo: () => Promise<IpcResponse<AudioStreamInfo>>;
-  /** 设置 FFT 频谱推送 */
-  setFftEnabled: (enabled: boolean) => Promise<IpcResponse>;
-  /** 获取 FFT 频谱数据 */
-  getFftData: () => Promise<IpcResponse<FftData>>;
   /** 设置渐入渐出时长（毫秒） */
   setFadeDuration: (ms: number) => Promise<IpcResponse>;
   /** 获取渐入渐出时长（毫秒） */
