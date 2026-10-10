@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { marked } from "marked";
-import agreementRaw from "@root/docs/agreement.md?raw";
+import agreementZhRaw from "@root/docs/agreement.md?raw";
+import agreementEnRaw from "@root/docs/en/agreement.md?raw";
 import IconFileText from "~icons/lucide/file-text";
 import IconChevronLeft from "~icons/lucide/chevron-left";
 import IconArrowRight from "~icons/lucide/arrow-right";
 import IconLogOut from "~icons/lucide/log-out";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const emit = defineEmits<{ (e: "next"): void; (e: "back"): void; (e: "reject"): void }>();
 const props = withDefaults(
   defineProps<{ variant?: "onboarding" | "update"; loading?: boolean }>(),
@@ -27,7 +28,9 @@ const acceptKey = computed(() =>
   isUpdate.value ? "agreementUpdate.accept" : "onboarding.agreement.accept",
 );
 
-const agreementHtml = marked.parse(agreementRaw, { async: false }) as string;
+/** 中文协议为默认版本，仅 en-US 使用英文协议 */
+const agreementRaw = computed(() => (locale.value === "en-US" ? agreementEnRaw : agreementZhRaw));
+const agreementHtml = computed(() => marked.parse(agreementRaw.value, { async: false }) as string);
 
 const scrollArea = ref<HTMLElement | null>(null);
 const readToEnd = ref(false);

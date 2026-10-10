@@ -16,17 +16,17 @@ pnpm dev -- --ozone-platform=x11
 
 **KDE Plasma**
 
-1. 右击 SPlayer-Next 的桌面项 → **编辑应用程序…**；
+1. 右击 Ops Music 的桌面项 → **编辑应用程序…**；
 2. 在 **命令行参数** 中，把 `%U` 改为 `--ozone-platform=x11 %U`；
 3. 保存退出。
 
 **其他桌面环境**
 
-1. 找到 SPlayer-Next 的 `.desktop` 文件（通常在 `/usr/share/applications/` 下，文件名为 `top.imsyy.splayer_next.desktop`）；
+1. 找到 Ops Music 的 `.desktop` 文件（通常在 `/usr/share/applications/` 下，文件名为 `com.ops.music.desktop`）；
 2. 复制到 `~/.local/share/applications/`；
 3. 用文本编辑器打开，找到 `Exec=` 开头的行，在可执行文件后追加 `--ozone-platform=x11`，例如：
    ```desktop
-   Exec=/opt/SPlayer-Next/SPlayer-Next --ozone-platform=x11 %U
+   Exec=/opt/OpsMusic/OpsMusic --ozone-platform=x11 %U
    ```
 4. 保存退出。
 
@@ -38,7 +38,7 @@ pnpm dev -- --ozone-platform=x11
 
 ## 已知的窗口限制
 
-Wayland 出于安全考虑，不允许应用读取 / 设置全局屏幕坐标，并对置顶、穿透、透明无边框窗口有更多约束。这会影响 SPlayer-Next 的以下功能：
+Wayland 出于安全考虑，不允许应用读取 / 设置全局屏幕坐标，并对置顶、穿透、透明无边框窗口有更多约束。这会影响 Ops Music 的以下功能：
 
 | 功能                                 | 在 Wayland 下的表现                               |
 | ------------------------------------ | ------------------------------------------------- |
@@ -56,15 +56,15 @@ Wayland 出于安全考虑，不允许应用读取 / 设置全局屏幕坐标，
 
 在原生 Wayland 下，Electron 的全局快捷键通过 `xdg-desktop-portal` 实现。
 
-打开应用时，若有新的未申请的全局快捷键，应该会弹出授权请求，点击确定即可。也可以在系统设置中查看 SPlayer-Next 是否有注册全局快捷键（在 KDE Plasma Wayland 中是 **系统设置 → 键盘 → 快捷键 → SPlayer-Next**）
+打开应用时，若有新的未申请的全局快捷键，应该会弹出授权请求，点击确定即可。也可以在系统设置中查看 Ops Music 是否有注册全局快捷键（在 KDE Plasma Wayland 中是 **系统设置 → 键盘 → 快捷键 → Ops Music**）
 
-Electron 注册的快捷键名称格式为 `SPlayer-Next shortcut: <组合键>`，但这个名称**并非实际生效的组合键**。实际生效的组合键由**系统设置**中为该名称绑定的按键决定。应用内设置的全局快捷键只决定它在系统中注册的名称，不决定实际按键。
+Electron 注册的快捷键名称格式为 `Ops Music shortcut: <组合键>`，但这个名称**并非实际生效的组合键**。实际生效的组合键由**系统设置**中为该名称绑定的按键决定。应用内设置的全局快捷键只决定它在系统中注册的名称，不决定实际按键。
 
 例如：
 
-1. 在应用内设置“上一曲”为 `Ctrl+Shift+←`，系统会注册名为 `SPlayer-Next shortcut: Ctrl+Shift+Left` 的项。
+1. 在应用内设置“上一曲”为 `Ctrl+Shift+←`，系统会注册名为 `Ops Music shortcut: Ctrl+Shift+Left` 的项。
 2. 在系统设置中，将该项绑定为 `Ctrl+Alt+Shift+←`，实际生效的全局快捷键就是 `Ctrl+Alt+Shift+←`。
-3. 若之后在应用内将“上一曲”改为 `Ctrl+Alt+Shift+←`，旧名称失效，应用会请求注册新名称 `SPlayer-Next shortcut: Ctrl+Alt+Shift+Left`，此时实际生效的按键取决于系统设置中新名称对应的绑定。
+3. 若之后在应用内将“上一曲”改为 `Ctrl+Alt+Shift+←`，旧名称失效，应用会请求注册新名称 `Ops Music shortcut: Ctrl+Alt+Shift+Left`，此时实际生效的按键取决于系统设置中新名称对应的绑定。
 
 > [!TIP]
 >

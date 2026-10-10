@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "SPlayer-Next"
+  name: "Ops Music"
   text: "Music, the way it should be"
   tagline: A clean and refined Windows desktop music player with broad format support, expressive lyrics, deep performance optimization, and carefully crafted details.
   actions:
@@ -14,7 +14,7 @@ hero:
       link: /en/guide
     - theme: alt
       text: GitHub
-      link: https://github.com/SPlayer-Dev/SPlayer-Next
+      link: https://github.com/xiaoxu1642/ops-music
 
 features:
   - icon: 🎵

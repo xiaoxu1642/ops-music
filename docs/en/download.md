@@ -2,7 +2,7 @@
 title: Download
 ---
 
-# Download SPlayer-Next
+# Download Ops Music
 
 The list below fetches the latest release for the selected channel from GitHub and recommends a package for your system. Stable is selected by default. If GitHub is slow, choose a download mirror.
 
@@ -20,12 +20,12 @@ The channel only selects which kind of Release this page lists. The application 
 
 ## Other sources
 
-- **Previous versions:** Browse all archived builds on [GitHub Releases](https://github.com/SPlayer-Dev/SPlayer-Next/releases).
-- **Development builds:** Download the latest workflow artifact from [GitHub Actions](https://github.com/SPlayer-Dev/SPlayer-Next/actions). A GitHub account is required.
+- **Previous versions:** Browse all archived builds on [GitHub Releases](https://github.com/xiaoxu1642/ops-music/releases).
+- **Development builds:** Download the latest workflow artifact from [GitHub Actions](https://github.com/xiaoxu1642/ops-music/actions). A GitHub account is required.
 
 ## Installation notes
 
-- **Windows:** Choose the NSIS installer or the single-file portable build. Neither checks for nor installs updates on its own.
+- **Windows:** Only the single-file portable build is provided (no installer). It does not check for or install updates on its own.
 - **macOS:** If macOS reports that the app is damaged or cannot verify it, see [macOS reports a damaged app](/en/troubleshooting/macos-damaged).
 - **Linux:** Choose AppImage if you are unsure which package format your distribution uses. See [Ubuntu sandbox startup failure](/en/troubleshooting/ubuntu-sandbox) for launch errors.
 
@@ -41,22 +41,22 @@ The channel only selects which kind of Release this page lists. The application 
 
 ```bash
 # AppImage
-chmod +x ./splayer-next-*.AppImage
-./splayer-next-*.AppImage
-./splayer-next-*.AppImage --appimage-extract
+chmod +x ./ops-music-*.AppImage
+./ops-music-*.AppImage
+./ops-music-*.AppImage --appimage-extract
 
 # deb
-sudo apt install ./splayer-next-*.deb
+sudo apt install ./ops-music-*.deb
 
 # rpm
-sudo dnf install ./splayer-next-*.rpm
-sudo zypper install ./splayer-next-*.rpm
+sudo dnf install ./ops-music-*.rpm
+sudo zypper install ./ops-music-*.rpm
 
 # pacman
-sudo pacman -U ./splayer-next-*.pacman
+sudo pacman -U ./ops-music-*.pacman
 
 # Archive
-tar -xzf ./splayer-next-*.tar.gz
-cd splayer-next-*/
-./SPlayer-Next
+tar -xzf ./ops-music-*.tar.gz
+cd ops-music-*/
+./OpsMusic
 ```

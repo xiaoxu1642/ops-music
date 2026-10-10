@@ -1,6 +1,6 @@
 # 贡献指南
 
-欢迎为 SPlayer-Next 贡献代码！本页介绍本地开发环境与基本约定。
+欢迎为 Ops Music 贡献代码！本页介绍本地开发环境与基本约定。
 
 ## 环境要求
 
@@ -12,8 +12,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/SPlayer-Dev/SPlayer-Next.git
-cd SPlayer-Next
+git clone https://github.com/xiaoxu1642/ops-music.git
+cd ops-music
 
 # 安装依赖
 pnpm install
@@ -40,7 +40,7 @@ pnpm build:win     # 打包 Windows
 
 ```bash
 # 上面的构建命令默认会构建当前平台和架构的全部 target。可以通过下面的方法指定只打包某些 target
-pnpm build:win nsis       # 打包 Windows 的 nsis 格式
+pnpm build:win portable # 打包 Windows 的便携版格式
 # 全部 target 的列表详见 https://www.electron.build/docs/targets
 
 # 仅构建未打包的程序目录，常用于本地测试（在 dist/xxx-unpacked 目录）
@@ -100,7 +100,7 @@ shared/             跨进程共享的类型与默认配置
 
 1. 安装插件
 2. 打开本项目，在 **设置 → 工具 → Easy i18n** 中配置此插件
-3. 在 **Modules Configuration → Add new module**，输入 SPlayer-Next（或任意名称），点击右侧的加号，新建模块
+3. 在 **Modules Configuration → Add new module**，输入 Ops Music（或任意名称），点击右侧的加号，新建模块
 4. 在下方的配置中，找到 **Preset** 选择 **VUE_I18N**。在 **Resource Configuration** 的 **Path template** 中填写 `$PROJECT_DIR$/src/i18n/locales/{locale}.json`
 5. (可选) 在上方的 **Common Configuration** 的 **Preview locale** 中填写 `zh-CN`
 

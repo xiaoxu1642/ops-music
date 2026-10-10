@@ -2,7 +2,7 @@
 title: 下载
 ---
 
-# 下载 SPlayer-Next
+# 下载 Ops Music
 
 下方会自动从 GitHub 拉取对应发布通道的最新版本，并根据你的系统推荐合适的安装包。默认选择 Stable 正式版；若下载缓慢，可切换镜像线路。
 
@@ -20,12 +20,12 @@ title: 下载
 
 ## 其他获取方式
 
-- **历史版本**：前往 [GitHub Releases](https://github.com/SPlayer-Dev/SPlayer-Next/releases) 查看全部归档。
-- **开发版**：可在 [GitHub Actions](https://github.com/SPlayer-Dev/SPlayer-Next/actions) 工作流产物中获取最新构建（需登录 GitHub）。
+- **历史版本**：前往 [GitHub Releases](https://github.com/xiaoxu1642/ops-music/releases) 查看全部归档。
+- **开发版**：可在 [GitHub Actions](https://github.com/xiaoxu1642/ops-music/actions) 工作流产物中获取最新构建（需登录 GitHub）。
 
 ## 安装提示
 
-- **Windows**：提供安装版（NSIS）与单文件便携版，按需选择；两者都不会自行检查或下载更新。
+- **Windows**：只提供单文件便携版（免安装），不会自行检查或下载更新。
 - **macOS**：首次打开若提示「应用已损坏」或无法验证，请参考 [Mac 应用显示已损坏](/troubleshooting/macos-damaged)。
 - **Linux**：不确定发行版格式时优先选择 AppImage；启动异常可参考 [Ubuntu 沙箱启动失败](/troubleshooting/ubuntu-sandbox)。
 
@@ -41,22 +41,22 @@ title: 下载
 
 ```bash
 # AppImage
-chmod +x ./splayer-next-*.AppImage
-./splayer-next-*.AppImage # 直接运行
-./splayer-next-*.AppImage --appimage-extract # 或解压到 squashfs-root 目录
+chmod +x ./ops-music-*.AppImage
+./ops-music-*.AppImage # 直接运行
+./ops-music-*.AppImage --appimage-extract # 或解压到 squashfs-root 目录
 
 # deb
-sudo apt install ./splayer-next-*.deb
+sudo apt install ./ops-music-*.deb
 
 # rpm
-sudo dnf install ./splayer-next-*.rpm # Fedora
-sudo zypper install ./splayer-next-*.rpm # openSUSE
+sudo dnf install ./ops-music-*.rpm # Fedora
+sudo zypper install ./ops-music-*.rpm # openSUSE
 
 # pacman
-sudo pacman -U ./splayer-next-*.pacman
+sudo pacman -U ./ops-music-*.pacman
 
 # 压缩包
-tar -xzf ./splayer-next-*.tar.gz
-cd splayer-next-*/
-./SPlayer-Next
+tar -xzf ./ops-music-*.tar.gz
+cd ops-music-*/
+./OpsMusic
 ```

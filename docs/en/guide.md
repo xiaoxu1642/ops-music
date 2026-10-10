@@ -1,6 +1,6 @@
 # User Guide
 
-This page covers the basics of SPlayer-Next. See [Download](/en/download) for installation packages.
+This page covers the basics of Ops Music. See [Download](/en/download) for installation packages.
 
 ## Playing music
 
@@ -16,7 +16,7 @@ This page covers the basics of SPlayer-Next. See [Download](/en/download) for in
 
 ## Lyrics
 
-SPlayer-Next supports LRC, QRC, YRC, and TTML, including word-by-word highlighting, translations, and romanization. Online lyrics are matched according to **Settings → Lyrics → Source preference**, source order, and format preference.
+Ops Music supports LRC, QRC, YRC, and TTML, including word-by-word highlighting, translations, and romanization. Online lyrics are matched according to **Settings → Lyrics → Source preference**, source order, and format preference.
 
 ### Online TTML lyrics
 

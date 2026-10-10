@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for contributing to SPlayer-Next. This page covers the local environment and core conventions.
+Thank you for contributing to Ops Music. This page covers the local environment and core conventions.
 
 ## Requirements
 
@@ -11,8 +11,8 @@ Thank you for contributing to SPlayer-Next. This page covers the local environme
 ## Getting started
 
 ```bash
-git clone https://github.com/SPlayer-Dev/SPlayer-Next.git
-cd SPlayer-Next
+git clone https://github.com/xiaoxu1642/ops-music.git
+cd ops-music
 pnpm install
 pnpm dev
 
@@ -29,7 +29,7 @@ pnpm build
 pnpm build:win
 
 # Build selected electron-builder targets
-pnpm build:win nsis
+pnpm build:win portable
 
 # Build unpacked output for local testing
 pnpm build:unpack

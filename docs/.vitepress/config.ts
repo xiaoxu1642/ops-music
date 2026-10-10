@@ -1,7 +1,7 @@
 import { defineConfig, type DefaultTheme } from "vitepress";
 
 const socialLinks: DefaultTheme.SocialLink[] = [
-  { icon: "github", link: "https://github.com/SPlayer-Dev/SPlayer-Next" },
+  { icon: "github", link: "https://github.com/xiaoxu1642/ops-music" },
 ];
 
 const zhTheme: DefaultTheme.Config = {
@@ -25,7 +25,7 @@ const zhTheme: DefaultTheme.Config = {
         { text: "隐私策略", link: "/privacy" },
       ],
     },
-    { text: "GitHub", link: "https://github.com/SPlayer-Dev/SPlayer-Next" },
+    { text: "GitHub", link: "https://github.com/xiaoxu1642/ops-music" },
   ],
   sidebar: [
     {
@@ -65,10 +65,10 @@ const zhTheme: DefaultTheme.Config = {
   footer: {
     message:
       '基于 AGPL-3.0 许可发布 | <a href="/agreement">用户协议</a> | <a href="/privacy">隐私策略</a>',
-    copyright: "Copyright © 2025-present imsyy",
+    copyright: "Copyright © 2025-present Ops Music",
   },
   editLink: {
-    pattern: "https://github.com/SPlayer-Dev/SPlayer-Next/blob/dev/docs/:path?plain=1",
+    pattern: "https://github.com/xiaoxu1642/ops-music/blob/main/docs/:path?plain=1",
     text: "查看或编辑此页",
   },
   lastUpdated: {
@@ -98,7 +98,7 @@ const enTheme: DefaultTheme.Config = {
         { text: "Privacy Policy", link: "/en/privacy" },
       ],
     },
-    { text: "GitHub", link: "https://github.com/SPlayer-Dev/SPlayer-Next" },
+    { text: "GitHub", link: "https://github.com/xiaoxu1642/ops-music" },
   ],
   sidebar: [
     {
@@ -138,10 +138,10 @@ const enTheme: DefaultTheme.Config = {
   footer: {
     message:
       'Released under AGPL-3.0 | <a href="/en/agreement">User Agreement</a> | <a href="/en/privacy">Privacy Policy</a>',
-    copyright: "Copyright © 2025-present imsyy",
+    copyright: "Copyright © 2025-present Ops Music",
   },
   editLink: {
-    pattern: "https://github.com/SPlayer-Dev/SPlayer-Next/blob/dev/docs/:path?plain=1",
+    pattern: "https://github.com/xiaoxu1642/ops-music/blob/main/docs/:path?plain=1",
     text: "View or edit this page",
   },
   lastUpdated: {
@@ -151,16 +151,16 @@ const enTheme: DefaultTheme.Config = {
 };
 
 export default defineConfig({
-  title: "SPlayer-Next",
+  title: "Ops Music",
   srcExclude: ["superpowers/**"],
   head: [
     ["link", { rel: "icon", href: "/favicon.png" }],
-    ["meta", { name: "author", content: "imsyy" }],
+    ["meta", { name: "author", content: "xiaoxu1642" }],
     [
       "meta",
       {
         name: "keywords",
-        content: "SPlayer,SPlayer-Next,music player,taskbar lyrics,Electron,Vue3,Rust",
+        content: "Ops Music,ops-music,music player,taskbar lyrics,Electron,Vue3,Rust",
       },
     ],
   ],
@@ -181,7 +181,7 @@ export default defineConfig({
   },
   themeConfig: {
     logo: "/favicon.png",
-    siteTitle: "SPlayer-Next",
+    siteTitle: "Ops Music",
     socialLinks,
     search: {
       provider: "local",

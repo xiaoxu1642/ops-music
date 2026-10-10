@@ -1,6 +1,6 @@
 # Linux Wayland Compatibility
 
-Some window features are restricted under Wayland. Certain environments may show flicker, corrupted frames, or even compositor hangs. These are common Electron/Chromium Wayland limitations rather than SPlayer-Next-specific behavior.
+Some window features are restricted under Wayland. Certain environments may show flicker, corrupted frames, or even compositor hangs. These are common Electron/Chromium Wayland limitations rather than Ops Music-specific behavior.
 
 ## Using Xwayland
 
@@ -10,10 +10,10 @@ For flicker, hangs, or broken floating windows, run through X11/Xwayland:
 pnpm dev -- --ozone-platform=x11
 ```
 
-For an installed package, copy `top.imsyy.splayer_next.desktop` from `/usr/share/applications/` to `~/.local/share/applications/` and add the argument to `Exec`:
+For an installed package, copy `com.ops.music.desktop` from `/usr/share/applications/` to `~/.local/share/applications/` and add the argument to `Exec`:
 
 ```desktop
-Exec=/opt/SPlayer-Next/SPlayer-Next --ozone-platform=x11 %U
+Exec=/opt/OpsMusic/OpsMusic --ozone-platform=x11 %U
 ```
 
 In KDE Plasma, the same change can be made by editing the application's desktop entry and replacing `%U` with `--ozone-platform=x11 %U`.
@@ -39,9 +39,9 @@ Behavior varies between GNOME Mutter, KDE KWin, wlroots-based compositors, and o
 
 ## Global shortcuts
 
-On native Wayland, Electron registers global shortcuts through `xdg-desktop-portal`. New shortcuts should trigger a permission request when the app starts. KDE lists them under **System Settings → Keyboard → Shortcuts → SPlayer-Next**.
+On native Wayland, Electron registers global shortcuts through `xdg-desktop-portal`. New shortcuts should trigger a permission request when the app starts. KDE lists them under **System Settings → Keyboard → Shortcuts → Ops Music**.
 
-Electron registers a display name such as `SPlayer-Next shortcut: Ctrl+Shift+Left`. The actual key combination is the binding assigned to that entry in system settings. Changing a shortcut in the app changes the registered name; restart SPlayer-Next after each change so the portal can request permission again.
+Electron registers a display name such as `Ops Music shortcut: Ctrl+Shift+Left`. The actual key combination is the binding assigned to that entry in system settings. Changing a shortcut in the app changes the registered name; restart Ops Music after each change so the portal can request permission again.
 
 Check whether the active portal backend exposes GlobalShortcuts:
 
@@ -55,6 +55,6 @@ See the [XDG Desktop Portal ArchWiki page](https://wiki.archlinux.org/title/XDG_
 
 ## Reporting a problem
 
-Include the distribution, desktop environment, compositor, whether SPlayer-Next is using native Wayland or Xwayland, and the exact window behavior.
+Include the distribution, desktop environment, compositor, whether Ops Music is using native Wayland or Xwayland, and the exact window behavior.
 
 Run `xprop` and click the window: output indicates Xwayland, while no response usually indicates native Wayland. `xeyes` can also distinguish them because its eyes follow the pointer over Xwayland windows but not native Wayland windows.
