@@ -3,13 +3,13 @@ import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 /**
- * 便携模式：将 userData 重定向到 exe 同级 UserData 目录
+ * 便携模式：将 userData 重定向到固定目录 %APPDATA%\Ops Music Portable
  *
- * electron-builder 的便携版会注入 PORTABLE_EXECUTABLE_DIR，此时把整个 userData
- * （含 Chromium 缓存与下方 app-data）落到 exe 同级目录，实现免安装、可整体拷贝
+ * electron-builder 的便携版会注入 PORTABLE_EXECUTABLE_DIR。数据不再放 exe 同级
+ * （dist 会被重新打包时清空），改为固定位置，免安装的同时数据不受构建影响
  */
 if (process.env.PORTABLE_EXECUTABLE_DIR) {
-  const portableUserData = path.join(process.env.PORTABLE_EXECUTABLE_DIR, "UserData");
+  const portableUserData = path.join(app.getPath("appData"), "Ops Music Portable");
   if (!existsSync(portableUserData)) mkdirSync(portableUserData, { recursive: true });
   app.setPath("userData", portableUserData);
 }
@@ -19,7 +19,7 @@ if (process.env.PORTABLE_EXECUTABLE_DIR) {
  *
  * 所有应用自定义数据（配置 / 数据库 / 缓存 / 日志）集中存放于此，
  * 与 Chromium 自建的 Cache/ GPUCache/ 等隔开，便于备份与后续便携版整体迁移。
- * 仅需改这一处即可整体改变数据落点（如便携版指向 exe 同级目录）。
+ * 仅需改这一处即可整体改变数据落点（如便携版指向固定目录）。
  */
 export const dataRoot = path.join(app.getPath("userData"), "app-data");
 
