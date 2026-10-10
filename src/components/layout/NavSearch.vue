@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useDataStore } from "@/stores/data";
 import { useStatusStore } from "@/stores/status";
+import { useUserStore } from "@/stores/user";
 import { getHotSearches, type HotSearchItem } from "@/apis/search/hot";
 import { getSearchSuggest, type SuggestData, type SuggestSimpleItem } from "@/apis/search/suggest";
 import { songsByIds as getNeteaseSongsByIds } from "@/apis/song/netease";
@@ -18,6 +19,7 @@ const { t, locale } = useI18n();
 const router = useRouter();
 const data = useDataStore();
 const status = useStatusStore();
+const user = useUserStore();
 
 /** 弹窗开关挂在 status store，便于快捷键打开 */
 const dialogOpen = computed({
@@ -35,6 +37,11 @@ const parsedLink = computed(() => parseMusicLink(trimmedQuery.value));
 const hotItems = ref<HotSearchItem[]>([]);
 
 const loadHot = async (): Promise<void> => {
+  // 热搜需要登录；未登录不发请求，仅提示登录
+  if (!user.isLoggedIn) {
+    hotItems.value = [];
+    return;
+  }
   try {
     hotItems.value = await getHotSearches();
   } catch (err) {
@@ -400,11 +407,19 @@ onMounted(() => {
             </div>
             <!-- 空内容提示 -->
             <div
-              v-if="data.searchHistory.length === 0 && hotItems.length === 0"
+              v-if="user.isLoggedIn && data.searchHistory.length === 0 && hotItems.length === 0"
               class="py-10 flex flex-col items-center justify-center gap-2 text-on-surface-variant/40"
             >
               <IconLucideSearch class="size-8" />
               <span class="text-xs">{{ t("nav.searchEmpty") }}</span>
+            </div>
+            <!-- 未登录：热搜需登录 -->
+            <div
+              v-if="!user.isLoggedIn"
+              class="py-4 flex flex-col items-center justify-center gap-2 text-on-surface-variant/40"
+            >
+              <IconLucideFlame class="size-6" />
+              <span class="text-xs">{{ t("nav.searchSection.hotGuest") }}</span>
             </div>
             <!-- 热搜 -->
             <div v-if="hotItems.length > 0" class="flex flex-col gap-2">

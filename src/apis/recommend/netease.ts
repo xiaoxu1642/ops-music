@@ -53,8 +53,6 @@ export const submitFmTrash = async (songId: string, playedSec?: number): Promise
 
 /** 首页推荐区块展示数 */
 const HOME_GRID_LIMIT = 12;
-/** personalized 拉取数 */
-const PERSONALIZED_FETCH_LIMIT = 20;
 
 interface RawRecommendPlaylist {
   id: number | string;
@@ -74,21 +72,14 @@ const playlistToCover = (raw: RawRecommendPlaylist): CoverItem => ({
 });
 
 /**
- * 推荐歌单
- * 已登录取每日专属歌单（recommend/resource），未登录取通用推荐（personalized）；
+ * 推荐歌单（每日专属，需登录）
  * 过滤掉「私人雷达」类个性化歌单
- * @param loggedIn - 是否已登录
  * @returns 歌单封面卡片列表
  */
-export const fetchRecommendPlaylists = async (loggedIn: boolean): Promise<CoverItem[]> => {
-  const list = loggedIn
-    ? ((await neteaseApi.recommend_resource<{ recommend?: RawRecommendPlaylist[] }>())?.recommend ??
-      [])
-    : ((
-        await neteaseApi.personalized<{ result?: RawRecommendPlaylist[] }>({
-          limit: PERSONALIZED_FETCH_LIMIT,
-        })
-      )?.result ?? []);
+export const fetchRecommendPlaylists = async (): Promise<CoverItem[]> => {
+  const list =
+    (await neteaseApi.recommend_resource<{ recommend?: RawRecommendPlaylist[] }>())?.recommend ??
+    [];
   return list
     .filter((raw) => !raw.name.includes("雷达"))
     .slice(0, HOME_GRID_LIMIT)

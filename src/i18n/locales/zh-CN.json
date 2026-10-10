@@ -157,7 +157,8 @@
     "searchSection": {
       "quick": "快捷",
       "history": "搜索历史",
-      "hot": "热搜榜"
+      "hot": "热搜榜",
+      "hotGuest": "登录后可查看热搜"
     },
     "searchMenu": {
       "copy": "复制",
@@ -237,10 +238,10 @@
     },
     "recommend": {
       "title": "专属歌单",
-      "titleGuest": "推荐歌单",
-      "subtitle": "为你量身定制的歌单精选",
-      "subtitleGuest": "大家都在听的热门歌单"
+      "subtitle": "为你量身定制的歌单精选"
     },
+    "loginRequired": "登录网易云账号后显示推荐内容",
+    "loginRequiredButton": "去登录",
     "radar": {
       "title": "雷达歌单",
       "subtitle": "持续推荐符合你的音乐口味"

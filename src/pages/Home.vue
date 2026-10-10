@@ -3,6 +3,7 @@ defineOptions({ name: "Home" });
 
 import type { Track } from "@shared/types/player";
 import type { CoverItem } from "@/types/artist";
+import { useUserStore } from "@/stores/user";
 import { useHomeHeader } from "@/composables/home/useHomeHeader";
 import { useDailyRecommend } from "@/composables/home/useDailyRecommend";
 import { useContinueListening } from "@/composables/home/useContinueListening";
@@ -14,7 +15,11 @@ import { withPicSize } from "@/utils/format/netease";
 import * as player from "@/core/player";
 
 const { t } = useI18n();
+const user = useUserStore();
 const { isFloatingBar } = useFloatingPlayerBar();
+
+/** 登录引导弹窗 */
+const loginOpen = ref(false);
 
 /** 头部 */
 const { greetingTitle, greetingSub, headerStats, load: loadHeader } = useHomeHeader();
@@ -220,6 +225,17 @@ const openAlbum = (item: CoverItem): void => {
           <span class="text-sm">{{ t("home.continue.empty") }}</span>
         </div>
       </section>
+      <!-- 未登录：网易云推荐内容需登录 -->
+      <section
+        v-if="!user.isLoggedIn"
+        class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-on-surface/12 py-10 text-on-surface-variant/40"
+      >
+        <IconLucideLogIn class="size-7" />
+        <span class="text-sm">{{ t("home.loginRequired") }}</span>
+        <SButton type="primary" round @click="loginOpen = true">
+          {{ t("home.loginRequiredButton") }}
+        </SButton>
+      </section>
       <!-- 推荐歌单 / 专属歌单 -->
       <section v-if="recommendPlaylists.length > 0" class="flex flex-col gap-3">
         <div>
@@ -260,5 +276,6 @@ const openAlbum = (item: CoverItem): void => {
         <CoverList :items="newAlbums" :virtual="false" :gap="16" @click="openAlbum" />
       </section>
     </div>
+    <LoginDialog v-model:open="loginOpen" />
   </div>
 </template>
