@@ -9,8 +9,7 @@ import i18n from "./i18n";
 import { useThemeStore } from "./stores/theme";
 import { useSettingsStore } from "./stores/settings";
 import { useHotkeyStore } from "./stores/hotkey";
-import { initPlayer, playFiles, restoreLastTrack } from "./core/player";
-import { handleOrpheus } from "./services/orpheus";
+import { initPlayer, restoreLastTrack } from "./core/player";
 import { installHotkeyManager } from "./core/hotkey/manager";
 import { vRipple } from "./directives/ripple";
 
@@ -58,21 +57,11 @@ const removeSplash = (): void => {
 };
 
 /**
- * 启动播放服务并分发冷启动任务
+ * 启动播放服务
  */
 const bootstrapPlayback = async (): Promise<void> => {
   await initPlayer();
-
-  const pendingAudioFiles = await window.api.system.consumePendingAudioFiles();
-  const pendingOrpheusUrl = await window.api.system.consumePendingProtocolUrl();
-
-  if (pendingAudioFiles && pendingAudioFiles.length > 0) {
-    await playFiles(pendingAudioFiles);
-  } else if (pendingOrpheusUrl) {
-    await handleOrpheus(pendingOrpheusUrl);
-  } else {
-    await restoreLastTrack();
-  }
+  await restoreLastTrack();
 };
 
 // 初始化程序

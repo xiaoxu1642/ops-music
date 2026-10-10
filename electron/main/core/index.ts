@@ -7,7 +7,6 @@ import {
   focusMainWindow,
   getTaskbarLyricWindow,
 } from "@main/window";
-import { isMac } from "@main/utils/config";
 import { registerIpcHandlers } from "@main/ipc";
 import { init as initMedia, shutdown as shutdownMedia } from "@main/services/media";
 import { initGlobalHotkey } from "@main/services/globalHotkey";
@@ -17,12 +16,6 @@ import { init as initDownload } from "@main/services/downloadManager";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
 import { coreLog, initLogger } from "@main/utils/logger";
-import {
-  initOrpheusRegistration,
-  extractOrpheusUrl,
-  captureOrpheusUrl,
-} from "@main/services/orpheus";
-import { extractAudioFiles, captureAudioFiles } from "@main/services/externalFile";
 
 /**
  * 配置 Chromium 启动参数以优化内存占用
@@ -70,24 +63,9 @@ export const initApp = (): void => {
     app.quit();
     return;
   }
-  app.on("second-instance", (_event, commandLine) => {
-    // 先落捕获再唤窗：主窗口被闲置销毁后此刻还没有渲染进程，
-    // 捕获会转入 pending 暂存，由重建后的渲染层启动时取回，否则唤起参数会丢
-    const url = extractOrpheusUrl(commandLine);
-    if (url) captureOrpheusUrl(url);
-    const files = extractAudioFiles(commandLine);
-    if (files.length > 0) captureAudioFiles(files);
+  // 已有实例运行时再次启动：聚焦主窗口
+  app.on("second-instance", () => {
     focusMainWindow();
-  });
-  // macOS 通过 open-url 接收协议唤起
-  app.on("open-url", (event, url) => {
-    event.preventDefault();
-    captureOrpheusUrl(url);
-  });
-  // macOS 通过 open-file 接收外部文件打开
-  app.on("open-file", (event, path) => {
-    event.preventDefault();
-    captureAudioFiles([path]);
   });
   // 注册缓存协议方案
   registerCacheScheme();
@@ -105,12 +83,6 @@ export const initApp = (): void => {
     initDatabase();
     // 创建主窗口
     createMainWindow();
-    // 注册 orpheus 协议并处理冷启动唤起
-    initOrpheusRegistration();
-    const coldOrpheusUrl = extractOrpheusUrl(process.argv);
-    if (coldOrpheusUrl) captureOrpheusUrl(coldOrpheusUrl);
-    const coldAudioFiles = extractAudioFiles(process.argv);
-    if (coldAudioFiles.length > 0) captureAudioFiles(coldAudioFiles);
     // 启动歌曲缓存
     void initSongCache();
     // 启动下载服务
@@ -129,11 +101,6 @@ export const initApp = (): void => {
     // 这里用空监听保住常驻托盘，退出只由托盘菜单与渲染端的 app.quit() 发起
     app.on("window-all-closed", () => {});
     app.on("activate", () => {
-      if (isMac) {
-        if (getMainWindow()) focusMainWindow();
-        else createMainWindow();
-        return;
-      }
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
     coreLog.info("应用初始化完成");

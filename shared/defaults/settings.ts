@@ -87,7 +87,6 @@ export const defaultSystemConfig: SystemConfig = {
     agreedAgreementVersion: 1,
     neteaseScrobbleEnabled: false,
     neteaseScrobbleMode: "ncbl",
-    registerOrpheusProtocol: false,
   },
   windowStates: {
     main: {

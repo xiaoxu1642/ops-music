@@ -22,12 +22,7 @@ const tryRm = async (path: string, options?: object): Promise<void> => {
 };
 
 const afterPack = async (context: AfterPackContext): Promise<void> => {
-  const resourceDir = join(
-    context.appOutDir,
-    context.packager.platform.name === "mac"
-      ? `${context.packager.appInfo.productFilename}.app/Contents/Resources`
-      : "resources",
-  );
+  const resourceDir = join(context.appOutDir, "resources");
 
   await Promise.all([trimBetterSqlite3(resourceDir, context)]);
 };

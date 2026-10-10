@@ -132,16 +132,7 @@ export const refreshTray = (): void => {
 /** 初始化系统托盘（主窗口被闲置销毁后重建时复用同一个托盘，不重复注册监听） */
 export const initTray = (): void => {
   if (tray) return;
-  const isMac = process.platform === "darwin";
-  let icon: string | Electron.NativeImage;
-  if (isWin) {
-    icon = loadIcon("tray/tray.ico");
-  } else if (isMac) {
-    icon = loadIcon("tray/tray-light.png", { width: 19, height: 19 });
-    icon.setTemplateImage(true);
-  } else {
-    icon = loadIcon("tray/tray@32.png", { width: 20, height: 20 });
-  }
+  const icon = loadIcon("tray/tray.ico");
   tray = new Tray(icon);
   tray.setToolTip(appName);
   tray.setContextMenu(buildMenu());

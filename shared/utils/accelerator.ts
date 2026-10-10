@@ -1,6 +1,5 @@
 /**
  * Electron Accelerator 字符串解析、规范化、匹配、显示工具
- * 在解析/匹配/显示时按平台展开 CommandOrControl
  */
 
 /** 解析后的加速键结构 */
@@ -89,9 +88,8 @@ const keyToCode = (token: string): string => {
 /**
  * 解析 Accelerator 字符串
  * @param accel 加速键字符串，如 "CommandOrControl+Shift+R"
- * @param isMac 当前平台是否为 macOS（用于展开 CommandOrControl）
  */
-export const parseAccelerator = (accel: string, isMac: boolean): ParsedAccelerator | null => {
+export const parseAccelerator = (accel: string): ParsedAccelerator | null => {
   if (!accel) return null;
   const tokens = accel
     .split("+")
@@ -131,8 +129,7 @@ export const parseAccelerator = (accel: string, isMac: boolean): ParsedAccelerat
           break;
         case "commandorcontrol":
         case "cmdorctrl":
-          if (isMac) result.meta = true;
-          else result.ctrl = true;
+          result.ctrl = true;
           break;
       }
     } else {
@@ -192,9 +189,8 @@ export const matchParsed = (event: KeyboardEvent, parsed: ParsedAccelerator): bo
 /**
  * 把 Accelerator 渲染为人类可读字符串
  * @param accel Accelerator 字符串
- * @param isMac 当前平台是否 macOS（决定符号样式）
  */
-export const formatAccelerator = (accel: string | null, isMac: boolean): string => {
+export const formatAccelerator = (accel: string | null): string => {
   if (!accel) return "";
   const tokens = accel
     .split("+")
@@ -204,20 +200,20 @@ export const formatAccelerator = (accel: string | null, isMac: boolean): string 
   for (const t of tokens) {
     const lower = t.toLowerCase();
     if (lower === "commandorcontrol" || lower === "cmdorctrl") {
-      out.push(isMac ? "⌘" : "Ctrl");
+      out.push("Ctrl");
     } else if (lower === "cmd" || lower === "command" || lower === "meta" || lower === "super") {
-      out.push(isMac ? "⌘" : "Win");
+      out.push("Win");
     } else if (lower === "ctrl" || lower === "control") {
-      out.push(isMac ? "⌃" : "Ctrl");
+      out.push("Ctrl");
     } else if (lower === "alt" || lower === "option") {
-      out.push(isMac ? "⌥" : "Alt");
+      out.push("Alt");
     } else if (lower === "shift") {
-      out.push(isMac ? "⇧" : "Shift");
+      out.push("Shift");
     } else if (lower === "left" || lower === "right" || lower === "up" || lower === "down") {
       const arrow: Record<string, string> = { left: "←", right: "→", up: "↑", down: "↓" };
       out.push(arrow[lower]);
     } else if (lower === "enter" || lower === "return") {
-      out.push(isMac ? "↵" : "Enter");
+      out.push("Enter");
     } else if (lower === "space" || lower === "spacebar") {
       out.push("Space");
     } else if (/^[a-z]$/.test(lower)) {
@@ -226,16 +222,15 @@ export const formatAccelerator = (accel: string | null, isMac: boolean): string 
       out.push(t);
     }
   }
-  return isMac ? out.join("") : out.join(" + ");
+  return out.join(" + ");
 };
 
 /**
  * 从 KeyboardEvent 反推为 Accelerator 字符串
  * @param event 键盘事件
- * @param isMac 平台
  * @returns null 表示当前事件不构成有效组合（如只按了 modifier 单键）
  */
-export const eventToAccelerator = (event: KeyboardEvent, isMac: boolean): string | null => {
+export const eventToAccelerator = (event: KeyboardEvent): string | null => {
   // modifier 单按视为未完成
   const isModifierKey =
     event.code === "ControlLeft" ||
@@ -284,12 +279,9 @@ export const eventToAccelerator = (event: KeyboardEvent, isMac: boolean): string
   };
 
   const parts: string[] = [];
-  // mac 上 metaKey=Cmd 视作 CommandOrControl，非 mac 上 ctrlKey=Ctrl 视作 CommandOrControl；
-  // 另一个 cmd-like 键（mac 的 Ctrl / 非 mac 的 Win）独立保留，避免共按时丢 modifier
-  const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
-  const otherCmdLike = isMac ? event.ctrlKey : event.metaKey;
-  if (cmdOrCtrl) parts.push("CommandOrControl");
-  if (otherCmdLike) parts.push(isMac ? "Ctrl" : "Cmd");
+  // Ctrl 视作 CommandOrControl；Win 键（meta）独立保留，避免共按时丢 modifier
+  if (event.ctrlKey) parts.push("CommandOrControl");
+  if (event.metaKey) parts.push("Cmd");
   if (event.altKey) parts.push("Alt");
   if (event.shiftKey) parts.push("Shift");
   parts.push(codeToToken(event.code));

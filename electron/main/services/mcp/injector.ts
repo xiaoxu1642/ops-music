@@ -4,7 +4,7 @@ import os from "node:os";
 import { app } from "electron";
 import type { McpAgentApp, McpClientConfigParams } from "@shared/types/settings";
 import { nativeLog } from "@main/utils/logger";
-import { isLinux, isMac, isWin } from "@main/utils/config";
+import { isWin } from "@main/utils/config";
 
 interface AgentDefinition {
   id: string;
@@ -46,23 +46,8 @@ const SUPPORTED_AGENTS: AgentDefinition[] = [
   {
     id: "claudedesktop",
     name: "Claude Desktop",
-    getConfigPath: () => {
-      if (isWin) {
-        return path.join(getAppDataPath(), "Claude", "claude_desktop_config.json");
-      }
-      return path.join(
-        os.homedir(),
-        "Library",
-        "Application Support",
-        "Claude",
-        "claude_desktop_config.json",
-      );
-    },
-    getInstallPaths: () => [
-      isWin
-        ? path.join(getAppDataPath(), "Claude")
-        : path.join(os.homedir(), "Library", "Application Support", "Claude"),
-    ],
+    getConfigPath: () => path.join(getAppDataPath(), "Claude", "claude_desktop_config.json"),
+    getInstallPaths: () => [path.join(getAppDataPath(), "Claude")],
     injectable: false,
   },
   {
@@ -75,36 +60,14 @@ const SUPPORTED_AGENTS: AgentDefinition[] = [
     id: "antigravity",
     name: "Antigravity IDE / CLI",
     getConfigPath: () => path.join(os.homedir(), ".gemini", "config", "mcp_config.json"),
-    getInstallPaths: () => {
-      const userInstallPaths = [
-        path.join(os.homedir(), ".gemini", "antigravity"),
-        path.join(os.homedir(), ".gemini", "antigravity-ide"),
-        path.join(os.homedir(), ".gemini", "antigravity-cli"),
-      ];
-      if (isWin) {
-        return [
-          ...userInstallPaths,
-          path.join(getAppDataPath(), "Antigravity"),
-          path.join(getAppDataPath(), "..", "Local", "Programs", "Antigravity"),
-          path.join(getAppDataPath(), "..", "Local", "Antigravity"),
-        ];
-      }
-      if (isMac) {
-        return [
-          ...userInstallPaths,
-          "/Applications/Antigravity.app",
-          path.join(os.homedir(), "Applications", "Antigravity.app"),
-        ];
-      }
-      if (isLinux) {
-        return [
-          ...userInstallPaths,
-          path.join(os.homedir(), ".config", "Antigravity"),
-          "/opt/Antigravity",
-        ];
-      }
-      return userInstallPaths;
-    },
+    getInstallPaths: () => [
+      path.join(os.homedir(), ".gemini", "antigravity"),
+      path.join(os.homedir(), ".gemini", "antigravity-ide"),
+      path.join(os.homedir(), ".gemini", "antigravity-cli"),
+      path.join(getAppDataPath(), "Antigravity"),
+      path.join(getAppDataPath(), "..", "Local", "Programs", "Antigravity"),
+      path.join(getAppDataPath(), "..", "Local", "Antigravity"),
+    ],
     format: "antigravity",
   },
 ];

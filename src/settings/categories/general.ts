@@ -58,12 +58,6 @@ const generalCategory: SettingCategory = {
           visible: () => navigator.platform.startsWith("Win"),
         },
         {
-          key: "orpheusProtocol",
-          type: "switch",
-          binding: { store: "settings", path: "system.system.registerOrpheusProtocol" },
-          defaultValue: false,
-        },
-        {
           key: "closeAction",
           type: "select",
           binding: { store: "settings", path: "appearance.closeAction" },

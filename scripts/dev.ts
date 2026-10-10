@@ -1,19 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * 跨平台开发启动脚本
- * 自动检测操作系统并设置相应的字符编码
+ * Windows 开发启动脚本
+ * 启动前设置代码页为 UTF-8
  */
 
 import { spawn } from "child_process";
-import os from "os";
-
-// 检测操作系统平台
-const platform = os.platform();
-const isWindows = platform === "win32";
-const isMacOS = platform === "darwin";
-
-console.log(`检测到操作系统: ${platform}`);
 
 // 设置环境变量
 const env: NodeJS.ProcessEnv = { ...process.env };
@@ -61,38 +53,19 @@ const startElectronVite = (): void => {
   });
 };
 
-if (isWindows) {
-  console.log("Windows 环境 - 正在设置代码页为 UTF-8");
-  // Windows 环境下先执行 chcp 65001
-  const chcp = spawn("chcp", ["65001"], {
-    stdio: "inherit",
-    shell: true,
-    env,
-  });
+// 先执行 chcp 65001 设置代码页
+const chcp = spawn("chcp", ["65001"], {
+  stdio: "inherit",
+  shell: true,
+  env,
+});
 
-  chcp.on("close", (code) => {
-    if (code === 0) {
-      console.log("代码页设置成功");
-      startElectronVite();
-    } else {
-      console.warn("代码页设置失败，继续启动...");
-      startElectronVite();
-    }
-  });
-} else {
-  // macOS 和 Linux 环境
-  console.log(`${isMacOS ? "macOS" : "Linux"} 环境 - 正在设置 UTF-8 编码`);
-  const langVar = env.LC_ALL || env.LANG || "";
-  if (langVar.endsWith("UTF-8")) {
-    console.log("当前环境已设置 UTF-8 编码");
+chcp.on("close", (code) => {
+  if (code === 0) {
+    console.log("代码页设置成功");
+    startElectronVite();
   } else {
-    if (langVar.startsWith("zh_CN")) {
-      env.LC_ALL = "zh_CN.UTF-8";
-      env.LANG = "zh_CN.UTF-8";
-    } else {
-      env.LC_ALL = "en_US.UTF-8";
-      env.LANG = "en_US.UTF-8";
-    }
+    console.warn("代码页设置失败，继续启动...");
+    startElectronVite();
   }
-  setTimeout(() => startElectronVite(), 0);
-}
+});

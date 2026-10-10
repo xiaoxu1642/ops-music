@@ -296,11 +296,6 @@ const toggleLyric = (): void => {
                 '--lp-credit-opacity': '1',
                 fontSize: lyricFontSize,
                 fontWeight: String(settings.lyric.fontWeight),
-                fontFamily: settings.lyric.fontFamily || undefined,
-                '--lyric-font-zh': settings.lyric.fontFamilyChinese || undefined,
-                '--lyric-font-ja': settings.lyric.fontFamilyJapanese || undefined,
-                '--lyric-font-ko': settings.lyric.fontFamilyKorean || undefined,
-                '--lyric-font-latin': settings.lyric.fontFamilyLatin || undefined,
                 mixBlendMode: settings.lyric.lyricBlendMode,
               }"
             >

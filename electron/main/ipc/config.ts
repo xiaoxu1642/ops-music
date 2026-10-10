@@ -15,7 +15,6 @@ import { setTaskbarProgress, applyMainWindowZoom, applyTaskbarLyricLayout } from
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
 import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
-import { setOrpheusProtocolRegistered } from "@main/services/orpheus";
 import { setTaskbarThumbnailEnabled } from "@main/services/thumbnail";
 
 /**
@@ -51,9 +50,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
       break;
     case "system.taskbarThumbnailCover":
       setTaskbarThumbnailEnabled(value as boolean);
-      break;
-    case "system.registerOrpheusProtocol":
-      setOrpheusProtocolRegistered(value as boolean);
       break;
     case "mcp.enabled":
       void (value ? startMcpServer() : stopMcpServer());

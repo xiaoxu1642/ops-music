@@ -369,10 +369,6 @@
       "selected": "{n} selected",
       "copy": "Copy",
       "copyRaw": "Copy original",
-      "exportImage": "Export image",
-      "saved": "Saved to Downloads",
-      "fileSuffix": "Lyrics",
-      "exportFailed": "Failed to export image",
       "empty": "Nothing to copy"
     },
     "repeatMode": {
@@ -1327,10 +1323,6 @@
       "description": "Choose which reporting interface is used for automatic NCM listening records",
       "legacy": "Legacy log API",
       "ncbl": "NCBL encrypted API"
-    },
-    "orpheusProtocol": {
-      "label": "Wake this app via the Orpheus protocol",
-      "description": "This protocol is normally used by the web player to launch the official client; enabling it may prevent the official client from being launched"
     },
     "mcpEnabled": {
       "label": "Enable MCP server",

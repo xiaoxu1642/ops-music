@@ -1,7 +1,4 @@
 import { app, ipcMain, shell } from "electron";
-import { writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { join, basename } from "node:path";
 import type { LocaleCode } from "@shared/types/settings";
 import { setLocale } from "@main/utils/i18n";
 import { systemLog } from "@main/utils/logger";
@@ -10,8 +7,6 @@ import { getThumbar } from "@main/services/thumbar";
 import { getMainWindow, focusMainWindow } from "@main/window";
 import { fetchBytes } from "@main/utils/fetchBytes";
 import { logsDir } from "@main/utils/paths";
-import { consumePendingOrpheusUrl } from "@main/services/orpheus";
-import { consumePendingAudioFiles } from "@main/services/externalFile";
 import { store } from "@main/store";
 
 /**
@@ -19,12 +14,6 @@ import { store } from "@main/store";
  */
 export const registerSystemIpc = (): void => {
   ipcMain.on("ping", () => systemLog.debug("pong"));
-
-  // 渲染层拉取冷启动暂存的 orpheus 唤起 URL
-  ipcMain.handle("system:consumePendingProtocolUrl", () => consumePendingOrpheusUrl());
-
-  // 渲染层拉取冷启动暂存的外部音频文件列表
-  ipcMain.handle("system:consumePendingAudioFiles", () => consumePendingAudioFiles());
 
   // 切换开发者工具
   ipcMain.handle("system:toggleDevTools", () => {
@@ -75,31 +64,5 @@ export const registerSystemIpc = (): void => {
     }
     const buf = await fetchBytes(url, { requireImage: true });
     return { success: true, data: buf };
-  });
-
-  // 保存文件到下载目录
-  ipcMain.handle("system:saveFile", async (_event, data: ArrayBuffer, fileName: string) => {
-    try {
-      // 只取末段并清洗非法字符
-      const safeName = basename(fileName)
-        .replace(/[\\/:*?"<>|]/g, " ")
-        .trim();
-      if (!safeName || safeName === "." || safeName === "..") {
-        return { success: false, error: "invalid file name" };
-      }
-      const dir = app.getPath("downloads");
-      const dot = safeName.lastIndexOf(".");
-      const base = dot > 0 ? safeName.slice(0, dot) : safeName;
-      const ext = dot > 0 ? safeName.slice(dot) : "";
-      let target = join(dir, safeName);
-      for (let seq = 2; existsSync(target); seq++) {
-        target = join(dir, `${base} (${seq})${ext}`);
-      }
-      await writeFile(target, Buffer.from(data));
-      return { success: true, path: target };
-    } catch (error) {
-      systemLog.error("[system] saveFile failed", error);
-      return { success: false, error: String(error) };
-    }
   });
 };

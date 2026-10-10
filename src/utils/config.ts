@@ -5,10 +5,6 @@ export const isDev = import.meta.env.MODE === "development" || import.meta.env.D
 const platform = window.api.system.platform;
 /** 是否为 Windows 系统 */
 export const isWin = platform === "win32";
-/** 是否为 macOS 系统 */
-export const isMac = platform === "darwin";
-/** 是否为 Linux 系统 */
-export const isLinux = platform === "linux";
 
 /** 应用版本号 */
 export const APP_VERSION = __APP_VERSION__;

@@ -16,8 +16,6 @@ tracing-subscriber = { workspace = true }
 tracing-appender = { workspace = true }
 time = { workspace = true }
 
-url = "2.5"
-
 [build-dependencies]
 napi-build = { workspace = true }
 

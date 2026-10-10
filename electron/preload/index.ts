@@ -22,13 +22,11 @@ const subscribe = <T>(channel: string, callback: (data: T) => void): (() => void
 
 /**
  * 推断安装类型
- * @returns nsis | portable | appx | dmg | appimage
+ * @returns nsis | portable | appx
  */
-const getInstallType = (): "nsis" | "portable" | "appx" | "dmg" | "appimage" => {
+const getInstallType = (): "nsis" | "portable" | "appx" => {
   if (process.env.PORTABLE_EXECUTABLE_DIR) return "portable";
   if (process.execPath.includes("WindowsApps")) return "appx";
-  if (process.platform === "darwin") return "dmg";
-  if (process.platform === "linux") return "appimage";
   return "nsis";
 };
 
@@ -184,23 +182,8 @@ const api = {
       subscribe<{ category?: string; highlight?: string }>("system:openSettings", callback),
     // 拉远端字节回渲染层
     fetchRemoteBytes: (url: string) => ipcRenderer.invoke("system:fetchRemoteBytes", url),
-    // 保存文件到下载目录
-    saveFile: (data: ArrayBuffer, defaultName: string) =>
-      ipcRenderer.invoke("system:saveFile", data, defaultName),
     // 重启应用
     relaunch: () => ipcRenderer.invoke("system:relaunch"),
-    // 订阅主进程下发的 orpheus 唤起 URL
-    onProtocolUrl: (callback: (url: string) => void) =>
-      subscribe<string>("protocol:orpheus", callback),
-    // 拉取冷启动暂存的 orpheus 唤起 URL
-    consumePendingProtocolUrl: (): Promise<string | null> =>
-      ipcRenderer.invoke("system:consumePendingProtocolUrl"),
-    // 订阅主进程下发的外部音频文件打开列表
-    onOpenFiles: (callback: (files: string[]) => void) =>
-      subscribe<string[]>("system:open-files", callback),
-    // 拉取冷启动暂存的外部音频文件列表
-    consumePendingAudioFiles: (): Promise<string[]> =>
-      ipcRenderer.invoke("system:consumePendingAudioFiles"),
     // 获取 File 对象的本地绝对路径（用于拖拽播放）
     getPathForFile: (file: File): string => webUtils.getPathForFile(file),
   },

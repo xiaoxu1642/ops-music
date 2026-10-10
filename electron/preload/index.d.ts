@@ -26,7 +26,7 @@ declare global {
       config: ConfigApi;
       player: PlayerApi;
       system: {
-        installType: "nsis" | "portable" | "appx" | "dmg" | "appimage";
+        installType: "nsis" | "portable" | "appx";
         platform: NodeJS.Platform;
         osInfo: {
           type: string;
@@ -43,15 +43,7 @@ declare global {
           callback: (payload: { category?: string; highlight?: string }) => void,
         ) => () => void;
         fetchRemoteBytes: (url: string) => Promise<IpcResponse<Buffer | null>>;
-        saveFile: (
-          data: ArrayBuffer,
-          fileName: string,
-        ) => Promise<{ success: boolean; path?: string; error?: string }>;
         relaunch: () => Promise<void>;
-        onProtocolUrl: (callback: (url: string) => void) => () => void;
-        consumePendingProtocolUrl: () => Promise<string | null>;
-        onOpenFiles: (callback: (files: string[]) => void) => () => void;
-        consumePendingAudioFiles: () => Promise<string[]>;
         getPathForFile: (file: File) => string;
       };
       library: LibraryApi;

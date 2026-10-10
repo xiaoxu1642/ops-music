@@ -17,8 +17,6 @@
 import { eventToAccelerator } from "@shared/utils/accelerator";
 
 interface UseHotkeyRecorderOptions {
-  /** 平台（用于显示 + accelerator 反推） */
-  isMac: boolean;
   /** 是否需要至少一个 modifier（global 录入设 true，避免单键被全局占用）。可传函数以按当前录入目标动态切换 */
   requireModifier?: boolean | (() => boolean);
   /** 录入完成回调 */
@@ -30,17 +28,17 @@ interface UseHotkeyRecorderOptions {
 }
 
 /** 录入态当前显示文案（实时反馈用户已按下的 modifier） */
-const buildLivePreview = (event: KeyboardEvent, isMac: boolean): string => {
+const buildLivePreview = (event: KeyboardEvent): string => {
   const parts: string[] = [];
-  if (event.ctrlKey) parts.push(isMac ? "⌃" : "Ctrl");
-  if (event.metaKey) parts.push(isMac ? "⌘" : "Win");
-  if (event.altKey) parts.push(isMac ? "⌥" : "Alt");
-  if (event.shiftKey) parts.push(isMac ? "⇧" : "Shift");
-  return isMac ? parts.join("") : parts.join(" + ");
+  if (event.ctrlKey) parts.push("Ctrl");
+  if (event.metaKey) parts.push("Win");
+  if (event.altKey) parts.push("Alt");
+  if (event.shiftKey) parts.push("Shift");
+  return parts.join(" + ");
 };
 
 export const useHotkeyRecorder = (options: UseHotkeyRecorderOptions) => {
-  const { isMac, requireModifier = false, onConfirm, onCancel, onClear } = options;
+  const { requireModifier = false, onConfirm, onCancel, onClear } = options;
 
   const isRecording = ref(false);
   const current = ref<string>("");
@@ -60,9 +58,9 @@ export const useHotkeyRecorder = (options: UseHotkeyRecorderOptions) => {
     }
 
     // 实时显示
-    current.value = buildLivePreview(event, isMac);
+    current.value = buildLivePreview(event);
 
-    const accel = eventToAccelerator(event, isMac);
+    const accel = eventToAccelerator(event);
     if (!accel) {
       // 仅按了 modifier，等下一个非 modifier 键
       return;

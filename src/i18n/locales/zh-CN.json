@@ -360,10 +360,6 @@
       "selected": "已选 {n} 行",
       "copy": "复制",
       "copyRaw": "复制原文",
-      "exportImage": "导出图片",
-      "saved": "已保存到下载文件夹",
-      "fileSuffix": "歌词分享",
-      "exportFailed": "导出图片失败",
       "empty": "没有可复制的内容"
     },
     "repeatMode": {
@@ -1318,10 +1314,6 @@
       "description": "选择自动同步 NCM 听歌记录时使用的上报接口",
       "legacy": "原版日志接口",
       "ncbl": "NCBL 加密接口"
-    },
-    "orpheusProtocol": {
-      "label": "通过 Orpheus 协议唤起本应用",
-      "description": "该协议通常用于官方网页端唤起官方客户端，启用后可能导致官方客户端无法被唤起"
     },
     "mcpEnabled": {
       "label": "启用 MCP 服务",

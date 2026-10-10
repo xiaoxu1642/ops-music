@@ -279,8 +279,6 @@ export interface SystemConfig {
     neteaseScrobbleEnabled: boolean;
     /** 听歌打卡上报方式 */
     neteaseScrobbleMode: NeteaseScrobbleMode;
-    /** 注册为 Orpheus 协议处理程序，抢占网页端「用客户端打开」 */
-    registerOrpheusProtocol: boolean;
   };
   /** 窗口几何状态（运行时自动记录，非用户主动配置） */
   windowStates: WindowStates;

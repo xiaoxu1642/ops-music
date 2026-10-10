@@ -401,22 +401,6 @@ defineExpose({
   height: 100%;
 }
 
-:deep(:lang(zh)) {
-  font-family: var(--lyric-font-zh, inherit);
-}
-
-:deep(:lang(ja)) {
-  font-family: var(--lyric-font-ja, inherit);
-}
-
-:deep(:lang(ko)) {
-  font-family: var(--lyric-font-ko, inherit);
-}
-
-:deep(:lang(und-Latn)) {
-  font-family: var(--lyric-font-latin, inherit);
-}
-
 :deep(.lp-line.lp-credit) {
   position: absolute !important;
   left: 0 !important;
