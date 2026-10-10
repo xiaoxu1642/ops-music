@@ -10,6 +10,13 @@ export const API_DOMAIN = "https://api.bilibili.com";
 export const VIDEO_PAGE_DOMAIN = "https://www.bilibili.com";
 
 /**
+ * Chromium 侧接口请求统一使用的 Referer：只给站点根。
+ * 带路径的 Referer（`/video/BV…`）在 Electron 网络栈里会被判为非法请求头并直接拦掉
+ * （表现为 `net::ERR_BLOCKED_BY_CLIENT`），因此视频页 Referer 只留给本地代理发往 CDN 的取流请求。
+ */
+export const API_REFERER = `${VIDEO_PAGE_DOMAIN}/`;
+
+/**
  * 伪装成桌面 Chrome：B 站对含 Electron/自定义 UA 的请求会返回 412 风控页
  */
 export const USER_AGENT =

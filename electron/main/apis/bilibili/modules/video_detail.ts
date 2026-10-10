@@ -6,7 +6,7 @@
  * 否则会出现「声音是 P1、歌词是 P2」的串台。
  */
 
-import { ENDPOINT, VIDEO_PAGE_DOMAIN, VIEW_CACHE_TTL_MS } from "../core/config";
+import { API_REFERER, ENDPOINT, VIDEO_PAGE_DOMAIN, VIEW_CACHE_TTL_MS } from "../core/config";
 import { buildCacheKey, cacheGet, cacheSet } from "../core/cache";
 import { normalizeResourceUrl } from "../core/url";
 import { normalizeBilibiliText } from "./search";
@@ -18,7 +18,8 @@ import type {
 } from "../core/types";
 
 /**
- * 视频页地址，同时作为 playurl 与音频流的 Referer
+ * 视频页地址，仅用于本地代理发往 CDN 的取流请求头。
+ * 接口请求不要用它——带路径的 Referer 会被 Chromium 网络栈拦掉，接口侧用 API_REFERER。
  * @param bvid - BV 号
  * @returns 视频页 URL
  */
@@ -50,7 +51,7 @@ export const loadView = async (
   if (hit) return hit.body as BilibiliVideoDetail;
 
   const res = await http.get(`${ENDPOINT.view}?bvid=${encodeURIComponent(bvid)}`, {
-    referer: videoReferer(bvid),
+    referer: API_REFERER,
     cookie,
   });
   const data = res.body as BilibiliViewResponse;

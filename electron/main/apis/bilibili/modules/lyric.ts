@@ -19,7 +19,8 @@ import type {
   BilibiliSubtitleItem,
   BilibiliSubtitleResponse,
 } from "../core/types";
-import { videoReferer, loadView } from "./video_detail";
+import { API_REFERER } from "../core/config";
+import { loadView } from "./video_detail";
 
 /** B 站 AI 生成字幕的语言前缀 */
 const AI_SUBTITLE_LAN_PREFIX = "ai-";
@@ -89,7 +90,8 @@ const EMPTY_LYRIC: BilibiliLyricResult = { lyric: "", lan: "", isAi: false };
 const lyric: BilibiliModule = async (query, http) => {
   const bvid = String(query.bvid ?? "");
   const cookie = query.cookie as Record<string, string> | undefined;
-  const referer = videoReferer(bvid);
+  // 接口与字幕正文都走 Chromium 网络栈，只能给站点根 Referer
+  const referer = API_REFERER;
   const view = await loadView(bvid, http, cookie);
 
   let cid = Number(query.cid ?? 0) || view.cid;
