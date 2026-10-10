@@ -58,18 +58,11 @@ export const defaultSystemConfig: SystemConfig = {
     },
   },
   download: {
-    enabled: false,
     dir: null,
     quality: "lossless",
     usePlaybackForDownload: false,
     fileTemplate: "{artist} - {title}",
     folderScheme: "none",
-    overwritePolicy: "rename",
-    embedCover: true,
-    embedMeta: true,
-    embedLyric: true,
-    writeLrc: false,
-    lyricFileFormat: "enhanced-lrc",
   },
   system: {
     rememberWindowState: true,

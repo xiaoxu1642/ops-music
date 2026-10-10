@@ -3,7 +3,6 @@ import { useSettingsStore } from "@/stores/settings";
 import { CURRENT_AGREEMENT_VERSION } from "@shared/constants/agreement";
 import WindowControls from "@/components/layout/WindowControls.vue";
 import StepWelcome from "@/components/onboarding/StepWelcome.vue";
-import StepPreferences from "@/components/onboarding/StepPreferences.vue";
 import StepAgreement from "@/components/onboarding/StepAgreement.vue";
 import StepLibrary from "@/components/onboarding/StepLibrary.vue";
 import StepHotkeys from "@/components/onboarding/StepHotkeys.vue";
@@ -15,7 +14,6 @@ const settings = useSettingsStore();
 const STEPS = [
   { key: "welcome", component: StepWelcome },
   { key: "agreement", component: StepAgreement },
-  { key: "preferences", component: StepPreferences },
   { key: "library", component: StepLibrary },
   { key: "hotkeys", component: StepHotkeys },
 ] as const;

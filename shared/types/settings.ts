@@ -1,14 +1,5 @@
 import type { HotkeyConfig } from "./hotkey";
-import type { DownloadLyricFormat, DownloadQuality, DownloadFolderScheme } from "./download";
-
-/** 支持的语言代码 */
-export type LocaleCode = "zh-CN" | "en-US";
-
-/** 语言选项 */
-export const LOCALES: { value: LocaleCode; label: string }[] = [
-  { value: "zh-CN", label: "简体中文" },
-  { value: "en-US", label: "English" },
-];
+import type { DownloadQuality, DownloadFolderScheme } from "./download";
 
 /** 均衡器预设标识 */
 export type EqualizerPreset =
@@ -144,10 +135,13 @@ export interface CacheSettings {
   songCache: SongCacheSettings;
 }
 
-/** 下载配置 */
+/**
+ * 下载配置
+ *
+ * 重名处理 / 歌词格式 / 内嵌选项不再可配，固定为：
+ * 重名保留两者（加序号）、增强 LRC、内嵌封面 + 元信息 + 歌词、不额外保存歌词文件
+ */
 export interface DownloadSettings {
-  /** 下载功能总开关；关闭后隐藏应用内所有下载入口，下载设置仍可预先配置 */
-  enabled: boolean;
   /** 下载目录；null 使用系统下载目录下的应用子目录 */
   dir: string | null;
   /** 下载音质 */
@@ -158,18 +152,6 @@ export interface DownloadSettings {
   fileTemplate: string;
   /** 文件智能分类：按规则分子文件夹 */
   folderScheme: DownloadFolderScheme;
-  /** 重名处理策略 */
-  overwritePolicy: "rename" | "overwrite" | "skip";
-  /** 内嵌封面 */
-  embedCover: boolean;
-  /** 内嵌标题/艺术家/专辑等元信息 */
-  embedMeta: boolean;
-  /** 内嵌歌词到标签 */
-  embedLyric: boolean;
-  /** 额外保存同名歌词文件 */
-  writeLrc: boolean;
-  /** 保存 / 内嵌的歌词格式 */
-  lyricFileFormat: DownloadLyricFormat;
 }
 
 /** 主窗口几何 */

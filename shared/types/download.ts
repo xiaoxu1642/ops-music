@@ -18,19 +18,7 @@ export type DownloadFolderScheme = "none" | "artist" | "artist-album";
 export type DownloadStatus =
   "queued" | "downloading" | "done" | "failed" | "canceled" | "interrupted";
 
-/** 写入选项 */
-export interface DownloadTagOptions {
-  /** 内嵌封面 */
-  embedCover: boolean;
-  /** 内嵌标题/艺术家/专辑等元信息 */
-  embedMeta: boolean;
-  /** 内嵌歌词到标签 */
-  embedLyric: boolean;
-  /** 额外保存同名歌词文件 */
-  writeLrc: boolean;
-}
-
-/** 渲染层 → 主进程的下载请求 */
+/** 渲染层 → 主进程的下载请求（写入行为固定：内嵌封面/元信息/逐字歌词，不额外保存歌词文件） */
 export interface DownloadRequest {
   /** 渲染层生成的 UUID */
   taskId: string;
@@ -44,13 +32,10 @@ export interface DownloadRequest {
   declaredSize?: number;
   /** 封面原图 URL，主进程按需 fetch 内嵌 */
   coverUrl?: string;
-  /** 歌词文本 */
+  /** 歌词文本（固定序列化为增强 LRC） */
   lyricText?: string;
-  tagOptions: DownloadTagOptions;
   /** 是否复用当前播放链接下载 */
   usePlaybackForDownload: boolean;
-  /** 内嵌歌词与 .lrc 的保存格式 */
-  lyricFileFormat: DownloadLyricFormat;
 }
 
 /** 主进程持有的下载任务 */
@@ -87,13 +72,7 @@ export type DownloadResolution = Required<Pick<DownloadRequest, "url">> &
 /** 主进程 → 渲染层的解析请求载荷（轮到下载但缺少 URL 时下发） */
 export type DownloadResolvePayload = Pick<
   DownloadRequest,
-  | "taskId"
-  | "track"
-  | "qualityLevel"
-  | "tagOptions"
-  | "coverUrl"
-  | "usePlaybackForDownload"
-  | "lyricFileFormat"
+  "taskId" | "track" | "qualityLevel" | "coverUrl" | "usePlaybackForDownload"
 >;
 
 /** 入队结果；ok 为 false 时 reason 说明原因 */

@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { useSettingsDialog } from "@/settings/useSettingsDialog";
 import { useWindowControls } from "@/composables/useWindowControls";
-import { useThemeStore } from "@/stores/theme";
 import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
-import IconSun from "~icons/lucide/sun";
-import IconMoon from "~icons/lucide/moon";
-import IconMonitor from "~icons/lucide/monitor";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconTerminal from "~icons/lucide/terminal";
 import IconSettings from "~icons/lucide/settings";
@@ -14,31 +10,12 @@ import IconScaling from "~icons/lucide/scaling";
 const router = useRouter();
 const { t } = useI18n();
 const { show: showSettings } = useSettingsDialog();
-const theme = useThemeStore();
 const { isBorderless } = useWindowControls();
 
 /** 界面缩放弹窗开关 */
 const uiZoomOpen = ref(false);
 
-const themeIcon = computed(() => {
-  if (theme.mode === "light") return IconMoon;
-  if (theme.mode === "dark") return IconMonitor;
-  return IconSun;
-});
-
-const themeLabel = computed(() => {
-  if (theme.mode === "light") return t("settings.themeMode.dark");
-  if (theme.mode === "dark") return t("settings.themeMode.system");
-  return t("settings.themeMode.light");
-});
-
 const menuItems = computed<DropdownMenuItem[]>(() => [
-  {
-    key: "theme",
-    label: themeLabel.value,
-    icon: themeIcon.value,
-    disabled: theme.appearanceStyle === "image",
-  },
   { key: "uiZoom", label: t("uiZoom.title"), icon: IconScaling },
   { key: "reload", label: t("nav.reload"), icon: IconRefreshCw, separator: true },
   { key: "devtools", label: t("nav.devtools"), icon: IconTerminal },
@@ -46,8 +23,7 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 ]);
 
 const onMenuSelect = (key: string): void => {
-  if (key === "theme") theme.cycleMode();
-  else if (key === "reload") location.reload();
+  if (key === "reload") location.reload();
   else if (key === "devtools") window.api.system.toggleDevTools();
   else if (key === "uiZoom") uiZoomOpen.value = true;
   else if (key === "settings") showSettings();

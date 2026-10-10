@@ -1,9 +1,5 @@
 import { app, ipcMain, shell } from "electron";
-import type { LocaleCode } from "@shared/types/settings";
-import { setLocale } from "@main/utils/i18n";
 import { systemLog } from "@main/utils/logger";
-import { refreshTray } from "@main/services/tray";
-import { getThumbar } from "@main/services/thumbar";
 import { getMainWindow, focusMainWindow } from "@main/window";
 import { fetchBytes } from "@main/utils/fetchBytes";
 import { logsDir } from "@main/utils/paths";
@@ -31,14 +27,6 @@ export const registerSystemIpc = (): void => {
 
   // 打开日志目录
   ipcMain.handle("system:openLogsDir", () => shell.openPath(logsDir));
-
-  // 切换主进程语言
-  ipcMain.on("system:setLocale", (_event, locale: LocaleCode) => {
-    if (setLocale(locale)) {
-      refreshTray();
-      getThumbar()?.refreshLocale();
-    }
-  });
 
   // 显示并聚焦主窗口
   ipcMain.handle("system:focusMainWindow", () => focusMainWindow());

@@ -1,4 +1,3 @@
 <template>
-  <AppBackground />
   <RouterView />
 </template>

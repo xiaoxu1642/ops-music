@@ -4,7 +4,6 @@ import type { QualityLevel } from "@/utils/quality";
 import type { CollectionType } from "@/types/collection";
 import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
 import * as player from "@/core/player";
-import { useSettingsStore } from "@/stores/settings";
 import { useCopyText } from "@/composables/useCopyText";
 import { toast } from "@/composables/useToast";
 import { buildDownloadQualityItems } from "@/composables/useDownload";
@@ -53,7 +52,6 @@ export const useTrackMenu = (
 ) => {
   const { t } = useI18n();
   const router = useRouter();
-  const settings = useSettingsStore();
   const { copy } = useCopyText();
   const isPlaylist = options.collectionType === "playlist";
   const showPlay = !options.hidePlayActions;
@@ -104,7 +102,7 @@ export const useTrackMenu = (
         label: t("songList.context.download"),
         icon: markRaw(IconDownload),
         separator: true,
-        show: !isLocal && !!options.onDownload && settings.system.download.enabled,
+        show: !isLocal && !!options.onDownload,
         children: buildDownloadQualityItems(t("download.qualityDefault"), "download:"),
       },
       {

@@ -1,6 +1,6 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
 import { PlayerApi, TrackSource } from "@shared/types/player";
-import { ConfigApi, LocaleCode } from "@shared/types/settings";
+import { ConfigApi } from "@shared/types/settings";
 import { LibraryApi } from "@shared/types/library";
 import { NowPlayingApi } from "@shared/types/nowPlaying";
 import { ApisApi } from "@shared/types/apis";
@@ -30,7 +30,6 @@ declare global {
         toggleDevTools: () => Promise<void>;
         showInExplorer: (filePath: string) => Promise<void>;
         openLogsDir: () => Promise<string>;
-        setLocale: (locale: LocaleCode) => void;
         focusMainWindow: () => Promise<void>;
         openSettings: (category?: string, highlight?: string) => Promise<void>;
         onOpenSettings: (
@@ -49,10 +48,6 @@ declare global {
       lyrics: LyricsApi;
       opencc: OpenccApi;
       download: DownloadApi;
-      theme: {
-        pickBackgroundImage: () => Promise<string | null>;
-        clearBackgroundImages: () => Promise<void>;
-      };
       cache: {
         getStats: () => Promise<{ id: string; kind: "file" | "db"; path: string; size: number }[]>;
         clear: (id: string) => Promise<void>;

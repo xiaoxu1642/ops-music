@@ -141,12 +141,7 @@ const { immersive, onPlayerMouseEnter, onPlayerMouseLeave, onMainMove, onBarEnte
 
 const { isFullscreen, toggleFullscreen } = useWindowControls();
 
-const canDownload = computed(
-  () =>
-    !!displayTrack.value &&
-    displayTrack.value.source !== "local" &&
-    settings.system.download.enabled,
-);
+const canDownload = computed(() => !!displayTrack.value && displayTrack.value.source !== "local");
 
 const downloadQualityItems = computed(() =>
   buildDownloadQualityItems(t("download.qualityDefault")),

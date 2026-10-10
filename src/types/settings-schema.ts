@@ -36,7 +36,7 @@ export interface SettingItem {
   /** 控件类型 */
   type: SettingWidgetType;
   /** store 绑定路径，如 { store: "settings", path: "lyric.fontSize" } */
-  binding?: { store: "settings" | "theme"; path: string };
+  binding?: { store: "settings"; path: string };
   /** select 选项 */
   options?: SettingOption[];
   /** slider / number 数值边界 */

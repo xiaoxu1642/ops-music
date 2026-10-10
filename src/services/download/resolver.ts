@@ -19,21 +19,19 @@ const resolvePayload = async (payload: DownloadResolvePayload): Promise<Download
     payload.usePlaybackForDownload,
   );
   if (!source) throw new Error("no download source");
-  const { tagOptions } = payload;
+  // 写入行为固定：内嵌逐字歌词，因此始终解析歌词文本
   let lyricText: string | undefined;
-  if (tagOptions.embedLyric || tagOptions.writeLrc) {
-    const lyric = await resolveDownloadLyric(payload.track);
-    if (lyric) {
-      const input = {
-        content: lyric.content,
-        translation: lyric.translation,
-        translationFormat: lyric.translationFormat,
-        romaji: lyric.romaji,
-        romajiFormat: lyric.romajiFormat,
-      };
-      // 内嵌与 .lrc 文件共用所选格式（lrc/增强 LRC）
-      lyricText = buildDownloadLyric(input, lyric.format, payload.lyricFileFormat) ?? undefined;
-    }
+  const lyric = await resolveDownloadLyric(payload.track);
+  if (lyric) {
+    const input = {
+      content: lyric.content,
+      translation: lyric.translation,
+      translationFormat: lyric.translationFormat,
+      romaji: lyric.romaji,
+      romajiFormat: lyric.romajiFormat,
+    };
+    // 内嵌歌词固定序列化为增强 LRC（逐字）
+    lyricText = buildDownloadLyric(input, lyric.format, "enhanced-lrc") ?? undefined;
   }
   return {
     url: source.url,

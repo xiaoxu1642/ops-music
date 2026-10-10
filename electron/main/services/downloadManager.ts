@@ -147,31 +147,23 @@ const streamToFile = async (
   return received;
 };
 
-/** 写入标签（封面/元信息/歌词）；失败返回 false 但不影响音频文件 */
+/** 写入标签（封面/元信息/歌词，固定全部内嵌）；失败返回 false 但不影响音频文件 */
 const applyTags = async (req: DownloadRequest, filePath: string): Promise<boolean> => {
-  const { tagOptions } = req;
-  const writeRequest: JsTagWriteRequest = { path: filePath };
-  let hasWrite = false;
-  if (tagOptions.embedMeta) {
-    writeRequest.title = req.track.title;
-    writeRequest.artist = artistString(req);
-    if (req.track.album?.name) writeRequest.album = req.track.album.name;
-    hasWrite = true;
-  }
-  if (tagOptions.embedLyric && req.lyricText) {
-    writeRequest.lyrics = req.lyricText;
-    hasWrite = true;
-  }
-  if (tagOptions.embedCover && req.coverUrl) {
+  const writeRequest: JsTagWriteRequest = {
+    path: filePath,
+    title: req.track.title,
+    artist: artistString(req),
+  };
+  if (req.track.album?.name) writeRequest.album = req.track.album.name;
+  if (req.lyricText) writeRequest.lyrics = req.lyricText;
+  if (req.coverUrl) {
     const cover = await fetchBytes(req.coverUrl, { requireImage: true });
     if (cover) {
       writeRequest.cover = cover;
-      hasWrite = true;
     } else {
       downloadLog.warn(`封面下载失败，跳过封面: ${req.coverUrl}`);
     }
   }
-  if (!hasWrite) return true;
   try {
     const results = await getEngine().writeTrackTags([writeRequest], getCoverCacheDir());
     return results[0]?.success === true;
@@ -179,21 +171,6 @@ const applyTags = async (req: DownloadRequest, filePath: string): Promise<boolea
     downloadLog.warn(`写标签失败 ${filePath}:`, err);
     return false;
   }
-};
-
-/** 写同名歌词文件，失败仅告警不影响音频 */
-const writeSidecar = async (filePath: string, text: string): Promise<void> => {
-  try {
-    await fsp.writeFile(filePath, text, "utf-8");
-  } catch (err) {
-    downloadLog.warn(`写歌词文件失败 ${filePath}:`, err);
-  }
-};
-
-/** 按开关写 .lrc（所选格式） */
-const writeLyricFiles = async (req: DownloadRequest, audioPath: string): Promise<void> => {
-  const base = audioPath.slice(0, audioPath.length - path.extname(audioPath).length);
-  if (req.tagOptions.writeLrc && req.lyricText) await writeSidecar(`${base}.lrc`, req.lyricText);
 };
 
 /** 等待渲染层补全解析；任务被取消/删除时经中断信号立即拒绝 */
@@ -248,10 +225,8 @@ const runTask = async (
         taskId: req.taskId,
         track: req.track,
         qualityLevel: req.qualityLevel,
-        tagOptions: req.tagOptions,
         coverUrl: req.coverUrl,
         usePlaybackForDownload: req.usePlaybackForDownload,
-        lyricFileFormat: req.lyricFileFormat,
       };
       const resolution = waitForResolution(req.taskId, controller.signal);
       broadcast("download:resolve", payload);
@@ -272,17 +247,6 @@ const runTask = async (
     );
     const targetDir = path.join(downloadDir, relDir);
     const finalNoExt = path.join(targetDir, baseName);
-    const policy = store.get("download.overwritePolicy");
-
-    // skip 策略：用预估扩展名提前命中已存在文件则跳过
-    const guessExt = resolveExtension(req.declaredFormat, null, audioUrl);
-    if (policy === "skip" && fs.existsSync(`${finalNoExt}${guessExt}`)) {
-      task.status = "done";
-      task.filePath = `${finalNoExt}${guessExt}`;
-      task.finishedAt = Date.now();
-      broadcastState(task);
-      return;
-    }
 
     await fsp.mkdir(tmpDir(), { recursive: true });
     await fsp.mkdir(targetDir, { recursive: true });
@@ -306,10 +270,10 @@ const runTask = async (
     if (!(await looksLikeAudio(partPath))) throw new Error("not audio");
 
     const ext = resolveExtension(req.declaredFormat, mime, audioUrl);
-    const finalPath = policy === "rename" ? dedupePath(finalNoExt, ext) : `${finalNoExt}${ext}`;
+    // 重名处理固定为保留两者（加序号）
+    const finalPath = dedupePath(finalNoExt, ext);
     await moveFile(partPath, finalPath);
 
-    await writeLyricFiles(req, finalPath);
     const tagOk = await applyTags(req, finalPath);
 
     task.status = "done";

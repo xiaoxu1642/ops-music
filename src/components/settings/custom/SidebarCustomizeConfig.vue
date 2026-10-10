@@ -201,7 +201,6 @@ interface EditorRow {
   label: string;
   icon?: Component;
   hideable: boolean;
-  featureOff: boolean;
 }
 
 const editorGroups = computed(() =>
@@ -216,7 +215,6 @@ const editorGroups = computed(() =>
         label: entry ? t(entry.labelKey) : key,
         icon: entry?.icon,
         hideable: entry?.hideable ?? true,
-        featureOff: key === "/download" && !settings.system.download.enabled,
       };
     }),
   })),
@@ -411,9 +409,6 @@ const handleReset = async (): Promise<void> => {
                 :class="isHidden(row.key) ? 'opacity-40' : ''"
               >
                 {{ row.label }}
-              </span>
-              <span v-if="row.featureOff" class="shrink-0 text-xs text-on-surface-variant/50">
-                {{ t("settings.sidebarCustomize.featureDisabled") }}
               </span>
               <SButton
                 v-if="row.hideable"

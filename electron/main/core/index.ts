@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, screen } from "electron";
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import {
   createMainWindow,
@@ -101,6 +101,10 @@ export const initApp = (): void => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
     coreLog.info("应用初始化完成");
+    // 主界面帧率跟随显示器刷新率（Windows 下 Electron 无普通窗口限帧 API，setFrameRate 仅离屏渲染可用）
+    // 这里只如实记录刷新率，便于排查"实际跑 60"的疑问
+    const { displayFrequency } = screen.getPrimaryDisplay();
+    coreLog.info(`显示器刷新率 ${displayFrequency}Hz，主界面按此刷新率渲染`);
   });
   // 退出前清理
   app.on("before-quit", () => {

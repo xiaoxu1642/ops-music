@@ -16,11 +16,10 @@ import {
   SIDEBAR_GROUP_SUBSCRIBED,
   SPRING_PRESETS,
 } from "@/types/settings";
-import type { SystemConfig, LocaleCode } from "@shared/types/settings";
+import type { SystemConfig } from "@shared/types/settings";
 import { defaultSystemConfig } from "@shared/defaults/settings";
 import { setByPath } from "@shared/utils/path";
 import { DEFAULT_SKIP_TRACK_KEYWORDS } from "@/utils/preset/skipKeywords";
-import { PLAYER_BG_DEFAULT_RENDER_SCALE, PLAYER_BG_MAX_FPS } from "@/utils/playerBackground";
 
 /**
  * 对账有序集合：保留存档中仍有效的项（顺序不变），
@@ -101,9 +100,6 @@ const reconcilePlaylistOrder = (stored: unknown): SidebarPlaylistOrder => {
 export const useSettingsStore = defineStore(
   "settings",
   () => {
-    /** 界面语言 */
-    const locale = ref<LocaleCode>("zh-CN");
-
     /** 外观 */
     const appearance = reactive<AppearanceSettings>({
       layoutMode: "default",
@@ -121,16 +117,10 @@ export const useSettingsStore = defineStore(
       showQualitySwitch: false,
       closeAction: "hide",
       rememberCloseChoice: false,
-      showPerformanceMonitor: false,
     });
 
     /** 播放器 */
     const player = reactive<PlayerSettings>({
-      playerBgType: "blur",
-      playerBgRenderer: "mesh",
-      playerBgFps: PLAYER_BG_MAX_FPS,
-      playerBgFlowSpeed: 4,
-      playerBgRenderScale: PLAYER_BG_DEFAULT_RENDER_SCALE,
       coverLayout: "default",
       coverLyricRatio: 0.45,
       autoCenterCover: true,
@@ -301,7 +291,6 @@ export const useSettingsStore = defineStore(
     };
 
     return {
-      locale,
       appearance,
       player,
       preset,

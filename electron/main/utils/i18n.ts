@@ -1,5 +1,3 @@
-import type { LocaleCode } from "@shared/types/settings";
-
 interface MainMessages {
   prev: string;
   play: string;
@@ -16,50 +14,22 @@ interface MainMessages {
   quit: string;
 }
 
-const messages: Record<LocaleCode, MainMessages> = {
-  "zh-CN": {
-    prev: "上一曲",
-    play: "播放",
-    pause: "暂停",
-    next: "下一曲",
-    addToLiked: "添加到我喜欢",
-    removeFromLiked: "从我喜欢中移除",
-    shuffle: "随机播放",
-    sequential: "顺序播放",
-    repeatList: "列表循环",
-    repeatOne: "单曲循环",
-    openTaskbarLyric: "开启任务栏歌词",
-    closeTaskbarLyric: "关闭任务栏歌词",
-    quit: "退出",
-  },
-  "en-US": {
-    prev: "Previous",
-    play: "Play",
-    pause: "Pause",
-    next: "Next",
-    addToLiked: "Add to Liked",
-    removeFromLiked: "Remove from Liked",
-    shuffle: "Shuffle",
-    sequential: "Sequential",
-    repeatList: "Repeat All",
-    repeatOne: "Repeat One",
-    openTaskbarLyric: "Open Taskbar Lyric",
-    closeTaskbarLyric: "Close Taskbar Lyric",
-    quit: "Quit",
-  },
+/** 主进程翻译表（界面仅中文） */
+const messages: MainMessages = {
+  prev: "上一曲",
+  play: "播放",
+  pause: "暂停",
+  next: "下一曲",
+  addToLiked: "添加到我喜欢",
+  removeFromLiked: "从我喜欢中移除",
+  shuffle: "随机播放",
+  sequential: "顺序播放",
+  repeatList: "列表循环",
+  repeatOne: "单曲循环",
+  openTaskbarLyric: "开启任务栏歌词",
+  closeTaskbarLyric: "关闭任务栏歌词",
+  quit: "退出",
 };
-
-let currentLocale: LocaleCode = "zh-CN";
 
 /** 获取翻译文本 */
-export const t = (key: keyof MainMessages): string => messages[currentLocale][key];
-
-/** 切换语言，返回是否发生变化 */
-export const setLocale = (locale: LocaleCode): boolean => {
-  if (currentLocale === locale) return false;
-  currentLocale = locale;
-  return true;
-};
-
-/** 获取当前语言 */
-export const getLocale = (): LocaleCode => currentLocale;
+export const t = (key: keyof MainMessages): string => messages[key];

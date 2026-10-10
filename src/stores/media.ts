@@ -166,7 +166,7 @@ export const useMediaStore = defineStore("media", () => {
           },
           {
             detectBackground: settings.lyric.detectBackgroundLyrics,
-            preferredLang: settings.locale,
+            preferredLang: "zh-CN",
             cleanKangxi: true,
             extractMetadata: true,
           },

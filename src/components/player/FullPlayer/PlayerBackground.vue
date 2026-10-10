@@ -1,20 +1,14 @@
 <script setup lang="ts">
-import { useSettingsStore } from "@/stores/settings";
 import { useMediaStore } from "@/stores/media";
 import { useStatusStore } from "@/stores/status";
-import { clampPlayerBgFps } from "@/utils/playerBackground";
 import DEFAULT_COVER from "@/assets/images/song.jpg";
-import BackgroundRender from "./BackgroundRender.vue";
 
 const media = useMediaStore();
-const settings = useSettingsStore();
 const status = useStatusStore();
-
-const bgType = computed(() => settings.player.playerBgType as string);
 
 /**
  * 背景是否就绪
- * 展开后立即挂载，收起后延迟 500ms 卸载以释放 WebGL 上下文 / 模糊位图
+ * 展开后立即挂载，收起后延迟 500ms 卸载以释放模糊位图
  */
 const bgReady = ref(false);
 let bgReadyTimer: ReturnType<typeof setTimeout> | undefined;
@@ -37,23 +31,7 @@ watch(
 
 onBeforeUnmount(() => clearTimeout(bgReadyTimer));
 
-// 流体背景播放态：暂停或窗口隐藏时整体销毁渲染器，只留静态封面
-const visibility = useDocumentVisibility();
-const bgAnimated = computed(() => {
-  if (!status.isPlayerExpanded) return false;
-  if (visibility.value === "hidden") return false;
-  return status.isPlaying;
-});
-
-/** 帧率上限由 clamp 兜底，历史配置可能保存更大的值 */
-const bgFps = computed(() => clampPlayerBgFps(settings.player.playerBgFps));
-
-/** 静态降级使用的封面：走 300px 缩略图，避免解码大图 */
-const staticCover = computed(
-  () => media.track?.cover || media.track?.coverOriginal || DEFAULT_COVER,
-);
-
-// 模糊模式：双缓冲层，切歌时交叉淡入淡出
+// 模糊背景：双缓冲层，切歌时交叉淡入淡出
 const initialCover = media.track?.cover || media.track?.coverOriginal || DEFAULT_COVER;
 const blurLayers = reactive([
   { src: initialCover, active: true },
@@ -118,8 +96,8 @@ onBeforeUnmount(() => {
   <div class="absolute inset-0 overflow-hidden -z-1 bg-solid-wrap">
     <div class="color bg-cover-base" />
   </div>
-  <!-- 模糊背景 -->
-  <Transition v-if="bgType === 'blur'" name="bg-fade">
+  <!-- 模糊背景（封面缩略图 + CSS 模糊铺底） -->
+  <Transition name="bg-fade">
     <div v-if="bgReady" class="absolute inset-0 overflow-hidden -z-1 bg-blur-wrap">
       <img
         v-for="(layer, index) in blurLayers"
@@ -129,21 +107,6 @@ onBeforeUnmount(() => {
         decoding="async"
         alt=""
       />
-    </div>
-  </Transition>
-  <!-- 流体背景 -->
-  <Transition v-else-if="bgType === 'animation'" name="bg-fade">
-    <div v-if="bgReady" class="absolute inset-0 overflow-hidden -z-1">
-      <BackgroundRender
-        v-if="bgAnimated"
-        :album="media.track?.cover || DEFAULT_COVER"
-        :fps="bgFps"
-        :flow-speed="settings.player.playerBgFlowSpeed"
-        :render-scale="settings.player.playerBgRenderScale"
-        :has-lyric="media.parsedLyric.length > 0"
-        :render-engine="settings.player.playerBgRenderer"
-      />
-      <img v-else class="bg-static" :src="staticCover" decoding="async" alt="" />
     </div>
   </Transition>
 </template>
@@ -197,7 +160,7 @@ onBeforeUnmount(() => {
   opacity: 1;
 }
 
-/* 流体背景渐入 */
+/* 背景渐入 */
 .bg-fade-enter-active {
   transition: opacity 0.8s ease-in-out;
 }
@@ -209,14 +172,5 @@ onBeforeUnmount(() => {
 .bg-fade-enter-from,
 .bg-fade-leave-to {
   opacity: 0;
-}
-
-/* 暂停/窗口隐藏时的静态封面降级 */
-.bg-static {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 </style>

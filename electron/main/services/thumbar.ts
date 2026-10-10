@@ -8,7 +8,6 @@ export interface Thumbar {
   clearThumbar(): void;
   updateThumbar(playing: boolean): void;
   updateLike(liked: boolean): void;
-  refreshLocale(): void;
 }
 
 let thumbar: Thumbar | null = null;
@@ -135,15 +134,6 @@ class ThumbarImpl implements Thumbar {
   updateLike(liked: boolean): void {
     this.isLiked = liked;
     this.renderButtons();
-  }
-
-  // 语言变更后刷新 tooltip
-  refreshLocale(): void {
-    this.prev.tooltip = t("prev");
-    this.next.tooltip = t("next");
-    this.play.tooltip = t("play");
-    this.pause.tooltip = t("pause");
-    this.updateThumbar(this.isPlaying);
   }
 
   // 清除工具栏

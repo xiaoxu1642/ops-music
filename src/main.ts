@@ -7,7 +7,6 @@ import router from "./router";
 import i18n from "./i18n";
 
 import { useThemeStore } from "./stores/theme";
-import { useSettingsStore } from "./stores/settings";
 import { useHotkeyStore } from "./stores/hotkey";
 import { initPlayer, restoreLastTrack } from "./core/player";
 import { installHotkeyManager } from "./core/hotkey/manager";
@@ -24,16 +23,6 @@ app.use(i18n);
 
 // 初始化主题
 useThemeStore().init();
-
-// 同步语言设置
-watch(
-  () => useSettingsStore().locale,
-  (v) => {
-    i18n.global.locale.value = v;
-    window.api.system.setLocale(v);
-  },
-  { immediate: true },
-);
 
 /** splash 最短展示时长（ms） */
 const SPLASH_MIN_MS = 1100;

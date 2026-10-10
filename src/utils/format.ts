@@ -9,7 +9,7 @@ export const formatFileSize = (bytes: number): string => {
 /**
  * 按 locale 紧凑展示一个数字，如 `9.9万` / `9.9M`
  * @param value - 原值，非有限数返回空串
- * @param locale - BCP-47 locale，如 "zh-CN" / "en-US"
+ * @param locale - BCP-47 locale，如 "zh-CN"
  */
 export const formatCompact = (value: number | undefined | null, locale: string): string => {
   if (value == null || !Number.isFinite(value)) return "";

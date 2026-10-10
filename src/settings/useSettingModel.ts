@@ -1,5 +1,4 @@
 import { useSettingsStore } from "@/stores/settings";
-import { useThemeStore } from "@/stores/theme";
 import { getByPath, setByPath } from "@shared/utils/path";
 import { virtualBindings } from "./virtualBindings";
 import { computed, type WritableComputedRef } from "vue";
@@ -9,16 +8,9 @@ import { computed, type WritableComputedRef } from "vue";
  * 仅在 SettingsItem 组件内按需调用
  */
 export const useSettingModel = (binding: {
-  store: "settings" | "theme";
+  store: "settings";
   path: string;
 }): WritableComputedRef<any> => {
-  if (binding.store === "theme") {
-    const store = useThemeStore();
-    return computed({
-      get: () => getByPath(store, binding.path),
-      set: (v) => setByPath(store, binding.path, v),
-    });
-  }
   // 虚拟 binding
   const virtual = virtualBindings[binding.path];
   if (virtual) {

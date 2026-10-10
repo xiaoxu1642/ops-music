@@ -166,8 +166,6 @@ const api = {
     showInExplorer: (filePath: string) => ipcRenderer.invoke("system:showInExplorer", filePath),
     // 打开日志目录
     openLogsDir: () => ipcRenderer.invoke("system:openLogsDir"),
-    // 同步语言到主进程
-    setLocale: (locale: string) => ipcRenderer.send("system:setLocale", locale),
     // 显示并聚焦主窗口
     focusMainWindow: () => ipcRenderer.invoke("system:focusMainWindow"),
     // 在主窗口打开设置弹窗
@@ -394,13 +392,6 @@ const api = {
     // 订阅当前曲目歌词偏移变化
     onLyricOffsetChange: (callback: (data: unknown) => void) =>
       subscribe("nowPlaying:lyric-offset-change", callback),
-  },
-  theme: {
-    // 弹出文件选择框
-    pickBackgroundImage: (): Promise<string | null> =>
-      ipcRenderer.invoke("theme:pickBackgroundImage"),
-    // 清空已缓存的背景图
-    clearBackgroundImages: (): Promise<void> => ipcRenderer.invoke("theme:clearBackgroundImages"),
   },
   cache: {
     // 各类别占用统计

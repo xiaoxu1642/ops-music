@@ -9,9 +9,18 @@
       "subtitle": "一个现代化的桌面音乐播放器，完成几步设置即可开始享用",
       "start": "开始设置",
       "features": {
-        "local": { "title": "本地音乐库", "desc": "扫描本地目录，自动整理音乐库" },
-        "quality": { "title": "无损音质", "desc": "原生音频引擎，支持多种无损格式" },
-        "lyrics": { "title": "丰富歌词体验", "desc": "AMLL 逐字歌词，任务栏歌词" }
+        "local": {
+          "title": "本地音乐库",
+          "desc": "扫描本地目录，自动整理音乐库"
+        },
+        "quality": {
+          "title": "无损音质",
+          "desc": "原生音频引擎，支持多种无损格式"
+        },
+        "lyrics": {
+          "title": "丰富歌词体验",
+          "desc": "AMLL 逐字歌词，任务栏歌词"
+        }
       }
     },
     "agreement": {
@@ -24,13 +33,6 @@
     "library": {
       "title": "本地音乐库",
       "subtitle": "添加要扫描的音乐文件夹，Ops Music 会自动建立曲库索引。可以添加多个目录，也可以之后再添加"
-    },
-    "preferences": {
-      "title": "语言与主题",
-      "subtitle": "选择界面语言与主题，进入应用后还可在「设置」中进一步调整",
-      "languageLabel": "界面语言",
-      "modeLabel": "主题模式",
-      "colorLabel": "主色调"
     },
     "hotkeys": {
       "title": "快捷键",
@@ -572,7 +574,6 @@
     "section": {
       "aboutApp": "关于软件",
       "specialThanks": "特别致谢",
-      "language": "语言",
       "playControl": "播放控制",
       "playbackTransition": "播放过渡",
       "audioSource": "播放音源",
@@ -586,8 +587,6 @@
       "lyricSpring": "弹簧动画",
       "lyricLayout": "布局与透明度",
       "taskbarLyric": "任务栏歌词",
-      "theme": "主题与颜色",
-      "appearanceStyle": "外观风格",
       "layout": "布局",
       "playerBar": "播放栏",
       "nowPlaying": "播放页",
@@ -602,7 +601,6 @@
       "downloadGeneral": "下载选项",
       "downloadTags": "写入内容",
       "backupReset": "备份与重置",
-      "debug": "调试",
       "preset": "强迫症配置",
       "envInfo": "环境信息"
     },
@@ -612,10 +610,6 @@
       "date": "日期"
     },
     "storeVersion": "Store",
-    "language": {
-      "label": "界面语言",
-      "description": "切换应用的显示语言"
-    },
     "autoPlay": {
       "label": "自动播放",
       "description": "加载歌曲后自动开始播放"
@@ -1130,32 +1124,6 @@
       "label": "逐字高亮",
       "description": "按单词进度逐字渲染高亮"
     },
-    "playerBgType": {
-      "label": "播放器背景",
-      "description": "全屏播放器的背景类型",
-      "blur": "模糊",
-      "solid": "纯色",
-      "animation": "流体"
-    },
-    "playerBgRenderer": {
-      "label": "渲染引擎",
-      "description": "选择流体背景渲染引擎",
-      "mesh": "网格渐变渲染器",
-      "isolation": "isolation 渲染器",
-      "pixi": "PixiJS 渲染器"
-    },
-    "playerBgFlowSpeed": {
-      "label": "流动速度",
-      "description": "流体背景的动画流动速度"
-    },
-    "playerBgRenderScale": {
-      "label": "渲染缩放",
-      "description": "适当提高可减少分界线锯齿、画面更细腻，但会增加显卡压力"
-    },
-    "playerBgFps": {
-      "label": "动画帧率",
-      "description": "流体背景的渲染帧率，越高越流畅但更耗性能"
-    },
     "coverLayout": {
       "label": "封面布局",
       "description": "全屏播放器封面的呈现方式",
@@ -1165,54 +1133,6 @@
     "coverLyricRatio": {
       "label": "封面/歌词占比",
       "description": "播放页封面与歌词区域的宽度比例"
-    },
-    "themeMode": {
-      "label": "主题模式",
-      "description": "应用的颜色主题",
-      "light": "浅色模式",
-      "dark": "深色模式",
-      "system": "跟随系统"
-    },
-    "themeSource": {
-      "label": "主题色来源",
-      "description": "主题色的获取方式",
-      "default": "默认主题色",
-      "custom": "自定义主色",
-      "cover": "跟随封面 / 背景",
-      "solid": "无主题色"
-    },
-    "customColor": {
-      "label": "自定义主题色",
-      "description": "自定义来源使用的主色"
-    },
-    "globalTint": {
-      "label": "全局着色",
-      "description": "将主题色应用到全局界面"
-    },
-    "appearanceStyle": {
-      "label": "外观风格",
-      "description": "应用主背景的呈现方式",
-      "solid": "纯色背景",
-      "image": "自定义图片"
-    },
-    "backgroundImage": {
-      "label": "背景图片",
-      "description": "选择本地图片作为应用背景",
-      "select": "选择图片",
-      "replace": "更换图片",
-      "clear": "清除"
-    },
-    "backgroundBlur": {
-      "label": "背景模糊",
-      "description": "对背景图片应用高斯模糊"
-    },
-    "backgroundDim": {
-      "label": "遮罩浓度",
-      "description": "叠加的黑色遮罩透明度，越高前景越易读"
-    },
-    "backgroundScale": {
-      "label": "缩放大小",
-      "description": "背景图的缩放倍数"
     },
     "layoutMode": {
       "label": "布局模式",
@@ -1269,10 +1189,6 @@
     "borderlessWindow": {
       "label": "开启无边框窗口",
       "description": "关闭后使用系统原生窗口边框和标题栏"
-    },
-    "showPerformanceMonitor": {
-      "label": "性能监视器",
-      "description": "悬浮显示 FPS / 帧时间 / 内存占用，点击切换指标"
     },
     "taskbarProgress": {
       "label": "任务栏播放进度",

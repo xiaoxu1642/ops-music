@@ -5,10 +5,7 @@ import type { TransitionPreference } from "@shared/types/player";
 import type { CjkTransformMode } from "@shared/types/opencc";
 import type { QualityLevel } from "@/utils/quality";
 
-/** 播放器背景类型 */
-export type PlayerBgType = "blur" | "solid" | "animation";
-/** 流体背景渲染引擎 */
-export type PlayerBgRenderer = "mesh" | "isolation" | "pixi";
+/** 全屏播放器封面布局 */
 export type CoverLayout = "default" | "fullscreen";
 
 /**
@@ -206,16 +203,6 @@ export interface LyricSettings {
 
 /** 播放器设置 */
 export interface PlayerSettings {
-  /** 播放器背景类型 */
-  playerBgType: PlayerBgType;
-  /** 流体背景渲染引擎 */
-  playerBgRenderer: PlayerBgRenderer;
-  /** 流体背景帧率（fps） */
-  playerBgFps: number;
-  /** 流体背景流动速度 */
-  playerBgFlowSpeed: number;
-  /** 流体背景渲染缩放 */
-  playerBgRenderScale: number;
   /** 全屏播放器封面布局 */
   coverLayout: CoverLayout;
   /** 播放页封面/歌词分栏占比（0-1，封面侧宽度） */
@@ -284,8 +271,6 @@ export interface AppearanceSettings {
   closeAction: "quit" | "hide";
   /** 记忆关闭选择 */
   rememberCloseChoice: boolean;
-  /** 性能监视器悬浮卡片 */
-  showPerformanceMonitor: boolean;
 }
 
 /** 强迫症设置 */

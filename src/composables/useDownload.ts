@@ -1,5 +1,5 @@
 import type { Track } from "@shared/types/player";
-import type { DownloadRequest, DownloadTagOptions, DownloadTask } from "@shared/types/download";
+import type { DownloadRequest, DownloadTask } from "@shared/types/download";
 import { QUALITY_LABELS, type QualityLevel } from "@/utils/quality";
 import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/composables/useToast";
@@ -36,26 +36,19 @@ export const useDownload = () => {
 
   /**
    * 构建不含网络解析的下载请求
+   * 歌词格式固定为增强 LRC（逐字），由解析服务序列化
    * @returns 本地曲目返回 null
    */
   const prepareRequest = (track: Track, opts: EnqueueOptions): DownloadRequest | null => {
     if (track.source === "local") return null;
     const download = useSettingsStore().system.download;
     const level = opts.quality ?? download.quality;
-    const tagOptions: DownloadTagOptions = {
-      embedCover: download.embedCover,
-      embedMeta: download.embedMeta,
-      embedLyric: download.embedLyric,
-      writeLrc: download.writeLrc,
-    };
     return {
       taskId: opts.taskId ?? crypto.randomUUID(),
       track,
       qualityLevel: level,
       coverUrl: track.coverOriginal ?? track.cover,
-      tagOptions,
       usePlaybackForDownload: download.usePlaybackForDownload,
-      lyricFileFormat: download.lyricFileFormat,
     };
   };
 

@@ -106,7 +106,7 @@ Rust extracts 300x300 JPEG thumbnail to `{userData}/app-data/cache/covers/` duri
 
 ### i18n
 
-Renderer uses `vue-i18n` with `src/i18n/locales/{zh-CN,en-US}.json`. Main process has a lightweight translation table (`electron/main/utils/i18n.ts`) for tray/thumbar; locale synced via `system:setLocale` IPC.
+Renderer uses `vue-i18n` with a single Chinese locale `src/i18n/locales/zh-CN.json`. Main process has a lightweight Chinese translation table (`electron/main/utils/i18n.ts`) for tray/thumbar.
 
 ### Path Aliases
 
@@ -182,7 +182,7 @@ Double quotes, semicolons, 100-char width, trailing commas.
 
 ### Shared Types
 
-Put cross-process types (`LocaleCode / SystemConfig`, etc.) in `shared/types/`.
+Put cross-process types (`SystemConfig`, etc.) in `shared/types/`.
 
 ### Commit Messages
 

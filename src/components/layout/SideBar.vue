@@ -25,7 +25,7 @@ import SPopselect from "@/components/ui/SPopselect.vue";
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-const { appearance, system: systemSettings } = useSettingsStore();
+const { appearance } = useSettingsStore();
 const status = useStatusStore();
 const playlistStore = usePlaylistStore();
 const userStore = useUserStore();
@@ -183,7 +183,6 @@ const navItems = computed<SMenuItem[]>(() => {
       if (hidden.has(key)) continue;
       const entry = SIDEBAR_NAV_META[key];
       if (!entry) continue;
-      if (key === "/download" && !systemSettings.download.enabled) continue;
       const item: SMenuItem = { key, label: t(entry.labelKey), icon: markRaw(entry.icon) };
       if (key === "/liked") item.trailing = renderHeartModeTrailing;
       if (key === "/download" && downloadStore.activeCount > 0)

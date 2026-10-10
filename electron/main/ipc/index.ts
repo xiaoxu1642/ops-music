@@ -7,7 +7,6 @@ import { registerWindowIpc } from "./window";
 import { registerApisIpc } from "./apis";
 import { registerLyricsIpc } from "./lyrics";
 import { registerHotkeyIpc } from "./hotkey";
-import { registerThemeIpc } from "./theme";
 import { registerCacheIpc } from "./cache";
 import { registerDownloadIpc } from "./download";
 import { registerStatsIpc } from "./stats";
@@ -26,7 +25,6 @@ export const registerIpcHandlers = (): void => {
   registerLyricsIpc();
   registerOpenccIpc();
   registerHotkeyIpc();
-  registerThemeIpc();
   registerPlaylistIpc();
   registerCacheIpc();
   registerDownloadIpc();

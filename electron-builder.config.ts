@@ -28,7 +28,7 @@ const config: Configuration = {
     "!**/node_modules/better-sqlite3/{deps,src}/**",
   ],
   // 保留的语言
-  electronLanguages: ["zh-CN", "en-US"],
+  electronLanguages: ["zh-CN"],
   asarUnpack: ["public/**"],
   extraResources: [
     {

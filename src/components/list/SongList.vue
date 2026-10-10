@@ -378,7 +378,7 @@ defineExpose({
                 <span>{{ t("songList.batch.addToQueue") }}</span>
               </SButton>
               <SButton
-                v-if="source !== 'local' && settings.system.download.enabled"
+                v-if="source !== 'local'"
                 variant="ghost"
                 size="small"
                 :disabled="batch.selectedCount.value === 0"

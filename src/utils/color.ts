@@ -91,8 +91,8 @@ export const hexToRgb = (hex: string): string => {
   return `${parseInt(hex.slice(1, 3), 16)} ${parseInt(hex.slice(3, 5), 16)} ${parseInt(hex.slice(5, 7), 16)}`;
 };
 
-/** 根据主色 HEX 和明暗模式生成色板 */
-export const generatePalette = (hex: string, isDark: boolean, globalTint = false): ThemePalette => {
+/** 根据主色 HEX 和明暗模式生成色板（主色取自传入色，其余沿纯色色板） */
+export const generatePalette = (hex: string, isDark: boolean): ThemePalette => {
   const safeHex = typeof hex === "string" && hex.startsWith("#") ? hex : DEFAULT_PRIMARY;
   const theme: Theme = themeFromSourceColor(argbFromHex(safeHex));
   // 用 secondary palette 生成主色
@@ -109,23 +109,6 @@ export const generatePalette = (hex: string, isDark: boolean, globalTint = false
     onPrimary: isDark ? toneColor(10) : toneColor(100),
     onPrimaryContainer: isDark ? toneColor(90) : toneColor(10),
   };
-  // 全局着色
-  if (globalTint) {
-    return {
-      ...primaryColors,
-      secondary: isDark ? toneColor(80) : toneColor(40),
-      secondaryContainer: isDark ? toneColor(30) : toneColor(90),
-      surface: isDark ? toneColor(20) : toneColor(94),
-      surfaceAlt: isDark ? toneColor(25) : toneColor(86),
-      surfacePanel: isDark ? toneColor(16) : toneColor(92),
-      surfaceBright: isDark ? toneColor(40) : toneColor(95),
-      onSurface: primary,
-      onSurfaceVariant: isDark ? toneColor(70) : toneColor(30),
-      outline: isDark ? toneColor(40) : toneColor(60),
-      outlineVariant: isDark ? toneColor(25) : toneColor(80),
-    };
-  }
-  // 非全局着色
   const base = isDark ? SOLID_PALETTE_DARK : SOLID_PALETTE_LIGHT;
   return { ...base, ...primaryColors };
 };
@@ -245,20 +228,6 @@ const loadColorFromRemote = async (url: string, token: number): Promise<void> =>
     if (token !== coverColorToken) return;
     themeStore.coverColor = null;
   }
-};
-
-/**
- * 从图片 URL 提取主色
- * @returns 主色 HEX 或 null（图片加载失败 / 单调 / 低彩度）
- */
-export const extractColorFromImageUrl = (url: string): Promise<string | null> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(extractColorFromImageElement(img));
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
 };
 
 /**
