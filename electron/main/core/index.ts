@@ -14,7 +14,6 @@ import { initDatabase, closeDatabase } from "@main/database";
 import { init as initSongCache } from "@main/services/songCache";
 import { init as initDownload } from "@main/services/downloadManager";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
-import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
 import { coreLog, initLogger } from "@main/utils/logger";
 
 /**
@@ -92,8 +91,6 @@ export const initApp = (): void => {
     restoreLyricWindows();
     // 注册全局快捷键
     initGlobalHotkey();
-    // 启动 AI 集成 MCP 服务
-    void startMcpServer();
     // 周期记录各进程内存
     setTimeout(logProcessMemory, MEMORY_LOG_FIRST_DELAY_MS);
     setInterval(logProcessMemory, MEMORY_LOG_INTERVAL_MS);
@@ -110,6 +107,5 @@ export const initApp = (): void => {
     coreLog.info("应用即将退出，清理资源");
     shutdownMedia();
     closeDatabase();
-    void stopMcpServer();
   });
 };

@@ -33,7 +33,4 @@ features:
   - icon: 🎨
     title: 自适应主题
     details: 封面取色驱动全站着色，Light / Dark / Auto 自动切换，音乐频谱可视化，细节处处打磨。
-  - icon: 🤖
-    title: MCP 接口
-    details: 内置本机 MCP 服务，支持 AI 客户端查询播放状态、搜索曲库并控制播放。
 ---

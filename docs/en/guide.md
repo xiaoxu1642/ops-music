@@ -46,4 +46,4 @@ Only **taskbar lyrics (Windows)** remain: the current line is drawn inside the W
 
 ## External control
 
-A local MCP service with its own switch lets AI clients inspect and control playback. See the [MCP interface](/en/mcp). The external HTTP and WebSocket APIs were removed as part of this project's scope cut.
+The external HTTP and WebSocket APIs were removed as part of this project's scope cut.

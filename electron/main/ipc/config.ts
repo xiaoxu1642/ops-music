@@ -14,7 +14,6 @@ import {
 import { setTaskbarProgress, applyMainWindowZoom, applyTaskbarLyricLayout } from "@main/window";
 import { broadcast } from "@main/utils/broadcast";
 import { isWin } from "@main/utils/config";
-import { startMcpServer, stopMcpServer } from "@main/services/mcp/http";
 import { setTaskbarThumbnailEnabled } from "@main/services/thumbnail";
 
 /**
@@ -50,9 +49,6 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
       break;
     case "system.taskbarThumbnailCover":
       setTaskbarThumbnailEnabled(value as boolean);
-      break;
-    case "mcp.enabled":
-      void (value ? startMcpServer() : stopMcpServer());
       break;
     case "system.uiZoom":
       applyMainWindowZoom();

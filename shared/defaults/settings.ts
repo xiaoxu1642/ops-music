@@ -71,11 +71,6 @@ export const defaultSystemConfig: SystemConfig = {
     writeLrc: false,
     lyricFileFormat: "enhanced-lrc",
   },
-  mcp: {
-    enabled: false,
-    port: 14559,
-    accessKey: "",
-  },
   system: {
     rememberWindowState: true,
     borderlessWindow: true,

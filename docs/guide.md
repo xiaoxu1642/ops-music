@@ -48,4 +48,4 @@ Ops Music 支持 LRC / QRC / YRC / TTML 多种歌词格式，提供逐字高亮�
 
 ## 外部控制
 
-应用提供独立开关的本机 MCP 服务，可供 AI 客户端查询状态与控制播放，详见 [MCP 接口](/mcp)。面向其他程序的外部 API（HTTP + WebSocket）已随本项目裁剪移除。
+面向其他程序的外部 API（HTTP + WebSocket）已随本项目裁剪移除。

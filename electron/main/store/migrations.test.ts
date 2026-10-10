@@ -66,10 +66,17 @@ afterEach(() => {
 });
 
 describe("退役配置迁移", () => {
-  it("删除退役 key，保留 MCP 与系统媒体控件", () => {
+  it("删除退役 key，保留系统媒体控件", () => {
     const root = asRecord(migrateLegacyArchive());
 
-    for (const key of ["lastfm", "externalApi", "streaming", "desktopLyric", "dynamicIsland"]) {
+    for (const key of [
+      "lastfm",
+      "externalApi",
+      "streaming",
+      "desktopLyric",
+      "dynamicIsland",
+      "mcp",
+    ]) {
       assert.equal(key in root, false, `${key} 应被删除`);
     }
     assert.equal("discord" in asRecord(root.media), false);
@@ -84,9 +91,8 @@ describe("退役配置迁移", () => {
     assert.equal("main" in windowStates, true);
     assert.equal("taskbarLyric" in windowStates, true);
 
-    assert.equal(asRecord(root.mcp).accessKey, "keep-me");
     assert.equal(asRecord(root.media).systemMediaControls, true);
-    assert.equal(root[META_KEY], 1);
+    assert.equal(root[META_KEY], 2);
   });
 
   it("剔除已下线的快捷键动作，保留仍注册的绑定", () => {

@@ -32,7 +32,4 @@ features:
   - icon: 🎨
     title: Adaptive themes
     details: Cover-driven colors, Light, Dark, and Auto modes, spectrum visualization, and carefully polished details.
-  - icon: 🤖
-    title: MCP interface
-    details: A built-in local MCP service lets AI clients inspect playback, search the library, and control the player.
 ---

@@ -1,12 +1,6 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
 import { PlayerApi, TrackSource } from "@shared/types/player";
-import {
-  ConfigApi,
-  LocaleCode,
-  McpClientConfigParams,
-  McpAgentApp,
-  McpStatus,
-} from "@shared/types/settings";
+import { ConfigApi, LocaleCode } from "@shared/types/settings";
 import { LibraryApi } from "@shared/types/library";
 import { NowPlayingApi } from "@shared/types/nowPlaying";
 import { ApisApi } from "@shared/types/apis";
@@ -87,14 +81,6 @@ declare global {
       };
       stats: StatsApi;
       hotkey: HotkeyApi;
-      mcp: {
-        restart: () => Promise<McpStatus>;
-        getStatus: () => Promise<McpStatus>;
-        getClientConfigParams: () => Promise<McpClientConfigParams>;
-        detectAgents: () => Promise<McpAgentApp[]>;
-        injectAgentConfig: (agentId: string, params: McpClientConfigParams) => Promise<boolean>;
-        onStatus: (callback: (status: McpStatus) => void) => () => void;
-      };
     };
   }
 }

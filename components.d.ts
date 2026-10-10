@@ -137,8 +137,6 @@ declare module 'vue' {
     LyricFormatOrderConfig: typeof import('./src/components/settings/custom/LyricFormatOrderConfig.vue')['default']
     Lyrics: typeof import('./src/components/player/Lyrics/index.vue')['default']
     LyricSourceOrderConfig: typeof import('./src/components/settings/custom/LyricSourceOrderConfig.vue')['default']
-    McpConfigDialog: typeof import('./src/components/settings/custom/McpConfigDialog.vue')['default']
-    McpStatusCard: typeof import('./src/components/settings/custom/McpStatusCard.vue')['default']
     NavHeader: typeof import('./src/components/layout/NavHeader.vue')['default']
     NavSearch: typeof import('./src/components/layout/NavSearch.vue')['default']
     NavSearchInput: typeof import('./src/components/layout/NavSearchInput.vue')['default']

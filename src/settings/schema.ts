@@ -5,7 +5,6 @@ import playerCategory from "./categories/player";
 import lyricCategory from "./categories/lyric";
 import externalLyricCategory from "./categories/externalLyric";
 import hotkeysCategory from "./categories/hotkeys";
-import servicesCategory from "./categories/services";
 import downloadCategory from "./categories/download";
 import localCacheCategory from "./categories/localCache";
 import otherCategory from "./categories/other";
@@ -19,7 +18,6 @@ export const settingsSchema: SettingCategory[] = [
   lyricCategory,
   externalLyricCategory,
   hotkeysCategory,
-  servicesCategory,
   downloadCategory,
   localCacheCategory,
   otherCategory,

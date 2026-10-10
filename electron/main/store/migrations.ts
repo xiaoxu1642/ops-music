@@ -59,6 +59,13 @@ const migrations: Migration[] = [
       for (const file of RETIRED_FILES) rmSync(path.join(configDir, file), { force: true });
     },
   },
+  {
+    version: 2,
+    migrate: (data) => {
+      // MCP 服务已退役，清理老存档里遗留的配置
+      delete asLegacy(data).mcp;
+    },
+  },
 ];
 
 /**

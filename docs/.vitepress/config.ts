@@ -13,7 +13,6 @@ const zhTheme: DefaultTheme.Config = {
       text: "开发",
       items: [
         { text: "原生模块", link: "/native" },
-        { text: "MCP 接口", link: "/mcp" },
         { text: "贡献指南", link: "/contributing" },
       ],
     },
@@ -36,10 +35,6 @@ const zhTheme: DefaultTheme.Config = {
         { text: "用户协议", link: "/agreement" },
         { text: "隐私策略", link: "/privacy" },
       ],
-    },
-    {
-      text: "接口",
-      items: [{ text: "MCP 接口", link: "/mcp" }],
     },
     {
       text: "开发",
@@ -86,7 +81,6 @@ const enTheme: DefaultTheme.Config = {
       text: "Development",
       items: [
         { text: "Native Modules", link: "/en/native" },
-        { text: "MCP", link: "/en/mcp" },
         { text: "Contributing", link: "/en/contributing" },
       ],
     },
@@ -109,10 +103,6 @@ const enTheme: DefaultTheme.Config = {
         { text: "User Agreement", link: "/en/agreement" },
         { text: "Privacy Policy", link: "/en/privacy" },
       ],
-    },
-    {
-      text: "Interfaces",
-      items: [{ text: "MCP", link: "/en/mcp" }],
     },
     {
       text: "Development",

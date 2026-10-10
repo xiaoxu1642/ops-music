@@ -30,7 +30,6 @@ vi.mock("@main/utils/broadcast", () => ({ broadcast: mocks.broadcast }));
 vi.mock("@main/services/media", () => ({}));
 vi.mock("@main/services/engine", () => ({}));
 vi.mock("@main/window", () => ({ applyTaskbarLyricLayout: mocks.applyTaskbarLyricLayout }));
-vi.mock("@main/services/mcp/http", () => ({}));
 vi.mock("@main/services/thumbnail", () => ({}));
 
 import { registerConfigIpc } from "./config";

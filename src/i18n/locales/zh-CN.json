@@ -564,7 +564,6 @@
       "externalLyric": "外部歌词",
       "appearance": "外观设置",
       "hotkeys": "快捷键配置",
-      "services": "服务",
       "download": "下载配置",
       "localCache": "本地与缓存",
       "other": "其他设置",
@@ -595,7 +594,6 @@
       "media": "媒体控制",
       "device": "输出设备",
       "hotkeys": "快捷键",
-      "mcp": "MCP",
       "systemConfig": "系统配置",
       "songCache": "歌曲缓存",
       "cache": "缓存管理",
@@ -1293,30 +1291,6 @@
       "description": "选择自动同步 NCM 听歌记录时使用的上报接口",
       "legacy": "原版日志接口",
       "ncbl": "NCBL 加密接口"
-    },
-    "mcpEnabled": {
-      "label": "启用 MCP 服务",
-      "description": "启用本地 MCP 服务，让 AI Agent 接入应用生态，按需扩展能力"
-    },
-    "mcpPort": {
-      "label": "监听端口",
-      "description": "修改端口后需要点击“重启服务”生效（1024–65535）"
-    },
-    "mcpConfigDetails": {
-      "label": "MCP 配置详情",
-      "description": "查看并复制 AI Agent 连接所需的 MCP 配置"
-    },
-    "mcp": {
-      "restart": "重启服务",
-      "restarted": "MCP 服务已重启",
-      "portInUse": "端口 {port} 已被占用，请换一个",
-      "running": "MCP 服务运行中",
-      "stopped": "MCP 服务未运行",
-      "detectHint": "检测到以下 AI Agent 应用，支持的平台可一键写入 MCP 配置",
-      "inject": "一键配置",
-      "notSupported": "暂不支持",
-      "injected": "已配置",
-      "injectSuccess": "配置成功"
     },
     "closeAction": {
       "label": "关闭按钮行为",

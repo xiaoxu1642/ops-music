@@ -1,6 +1,6 @@
 # Type Reference
 
-Core data types used by the application and the MCP interface. A `?` marks an optional field.
+Core data types used by the application. A `?` marks an optional field.
 
 ## Tracks
 

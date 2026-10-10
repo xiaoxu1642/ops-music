@@ -49,10 +49,6 @@ The software provides general client capabilities that request data when initiat
 
 The developers claim no ownership over track URLs, metadata, lyrics, covers, or other third-party content. Your access, storage, use, and distribution must comply with applicable law, authorization from rights holders, and platform terms. Technical capability does not grant rights to third-party content.
 
-### 5.3 MCP interface and automation
-
-The MCP (Model Context Protocol) interface is a neutral local control mechanism. You are responsible for actions, data changes, and security risks caused by AI agents, automation scripts, or other clients using it.
-
 ## 6. Accounts and credentials
 
 Credentials are used only for requested features and remain on your device. The developers do not upload these credentials to a server they control.
