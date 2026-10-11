@@ -12,6 +12,7 @@ import { IpcResponse } from "@shared/types/player";
 import { StatsApi } from "@shared/types/stats";
 import { PlaylistApi } from "@shared/types/playlist";
 import { OpenccApi } from "@shared/types/opencc";
+import { CommentsApi } from "@shared/types/comment";
 
 declare global {
   interface Window {
@@ -46,6 +47,7 @@ declare global {
       apis: ApisApi;
       lyrics: LyricsApi;
       opencc: OpenccApi;
+      comments: CommentsApi;
       download: DownloadApi;
       cache: {
         getStats: () => Promise<{ id: string; kind: "file" | "db"; path: string; size: number }[]>;

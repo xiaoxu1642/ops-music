@@ -12,6 +12,7 @@ import { registerDownloadIpc } from "./download";
 import { registerStatsIpc } from "./stats";
 import { registerPlaylistIpc } from "./playlist";
 import { registerOpenccIpc } from "./opencc";
+import { registerCommentsIpc } from "./comments";
 
 /** 注册所有 IPC 处理 */
 export const registerIpcHandlers = (): void => {
@@ -24,6 +25,7 @@ export const registerIpcHandlers = (): void => {
   registerApisIpc();
   registerLyricsIpc();
   registerOpenccIpc();
+  registerCommentsIpc();
   registerHotkeyIpc();
   registerPlaylistIpc();
   registerCacheIpc();

@@ -12,6 +12,7 @@ import type {
   PlaylistUpdateInput,
 } from "@shared/types/playlist";
 import type { CjkTransformMode } from "@shared/types/opencc";
+import type { MusicCommentQuery } from "@shared/types/comment";
 
 /** 订阅主进程推送的事件 */
 const subscribe = <T>(channel: string, callback: (data: T) => void): (() => void) => {
@@ -333,6 +334,9 @@ const api = {
     // 批量转换文本
     convertBatch: (texts: string[], config: CjkTransformMode): Promise<string[]> =>
       ipcRenderer.invoke("opencc:convertBatch", texts, config),
+  },
+  comments: {
+    get: (args: MusicCommentQuery) => ipcRenderer.invoke("comments:get", args),
   },
   download: {
     // 入队下载

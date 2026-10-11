@@ -46,6 +46,10 @@ import search_suggest_pc from "./search_suggest_pc";
 import lyric from "./lyric";
 import lyric_new from "./lyric_new";
 
+// 评论
+import comment_music from "./comment_music";
+import comment_hot from "./comment_hot";
+
 // 播放
 import song_detail from "./song_detail";
 import song_url from "./song_url";
@@ -127,6 +131,9 @@ export const modules: Record<string, NeteaseModule> = {
 
   lyric,
   lyric_new,
+
+  comment_music,
+  comment_hot,
 
   song_detail,
   song_url,
