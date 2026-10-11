@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { LyricLine } from "@shared/types/lyrics";
 import { useSettingsStore } from "@/stores/settings";
-import AMLLLyrics from "./AMLLLyrics.vue";
 import DefaultLyrics from "./DefaultLyrics.vue";
 import LyricCredit from "./LyricCredit.vue";
+
+// 静态引入会把 @applemusic-like-lyrics/core 及其 7 个 @pixi/* 依赖打进首屏包，
+// 而默认引擎是 physics，懒加载后只有切到 amll 引擎才加载执行这部分
+const AMLLLyrics = defineAsyncComponent(() => import("./AMLLLyrics.vue"));
 
 const props = withDefaults(
   defineProps<{
