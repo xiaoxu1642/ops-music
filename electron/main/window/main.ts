@@ -279,17 +279,47 @@ export const hideMainWindow = (): void => {
   getMainWindow()?.hide();
 };
 
+/** 任务栏进度刷新间隔（毫秒）：系统任务栏的视觉刷新需求远低于播放位置推送率（5Hz） */
+const TASKBAR_PROGRESS_MIN_INTERVAL_MS = 1000;
+
+/** 上次下发任务栏进度的时间，0 表示尚未下发或已清除 */
+let taskbarProgressSentAt = 0;
+
+/** 上次下发的任务栏进度样式，用于识别 paused ⇄ normal 变化 */
+let taskbarProgressMode: "normal" | "paused" | "none" = "none";
+
+/** 实际下发任务栏进度并记录状态 */
+const sendTaskbarProgress = (
+  win: BrowserWindow,
+  progress: number,
+  mode: "normal" | "paused",
+): void => {
+  win.setProgressBar(progress, { mode });
+  taskbarProgressMode = mode;
+  taskbarProgressSentAt = Date.now();
+};
+
 /**
  * 更新任务栏播放进度
+ * 播放位置每 200ms 推一次，逐 tick 下发会让主进程每分钟做约 300 次跨进程调用，
+ * 因此按 TASKBAR_PROGRESS_MIN_INTERVAL_MS 节流；清除、样式变化和首次下发必须直通，不能被节流吞掉
  * @param progress - 进度 0~1，或 -1 清除
  * @param paused - 是否暂停状态（显示暂停样式）
  */
 export const setTaskbarProgress = (progress: number, paused = false): void => {
   const win = getMainWindow();
   if (!win) return;
+
   if (progress < 0) {
+    if (taskbarProgressMode === "none") return;
     win.setProgressBar(-1);
-  } else {
-    win.setProgressBar(progress, { mode: paused ? "paused" : "normal" });
+    taskbarProgressMode = "none";
+    taskbarProgressSentAt = 0;
+    return;
   }
+
+  const mode: "normal" | "paused" = paused ? "paused" : "normal";
+  const modeChanged = mode !== taskbarProgressMode;
+  if (!modeChanged && Date.now() - taskbarProgressSentAt < TASKBAR_PROGRESS_MIN_INTERVAL_MS) return;
+  sendTaskbarProgress(win, progress, mode);
 };
