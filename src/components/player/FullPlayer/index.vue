@@ -56,11 +56,18 @@ const displayTrack = computed(() => media.track ?? status.currentTrack);
 const hasLyric = computed(() => media.parsedLyric.length > 0 || media.lyricLoading);
 const hasTrack = computed(() => !!displayTrack.value);
 
+/** 上次推送给歌词引擎的时间（毫秒），用于识别暂停态下的重复推送 */
+let lastLyricTimeMs = -1;
+
 /** 精确播放时间（毫秒） */
-const { start: startTick, stop: stopTick } = usePlaybackTime((currentMs) => {
-  if (!status.trackLoading && !media.lyricLoading) {
-    lyricRef.value?.setCurrentTime(currentMs + status.lyricOffsetMs, player.isSeeking());
-  }
+const { start: startTick, stop: stopTick } = usePlaybackTime((currentMs, _durationMs, playing) => {
+  if (status.trackLoading || media.lyricLoading) return;
+  const timeMs = currentMs + status.lyricOffsetMs;
+  // 暂停且非 seek 时时间源恒定，逐帧重复推同一个值只是空转（歌词弹簧由引擎自身的 RAF 驱动）；
+  // 播放态、歌词偏移或 seek 任一变化都会重新放行，RAF 不停帧以免恢复时跳变
+  if (!playing && !player.isSeeking() && timeMs === lastLyricTimeMs) return;
+  lastLyricTimeMs = timeMs;
+  lyricRef.value?.setCurrentTime(timeMs, player.isSeeking());
 });
 
 /** 收起满宽限期仍未重开时卸载歌词引擎，触发 AMLL/DefaultLyrics 的真正 dispose */
