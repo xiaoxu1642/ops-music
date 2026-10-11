@@ -5,6 +5,13 @@ import { join } from "path";
 const ICONS_DIR = join(__dirname, "../../public/icons");
 
 /**
+ * 图标缓存
+ * key 为「相对路径 + 尺寸」，主题后缀已经写在路径里，因此 key 空间 = 固定图标集 × 2 主题 × 少量尺寸，
+ * 数量天然有界，无需淘汰规则
+ */
+const iconCache = new Map<string, NativeImage>();
+
+/**
  * 加载图标文件
  * @param relativePath - 相对于 public/icons/ 的路径
  * @param size - 可选，resize 尺寸
@@ -14,8 +21,13 @@ export const loadIcon = (
   relativePath: string,
   size?: { width: number; height: number },
 ): NativeImage => {
+  const key = size ? `${relativePath}|${size.width}x${size.height}` : relativePath;
+  const cached = iconCache.get(key);
+  if (cached) return cached;
   const image = nativeImage.createFromPath(join(ICONS_DIR, relativePath));
-  return size ? image.resize(size) : image;
+  const result = size ? image.resize(size) : image;
+  iconCache.set(key, result);
+  return result;
 };
 
 /**
