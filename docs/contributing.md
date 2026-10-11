@@ -40,7 +40,7 @@ pnpm build:win     # 打包 Windows
 
 ```bash
 # 上面的构建命令默认会构建当前平台和架构的全部 target。可以通过下面的方法指定只打包某些 target
-pnpm build:win portable # 打包 Windows 的便携版格式
+pnpm build:win zip # 打包 Windows 的 zip 免安装版
 # 全部 target 的列表详见 https://www.electron.build/docs/targets
 
 # 仅构建未打包的程序目录，常用于本地测试（在 dist/xxx-unpacked 目录）

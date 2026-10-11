@@ -12,7 +12,7 @@ The list below fetches the latest release for the selected channel from GitHub a
 
 | Channel    | Intended audience       | Releases received           | Example         |
 | ---------- | ----------------------- | --------------------------- | --------------- |
-| **Stable** | Everyday use            | Stable                      | `1.2.1`         |
+| **Stable** | Everyday use            | Stable                      | `1.2.2`         |
 | **Beta**   | Early feature access    | Beta, then Stable           | `1.3.0-beta.1`  |
 | **Alpha**  | Development and testing | Alpha, then Beta and Stable | `1.4.0-alpha.1` |
 
@@ -24,4 +24,4 @@ The channel only selects which kind of Release this page lists. The application 
 
 ## Installation notes
 
-- **Windows:** Only the single-file portable build is provided (no installer). It does not check for or install updates on its own.
+- **Windows:** Only the zip portable build is provided (unzip once, then launch from the extracted folder). It does not check for or install updates on its own.

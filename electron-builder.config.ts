@@ -68,11 +68,8 @@ const config: Configuration = {
     icon: "public/icons/logo.ico",
     artifactName: "${productName}-${version}-${arch}.${ext}",
     forceCodeSigning: false,
-    // 只出免安装版；安装器（NSIS）链路已退役
-    target: ["portable"],
-  },
-  portable: {
-    artifactName: "${productName}-${version}-${arch}-portable.${ext}",
+    // 只出 zip 免安装版：解压一次后直接运行，启动免去单文件自解压开销；安装器（NSIS）链路已退役
+    target: ["zip"],
   },
   npmRebuild: false,
   electronDownload: {

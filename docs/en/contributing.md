@@ -29,7 +29,7 @@ pnpm build
 pnpm build:win
 
 # Build selected electron-builder targets
-pnpm build:win portable
+pnpm build:win zip
 
 # Build unpacked output for local testing
 pnpm build:unpack
