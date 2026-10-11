@@ -16,8 +16,6 @@ export interface WindowApi {
   closeTaskbarLyric: () => Promise<void>;
   /** 查询任务栏歌词窗口是否处于打开状态 */
   isTaskbarLyricOpen: () => Promise<boolean>;
-  /** 自动关闭后用户确认重新打开（不重新武装暂停自动销毁计时） */
-  reopenTaskbarLyric: () => Promise<boolean>;
   /** 取回自动关闭提示（主窗口缺失期间暂存，取后即清） */
   consumeTaskbarLyricAutoClose: () => Promise<TaskbarLyricAutoCloseReason | null>;
   /** 订阅任务栏歌词窗口开关状态变化 */

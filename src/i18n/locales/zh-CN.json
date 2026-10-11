@@ -62,8 +62,6 @@
   "common": {
     "back": "返回",
     "confirm": "确认",
-    "yes": "是",
-    "no": "否",
     "cancel": "取消",
     "close": "关闭",
     "configure": "配置",
@@ -105,7 +103,8 @@
     "location": "来自{location}",
     "page": "第 {page} / {total} 页"
   },
-  "taskbarLyricAutoClosed": "任务栏歌词为节省占用已关闭，是否再次打开？",
+  "taskbarLyricAutoClosed": "任务栏歌词为节省占用已关闭",
+  "taskbarLyricToggle": "任务栏歌词",
   "equalizer": {
     "title": "均衡器",
     "preamp": "前级",

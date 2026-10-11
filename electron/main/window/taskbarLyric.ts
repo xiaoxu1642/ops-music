@@ -437,11 +437,8 @@ const onExplorerRestart = (): void => {
   if (nativeModule) startWatchers(nativeModule);
 };
 
-/**
- * 创建任务栏歌词窗口：加载原生模块、嵌入任务栏 HWND 并启动 watcher
- * @param armPausedTimeout - 是否武装暂停自动销毁计时；用户确认保留的重建场景传 false，等下一次暂停事件
- */
-export const createTaskbarLyricWindow = (armPausedTimeout = true): BrowserWindow | null => {
+/** 创建任务栏歌词窗口：加载原生模块、嵌入任务栏 HWND 并启动 watcher */
+export const createTaskbarLyricWindow = (): BrowserWindow | null => {
   if (process.platform !== "win32") {
     taskbarLog.warn("任务栏歌词仅支持 Windows");
     return null;
@@ -500,7 +497,7 @@ export const createTaskbarLyricWindow = (armPausedTimeout = true): BrowserWindow
   // 创建即接管：播种播放态、订阅播放变化并开始悬停轮询
   startNowPlayingWatch();
   startHoverPoll();
-  startTaskbarLyricAutoClose({ armPausedTimeout, onAutoClose: handleTaskbarLyricAutoClose });
+  startTaskbarLyricAutoClose({ onAutoClose: handleTaskbarLyricAutoClose });
 
   taskbarLyricWindow.once("ready-to-show", () => {
     const win = taskbarLyricWindow;

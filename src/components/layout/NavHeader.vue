@@ -37,6 +37,7 @@ const { isBorderless } = useWindowControls();
     <div class="flex-1 h-full min-w-4" />
     <!-- 右侧 -->
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <TaskbarLyricQuickToggle />
       <NavUser />
       <SButton
         class="app-no-drag shrink-0"

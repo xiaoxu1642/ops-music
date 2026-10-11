@@ -255,8 +255,6 @@ const api = {
     closeTaskbarLyric: () => ipcRenderer.invoke("window:closeTaskbarLyric"),
     // 查询任务栏歌词窗口是否打开
     isTaskbarLyricOpen: () => ipcRenderer.invoke("window:isTaskbarLyricOpen"),
-    // 自动关闭后用户确认重新打开
-    reopenTaskbarLyric: () => ipcRenderer.invoke("window:reopenTaskbarLyric"),
     // 取回自动关闭提示（主窗口缺失期间暂存，取后即清）
     consumeTaskbarLyricAutoClose: () => ipcRenderer.invoke("window:consumeTaskbarLyricAutoClose"),
     // 订阅任务栏歌词窗口开关状态

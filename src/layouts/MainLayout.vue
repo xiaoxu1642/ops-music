@@ -3,7 +3,7 @@ import { useStatusStore } from "@/stores/status";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
 import { useExternalFileHandler } from "@/composables/useExternalFileHandler";
-import { toast } from "@/composables/useToast";
+import { toast, type ToastInstance } from "@/composables/useToast";
 
 const route = useRoute();
 const status = useStatusStore();
@@ -15,34 +15,39 @@ useExternalFileHandler();
 const { t } = useI18n();
 
 /**
- * 任务栏歌词被自动关闭（全屏应用/长时间暂停）后询问是否重开
- * 只弹应用内 toast，不 show/focus 主窗口，避免抢走全屏应用的前台
+ * 任务栏歌词被自动关闭（全屏应用/长时间暂停）后的告知
+ * 只弹应用内 toast 停留 10 分钟，不 show/focus 主窗口；
+ * 用户手动打开任务栏歌词或超时后自动消失
  */
+let taskbarLyricAutoCloseToast: ToastInstance | null = null;
 const showTaskbarLyricAutoCloseToast = (): void => {
-  toast.info(t("taskbarLyricAutoClosed"), {
+  taskbarLyricAutoCloseToast?.close();
+  taskbarLyricAutoCloseToast = toast.info(t("taskbarLyricAutoClosed"), {
     sticky: true,
-    actions: [
-      {
-        label: t("common.yes"),
-        onClick: () => {
-          window.api.window.reopenTaskbarLyric().catch(() => {});
-        },
-      },
-      { label: t("common.no") },
-    ],
+    duration: 10 * 60 * 1000,
   });
 };
 
 let unsubscribeTaskbarLyricAutoClosed: (() => void) | null = null;
+let unsubscribeTaskbarLyricVisibility: (() => void) | null = null;
 onMounted(async () => {
   unsubscribeTaskbarLyricAutoClosed = window.api.window.onTaskbarLyricAutoClosed(() => {
     showTaskbarLyricAutoCloseToast();
+  });
+  // 用户重新打开任务栏歌词后撤下提示
+  unsubscribeTaskbarLyricVisibility = window.api.window.onTaskbarLyricVisibilityChange((open) => {
+    if (!open) return;
+    taskbarLyricAutoCloseToast?.close();
+    taskbarLyricAutoCloseToast = null;
   });
   // 主窗口不存在期间暂存的提示在此补发
   const pending = await window.api.window.consumeTaskbarLyricAutoClose();
   if (pending) showTaskbarLyricAutoCloseToast();
 });
-onBeforeUnmount(() => unsubscribeTaskbarLyricAutoClosed?.());
+onBeforeUnmount(() => {
+  unsubscribeTaskbarLyricAutoClosed?.();
+  unsubscribeTaskbarLyricVisibility?.();
+});
 
 /** 有歌曲信息时显示播放栏 */
 const showPlayerBar = computed(() => !!useMediaStore().track);

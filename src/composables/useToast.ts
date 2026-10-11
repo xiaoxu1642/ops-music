@@ -2,14 +2,6 @@ import type { Component } from "vue";
 
 export type ToastType = "default" | "info" | "success" | "warning" | "error" | "loading";
 
-/** toast 操作按钮 */
-export interface ToastActionItem {
-  /** 按钮文案 */
-  label: string;
-  /** 点击回调（点击后 toast 自动关闭） */
-  onClick?: () => void;
-}
-
 export interface ToastOptions {
   /** 持续时长（毫秒），0 表示不自动关闭，默认 3000 */
   duration?: number;
@@ -17,10 +9,8 @@ export interface ToastOptions {
   closable?: boolean;
   /** 自定义图标组件，传 false 隐藏图标 */
   icon?: Component | false;
-  /** 常驻：不自动关闭，且空间不足时不被挤出（需用户显式操作） */
+  /** 常驻标记：空间不足时不参与挤出；是否自动关闭仍由 duration 决定 */
   sticky?: boolean;
-  /** 操作按钮 */
-  actions?: ToastActionItem[];
 }
 
 export interface ToastInstance {
@@ -37,7 +27,6 @@ export interface ToastItem {
   closable: boolean;
   icon: Component | false | undefined;
   sticky: boolean;
-  actions?: ToastActionItem[];
 }
 
 /** 最大同时显示数量，由组件注册时设置 */
@@ -71,7 +60,7 @@ const remove = (id: number): void => {
  * @returns toast 实例
  */
 const push = (type: ToastType, message: string, options?: ToastOptions): ToastInstance => {
-  const { duration = 3000, closable = false, icon, sticky = false, actions } = options ?? {};
+  const { duration = 3000, closable = false, icon, sticky = false } = options ?? {};
   while (toasts.length >= maxToasts) {
     // 挤出最旧的非 sticky toast；全是 sticky 时不再挤入新弹
     const idx = toasts.findIndex((t) => !t.sticky);
@@ -79,8 +68,8 @@ const push = (type: ToastType, message: string, options?: ToastOptions): ToastIn
     remove(toasts[idx].id);
   }
   const id = nextId++;
-  toasts.push({ id, type, message, closable, icon, sticky, actions });
-  if (!sticky && duration > 0) {
+  toasts.push({ id, type, message, closable, icon, sticky });
+  if (duration > 0) {
     timers.set(
       id,
       setTimeout(() => remove(id), duration),

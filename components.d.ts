@@ -233,6 +233,7 @@ declare module 'vue' {
     SwitchRoot: typeof import('reka-ui')['SwitchRoot']
     SwitchThumb: typeof import('reka-ui')['SwitchThumb']
     TagEditorDialog: typeof import('./src/components/modals/TagEditorDialog.vue')['default']
+    TaskbarLyricQuickToggle: typeof import('./src/components/layout/TaskbarLyricQuickToggle.vue')['default']
     Toolbar: typeof import('./src/components/player/Toolbar.vue')['default']
     TooltipContent: typeof import('reka-ui')['TooltipContent']
     TooltipPortal: typeof import('reka-ui')['TooltipPortal']

@@ -1,22 +1,11 @@
 <script setup lang="ts">
-import {
-  useToast,
-  setMaxToasts,
-  type ToastType,
-  type ToastActionItem,
-} from "@/composables/useToast";
+import { useToast, setMaxToasts, type ToastType } from "@/composables/useToast";
 
 const props = withDefaults(defineProps<{ max?: number }>(), { max: 5 });
 
 setMaxToasts(props.max);
 
 const { toasts, remove } = useToast();
-
-/** 点击操作按钮：先执行回调再关闭 toast */
-const onAction = (id: number, action: ToastActionItem): void => {
-  action.onClick?.();
-  remove(id);
-};
 
 /** 图标色 */
 const iconStyles: Record<ToastType, string> = {
@@ -95,16 +84,6 @@ const onBeforeLeave = (el: Element): void => {
             </template>
           </template>
           <span>{{ item.message }}</span>
-          <div v-if="item.actions?.length" class="flex shrink-0 items-center gap-1.5">
-            <button
-              v-for="action in item.actions"
-              :key="action.label"
-              class="shrink-0 px-2 py-0.5 rounded-md border-none bg-primary text-on-primary text-xs cursor-pointer transition-colors duration-200 hover:bg-primary/90"
-              @click="onAction(item.id, action)"
-            >
-              {{ action.label }}
-            </button>
-          </div>
           <button
             v-if="item.closable"
             class="shrink-0 p-0 border-none bg-transparent opacity-40 hover:opacity-100 cursor-pointer text-current leading-0 transition-opacity duration-200"

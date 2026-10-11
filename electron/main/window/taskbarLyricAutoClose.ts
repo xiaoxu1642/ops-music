@@ -14,11 +14,6 @@ const PAUSE_AUTO_CLOSE_MS = 5 * 60 * 1000;
 export interface TaskbarLyricAutoCloseOptions {
   /** 命中条件时回调（由调用方负责销毁窗口与提示用户） */
   onAutoClose: (reason: TaskbarLyricAutoCloseReason) => void;
-  /**
-   * 启动时若已处于暂停，是否立即武装暂停计时
-   * 用户明确要求保留（"是"重建）的场景传 false，等下一次「播放 → 暂停」转变再武装
-   */
-  armPausedTimeout?: boolean;
 }
 
 let nativeModule: TaskbarLyricNative | null = null;
@@ -49,7 +44,9 @@ const armPauseTimer = (): void => {
 /**
  * 开始自动销毁监听：全屏应用检测轮询 + 暂停时长计时
  * 窗口创建后调用；窗口销毁时必须调用 stopTaskbarLyricAutoClose
- * @param options - 回调与初始武装配置
+ * 暂停计时只在观察到「播放 → 暂停」转变后武装——创建时已处于暂停不立即计时，
+ * 避免用户手动打开歌词后又被自动关闭形成循环烦扰
+ * @param options - 回调配置
  */
 export const startTaskbarLyricAutoClose = (options: TaskbarLyricAutoCloseOptions): void => {
   stopTaskbarLyricAutoClose();
@@ -71,7 +68,6 @@ export const startTaskbarLyricAutoClose = (options: TaskbarLyricAutoCloseOptions
     taskbarLog.warn("全屏检测不可用：原生模块未加载");
   }
 
-  if (options.armPausedTimeout !== false && paused) armPauseTimer();
   unsubscribeNowPlaying = nowPlaying.onPositionSync((data) => {
     if (data.state === "paused") {
       if (paused) return;
