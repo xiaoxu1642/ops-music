@@ -77,6 +77,14 @@ export const getAllTracks = (): Track[] => {
 const excludeCueContainer = (col = "path"): string =>
   `${col} NOT IN (SELECT cue_audio_path FROM tracks WHERE cue_audio_path IS NOT NULL)`;
 
+/** 曲库展示用曲目列表：直接排除被 CUE 分轨引用的容器整轨，避免回 JS 再建集合过滤 */
+export const getLibraryTracks = (): Track[] => {
+  const rows = getDb()
+    .prepare(`SELECT * FROM tracks WHERE ${excludeCueContainer()}`)
+    .all() as TrackRow[];
+  return rows.map(rowToTrack);
+};
+
 /** 获取曲目总数（不含 CUE 容器整轨） */
 export const getTrackCount = (): number => {
   const row = getDb()

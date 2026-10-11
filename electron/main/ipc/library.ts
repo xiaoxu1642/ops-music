@@ -2,7 +2,7 @@ import { ipcMain, dialog } from "electron";
 import fs from "node:fs/promises";
 import { store } from "@main/store";
 import {
-  getAllTracks,
+  getLibraryTracks,
   searchTracks,
   getTrackCount,
   deleteTracksByDir,
@@ -52,13 +52,7 @@ export const registerLibraryIpc = (): void => {
   // 获取全部曲目（隐藏被 CUE 分轨引用的容器整轨；容器仍留在库中供扫描器读取时长）
   ipcMain.handle("library:getTracks", () => {
     try {
-      const all = getAllTracks();
-      const containerPaths = new Set<string>();
-      for (const track of all) {
-        if (track.cueAudioPath) containerPaths.add(track.cueAudioPath);
-      }
-      const data = all.filter((track) => !track.path || !containerPaths.has(track.path));
-      return { success: true, data };
+      return { success: true, data: getLibraryTracks() };
     } catch (_error) {
       return { success: false, error: ErrorCode.UNKNOWN };
     }

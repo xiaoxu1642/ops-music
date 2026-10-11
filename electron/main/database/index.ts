@@ -57,6 +57,13 @@ export const initDatabase = (): void => {
     );
     CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
     CREATE INDEX IF NOT EXISTS idx_tracks_album ON tracks(album);
+    -- excludeCueContainer() 的 NOT IN 子查询出现在每条列表/计数/统计 SQL 上，
+    -- 没有索引时每次都要再全表扫一遍 tracks
+    CREATE INDEX IF NOT EXISTS idx_tracks_cue_audio
+      ON tracks(cue_audio_path) WHERE cue_audio_path IS NOT NULL;
+    -- 专辑维度查询走 json_extract(album,'$.name')，函数表达式用不上 idx_tracks_album
+    CREATE INDEX IF NOT EXISTS idx_tracks_album_name
+      ON tracks(json_extract(album, '$.name'));
 
     CREATE TABLE IF NOT EXISTS account_sessions (
       platform TEXT PRIMARY KEY,
@@ -167,6 +174,7 @@ export const closeDatabase = (): void => {
 
 export {
   getAllTracks,
+  getLibraryTracks,
   getTrackCount,
   getFileRecords,
   getCueTrackPathsByDirs,
