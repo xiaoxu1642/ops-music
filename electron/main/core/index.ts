@@ -81,6 +81,7 @@ export const initApp = (): void => {
   configureMemoryOptimizations();
   // 初始化日志
   initLogger();
+  coreLog.info(`启动耗时｜日志就绪 ${Math.round(process.uptime() * 1000)}ms`);
   // 单例锁
   const gotLock = app.requestSingleInstanceLock();
   if (!gotLock) {
@@ -124,6 +125,7 @@ export const initApp = (): void => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
     coreLog.info("应用初始化完成");
+    coreLog.info(`启动耗时｜应用初始化完成 ${Math.round(process.uptime() * 1000)}ms`);
     // 主界面帧率跟随显示器刷新率（Windows 下 Electron 无普通窗口限帧 API，setFrameRate 仅离屏渲染可用）
     // 这里只如实记录刷新率，便于排查"实际跑 60"的疑问
     const { displayFrequency } = screen.getPrimaryDisplay();

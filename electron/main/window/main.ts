@@ -90,6 +90,7 @@ export const createMainWindow = (): BrowserWindow => {
 
   // 窗口内容就绪
   mainWindow.once("ready-to-show", () => {
+    coreLog.info(`启动耗时｜主窗口首次显示 ${Math.round(process.uptime() * 1000)}ms`);
     mainWindow?.show();
   });
 
