@@ -189,13 +189,14 @@ const cleanupOrphans = async (): Promise<void> => {
     }
   }
 
+  // 目录内容已经读过，直接比对集合，避免对每个已知文件发一次同步 existsSync
+  const present = new Set(entries);
   let missingRows = 0;
   for (const filename of known) {
-    if (!fs.existsSync(path.join(cacheDir, filename))) {
-      const row = findByFilename(filename);
-      if (row) deleteByKey(row.cacheKey);
-      missingRows += 1;
-    }
+    if (present.has(filename)) continue;
+    const row = findByFilename(filename);
+    if (row) deleteByKey(row.cacheKey);
+    missingRows += 1;
   }
 
   songCacheLog.info(
