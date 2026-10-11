@@ -23,8 +23,8 @@ const safeCall = (fn: () => void): void => {
 
 /**
  * 按需加载并初始化原生模块
- * 首次真正用到媒体集成（播放、启用、音量等）时才载入 .node，
- * 不用系统媒体控制的场景主进程不再常驻模块内存
+ * 只在系统媒体控件启用时调用（各 setter 与 enable 都做配置门控），
+ * 关闭态下 media-ctrl.node 不再进入主进程内存
  */
 const ensureLoaded = (): MediaCtrlModule | null => {
   if (loaded) return mc;
@@ -41,16 +41,17 @@ const ensureLoaded = (): MediaCtrlModule | null => {
     mc.onEvent((event) => {
       eventHandler?.(event);
     });
-    const mediaConfig = store.get("media");
-    if (mediaConfig.systemMediaControls) {
-      mc.enable();
-    }
+    // initialize 内部把 SMTC 的 IsEnabled 置 false，必须再 enable 才会接管系统媒体会话
+    mc.enable();
     mediaLog.info("系统媒体控件已初始化");
   } catch (error) {
     mediaLog.error("初始化失败:", error);
   }
   return mc;
 };
+
+/** 是否启用系统媒体控件；关闭时连原生模块都不加载 */
+const isEnabled = (): boolean => !!store.get("media.systemMediaControls");
 
 /** 启用系统媒体控件 */
 export const enable = (): void => safeCall(() => ensureLoaded()?.enable());
@@ -67,20 +68,31 @@ export const onEvent = (handler: (event: MediaEvent) => void): void => {
 };
 
 /** 更新歌曲元数据 */
-export const setMetadata = (param: MetadataParam): void =>
+export const setMetadata = (param: MetadataParam): void => {
+  if (!isEnabled()) return;
   safeCall(() => ensureLoaded()?.setMetadata(param));
+};
 
 /** 更新播放状态 */
-export const setPlayState = (param: PlayStateParam): void =>
+export const setPlayState = (param: PlayStateParam): void => {
+  if (!isEnabled()) return;
   safeCall(() => ensureLoaded()?.setPlayState(param));
+};
 
 /** 更新播放进度 */
-export const setTimeline = (param: TimelineParam): void =>
+export const setTimeline = (param: TimelineParam): void => {
+  if (!isEnabled()) return;
   safeCall(() => ensureLoaded()?.setTimeline(param));
+};
 
 /** 更新播放速率 */
-export const setRate = (rate: number): void => safeCall(() => ensureLoaded()?.setRate(rate));
+export const setRate = (rate: number): void => {
+  if (!isEnabled()) return;
+  safeCall(() => ensureLoaded()?.setRate(rate));
+};
 
 /** 更新音量 */
-export const setVolume = (volume: number): void =>
+export const setVolume = (volume: number): void => {
+  if (!isEnabled()) return;
   safeCall(() => ensureLoaded()?.setVolume(volume));
+};
