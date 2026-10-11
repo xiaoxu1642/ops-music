@@ -73,7 +73,6 @@ const {
         :item-height="72"
         :padding-top="32"
         :padding-bottom="32"
-        item-fixed
         cover
         height="100%"
         :default-scroll-index="Math.max(0, statusStore.playIndex)"
@@ -95,7 +94,7 @@ const {
                 v-if="index === statusStore.playIndex"
                 class="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-cover"
               />
-              <SImg :src="withPicSize(item.cover, 150)" class="size-12 rounded-lg shrink-0" />
+              <SImg :src="withPicSize(item.cover, 96)" class="size-12 rounded-lg shrink-0" />
               <div class="flex-1 min-w-0">
                 <div class="text-base truncate font-medium leading-snug">{{ item.title }}</div>
                 <div

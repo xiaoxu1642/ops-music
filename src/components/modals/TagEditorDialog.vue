@@ -282,7 +282,7 @@ const handleSave = async (): Promise<void> => {
             @keydown.enter="applyCandidate(candidate)"
           >
             <SImg
-              :src="withPicSize(candidate.track.cover, 150)"
+              :src="withPicSize(candidate.track.cover, 96)"
               class="size-10 shrink-0 rounded-md overflow-hidden"
             />
             <div class="flex flex-col min-w-0 flex-1">

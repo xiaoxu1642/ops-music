@@ -127,7 +127,6 @@ defineExpose({ playAll });
     :items="tasks"
     :item-height="88"
     :get-item-key="(task: DownloadTask) => task.taskId"
-    item-fixed
     height="100%"
     :padding-bottom="80"
   >
@@ -186,7 +185,7 @@ defineExpose({ playAll });
           </div>
           <!-- 信息 -->
           <div class="flex-1 min-w-0 flex items-center gap-3">
-            <SImg :src="withPicSize(item.track.cover, 150)" class="size-12 rounded-lg shrink-0" />
+            <SImg :src="withPicSize(item.track.cover, 96)" class="size-12 rounded-lg shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="flex items-baseline gap-1.5 min-w-0">
                 <span

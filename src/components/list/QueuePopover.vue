@@ -94,7 +94,6 @@ const onClear = (): void => {
         ref="listRef"
         :items="queue"
         :item-height="56"
-        item-fixed
         height="100%"
         :default-scroll-index="Math.max(0, statusStore.playIndex)"
         :get-item-key="(item: Track) => item.id"
@@ -120,7 +119,7 @@ const onClear = (): void => {
               @mousedown="handlePointerDown($event, index, item.title)"
               @touchstart.passive="handlePointerDown($event, index, item.title)"
             >
-              <SImg :src="withPicSize(item.cover, 150)" class="size-9 rounded shrink-0" />
+              <SImg :src="withPicSize(item.cover, 96)" class="size-9 rounded shrink-0" />
               <div class="flex-1 min-w-0">
                 <div class="text-xs truncate font-medium leading-tight">{{ item.title }}</div>
                 <div

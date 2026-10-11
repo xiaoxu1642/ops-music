@@ -196,7 +196,7 @@ const openAlbum = (item: CoverItem): void => {
             </span>
             <div class="relative size-12 shrink-0">
               <SImg
-                :src="withPicSize(item.track.cover, 150)"
+                :src="withPicSize(item.track.cover, 96)"
                 :alt="item.track.title"
                 class="size-12 rounded-lg"
               />

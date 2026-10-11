@@ -117,7 +117,7 @@ const handlePick = async (playlistId: string): Promise<void> => {
         @click="handlePick(entry.id)"
       >
         <SImg
-          :src="withPicSize(entry.cover, 150)"
+          :src="withPicSize(entry.cover, 96)"
           :alt="entry.name"
           class="size-12 rounded-md shrink-0"
         />

@@ -302,7 +302,7 @@ defineExpose({
       <template #header>
         <div v-if="contextTrack">
           <div class="flex items-center gap-1.5 px-1 py-1">
-            <SImg :src="withPicSize(contextTrack.cover, 150)" class="size-9 rounded-md shrink-0" />
+            <SImg :src="withPicSize(contextTrack.cover, 96)" class="size-9 rounded-md shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="text-xs font-medium truncate">
                 {{ contextTrack.title }}
@@ -320,7 +320,6 @@ defineExpose({
         :item-height="88"
         :padding-bottom="isFloatingPlayerBar ? PLAYER_BAR_GAP : 80"
         :get-item-key="(item: Track) => item.id"
-        item-fixed
         height="100%"
         @scroll="onScroll"
         @reach-bottom="emit('reachBottom')"
@@ -568,7 +567,7 @@ defineExpose({
               </div>
               <!-- 信息 -->
               <div class="flex-1 min-w-0 flex items-center gap-3">
-                <SImg :src="withPicSize(item.cover, 150)" class="size-12 rounded-lg shrink-0" />
+                <SImg :src="withPicSize(item.cover, 96)" class="size-12 rounded-lg shrink-0" />
                 <div class="flex-1 min-w-0">
                   <div class="flex items-baseline gap-1.5 min-w-0">
                     <span
