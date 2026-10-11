@@ -39,6 +39,14 @@ export declare class UiaWatcher {
 }
 export type NapiUiaWatcher = UiaWatcher
 
+/**
+ * 检测系统当前是否运行着全屏应用（含 D3D 独占全屏与演示模式）
+ *
+ * 由 shell 的 SHQueryUserNotificationState 判定：普通最大化窗口不会命中；
+ * 全屏游戏 / 全屏视频返回 BUSY 或 RUNNING_D3D_FULL_SCREEN，演示模式返回 PRESENTATION_MODE
+ */
+export declare function isFullscreenAppRunning(): boolean
+
 export interface JsAvailableSpace {
   left: JsRect
   right: JsRect

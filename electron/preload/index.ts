@@ -2,6 +2,7 @@ import os from "os";
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
 import type { TaskbarLyricSettings } from "@shared/types/settings";
+import type { TaskbarLyricAutoClosePayload } from "@shared/types/window";
 import type { HotkeyActionId, HotkeyBinding, HotkeyConflict } from "@shared/types/hotkey";
 import type { LoadOptions, TrackSource, TransitionPreference } from "@shared/types/player";
 import type { PlayEventInput, FavoriteEventInput } from "@shared/types/stats";
@@ -254,9 +255,16 @@ const api = {
     closeTaskbarLyric: () => ipcRenderer.invoke("window:closeTaskbarLyric"),
     // 查询任务栏歌词窗口是否打开
     isTaskbarLyricOpen: () => ipcRenderer.invoke("window:isTaskbarLyricOpen"),
+    // 自动关闭后用户确认重新打开
+    reopenTaskbarLyric: () => ipcRenderer.invoke("window:reopenTaskbarLyric"),
+    // 取回自动关闭提示（主窗口缺失期间暂存，取后即清）
+    consumeTaskbarLyricAutoClose: () => ipcRenderer.invoke("window:consumeTaskbarLyricAutoClose"),
     // 订阅任务栏歌词窗口开关状态
     onTaskbarLyricVisibilityChange: (callback: (open: boolean) => void) =>
       subscribe<boolean>("taskbarLyric:visibilityChange", callback),
+    // 订阅任务栏歌词自动关闭推送
+    onTaskbarLyricAutoClosed: (callback: (payload: TaskbarLyricAutoClosePayload) => void) =>
+      subscribe<TaskbarLyricAutoClosePayload>("taskbarLyric:autoClosed", callback),
     // 主窗口控制
     minimize: () => ipcRenderer.send("window:minimize"),
     toggleMaximize: () => ipcRenderer.send("window:toggleMaximize"),

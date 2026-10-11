@@ -24,6 +24,25 @@ mod uia;
 mod uia_watcher;
 mod utils;
 
+/// 检测系统当前是否运行着全屏应用（含 D3D 独占全屏与演示模式）
+///
+/// 由 shell 的 SHQueryUserNotificationState 判定：普通最大化窗口不会命中；
+/// 全屏游戏 / 全屏视频返回 BUSY 或 RUNNING_D3D_FULL_SCREEN，演示模式返回 PRESENTATION_MODE
+#[napi]
+pub fn is_fullscreen_app_running() -> bool {
+    use windows::Win32::UI::Shell::{
+        SHQueryUserNotificationState, QUNS_BUSY, QUNS_PRESENTATION_MODE, QUNS_RUNNING_D3D_FULL_SCREEN,
+    };
+    match unsafe { SHQueryUserNotificationState() } {
+        Ok(state) => {
+            state == QUNS_BUSY
+                || state == QUNS_RUNNING_D3D_FULL_SCREEN
+                || state == QUNS_PRESENTATION_MODE
+        }
+        Err(_) => false,
+    }
+}
+
 // --- NAPI 数据类型 ---
 
 #[napi(object)]

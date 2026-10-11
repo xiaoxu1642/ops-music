@@ -23,6 +23,7 @@ export {
   isTaskbarLyricPresented,
   applyTaskbarLyricLayout,
   updateTaskbarLyricContentWidth,
+  consumeTaskbarLyricAutoCloseNotice,
 } from "./taskbarLyric";
 
 /** 恢复歌词相关窗口 */

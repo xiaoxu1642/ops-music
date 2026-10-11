@@ -1,5 +1,13 @@
 import type { TaskbarLyricSettings } from "./settings";
 
+/** 任务栏歌词自动关闭原因 */
+export type TaskbarLyricAutoCloseReason = "fullscreen" | "paused";
+
+/** 任务栏歌词自动关闭推送负载 */
+export interface TaskbarLyricAutoClosePayload {
+  reason: TaskbarLyricAutoCloseReason;
+}
+
 /** 窗口管理 API */
 export interface WindowApi {
   /** 切换任务栏歌词窗口 */
@@ -8,8 +16,16 @@ export interface WindowApi {
   closeTaskbarLyric: () => Promise<void>;
   /** 查询任务栏歌词窗口是否处于打开状态 */
   isTaskbarLyricOpen: () => Promise<boolean>;
+  /** 自动关闭后用户确认重新打开（不重新武装暂停自动销毁计时） */
+  reopenTaskbarLyric: () => Promise<boolean>;
+  /** 取回自动关闭提示（主窗口缺失期间暂存，取后即清） */
+  consumeTaskbarLyricAutoClose: () => Promise<TaskbarLyricAutoCloseReason | null>;
   /** 订阅任务栏歌词窗口开关状态变化 */
   onTaskbarLyricVisibilityChange: (callback: (open: boolean) => void) => () => void;
+  /** 订阅任务栏歌词自动关闭推送 */
+  onTaskbarLyricAutoClosed: (
+    callback: (payload: TaskbarLyricAutoClosePayload) => void,
+  ) => () => void;
   /** 最小化主窗口 */
   minimize: () => void;
   /** 切换最大化 / 还原 */

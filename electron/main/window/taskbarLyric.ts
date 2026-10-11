@@ -3,6 +3,9 @@ import { join } from "path";
 import { is } from "@electron-toolkit/utils";
 import { createWindow } from "./create";
 import { isTaskbarLyricPresentationShown } from "./taskbarLyricPresentation";
+import { getMainWindow } from "./main";
+import { startTaskbarLyricAutoClose, stopTaskbarLyricAutoClose } from "./taskbarLyricAutoClose";
+import type { TaskbarLyricAutoCloseReason } from "@shared/types/window";
 import { loadNativeModule } from "@main/utils/nativeLoader";
 import { broadcast } from "@main/utils/broadcast";
 import { setTrayTaskbarLyric } from "@main/services/tray";
@@ -67,6 +70,8 @@ let pauseCollapseTimer: NodeJS.Timeout | null = null;
 let hoverPollTimer: NodeJS.Timeout | null = null;
 /** nowPlaying 播放态订阅取消函数 */
 let unsubscribeNowPlaying: (() => void) | null = null;
+/** 主窗口缺失期间暂存的自动关闭提示原因 */
+let pendingAutoCloseReason: TaskbarLyricAutoCloseReason | null = null;
 
 interface ActiveWindowRegion {
   x: number;
@@ -132,6 +137,26 @@ const sendHover = (win: BrowserWindow | null, hovered: boolean): void => {
 const sendCollapse = (win: BrowserWindow | null, collapsed: boolean): void => {
   if (!win || win.isDestroyed()) return;
   win.webContents.send("taskbarLyric:collapseChange", collapsed);
+};
+
+/**
+ * 自动销毁回调：关闭窗口并提示用户
+ * 主窗口不在（被闲置销毁）时把提示暂存，等其重建后由渲染端取回
+ * 只发事件、不 show/focus，避免抢走全屏应用的前台
+ */
+const handleTaskbarLyricAutoClose = (reason: TaskbarLyricAutoCloseReason): void => {
+  taskbarLog.info(
+    reason === "fullscreen"
+      ? "检测到全屏应用，自动关闭任务栏歌词以节省占用"
+      : "暂停超过 5 分钟，自动关闭任务栏歌词以节省占用",
+  );
+  closeTaskbarLyricWindow();
+  const mainWin = getMainWindow();
+  if (mainWin && !mainWin.isDestroyed()) {
+    mainWin.webContents.send("taskbarLyric:autoClosed", { reason });
+  } else {
+    pendingAutoCloseReason = reason;
+  }
 };
 
 /** 取消暂停折叠计时器 */
@@ -412,8 +437,11 @@ const onExplorerRestart = (): void => {
   if (nativeModule) startWatchers(nativeModule);
 };
 
-/** 创建任务栏歌词窗口：加载原生模块、嵌入任务栏 HWND 并启动 watcher */
-export const createTaskbarLyricWindow = (): BrowserWindow | null => {
+/**
+ * 创建任务栏歌词窗口：加载原生模块、嵌入任务栏 HWND 并启动 watcher
+ * @param armPausedTimeout - 是否武装暂停自动销毁计时；用户确认保留的重建场景传 false，等下一次暂停事件
+ */
+export const createTaskbarLyricWindow = (armPausedTimeout = true): BrowserWindow | null => {
   if (process.platform !== "win32") {
     taskbarLog.warn("任务栏歌词仅支持 Windows");
     return null;
@@ -472,6 +500,7 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
   // 创建即接管：播种播放态、订阅播放变化并开始悬停轮询
   startNowPlayingWatch();
   startHoverPoll();
+  startTaskbarLyricAutoClose({ armPausedTimeout, onAutoClose: handleTaskbarLyricAutoClose });
 
   taskbarLyricWindow.once("ready-to-show", () => {
     const win = taskbarLyricWindow;
@@ -505,6 +534,7 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
     // 生命周期随窗口终了：停止轮询/计时与新播放订阅，清空状态机
     stopHoverPoll();
     stopNowPlayingWatch();
+    stopTaskbarLyricAutoClose();
     clearPauseCollapseTimer();
     pauseCollapse = createPauseCollapseState(false);
     cleanupWatchers();
@@ -549,4 +579,11 @@ export const toggleTaskbarLyricWindow = (): boolean => {
 /** 触发一次布局重算（配置变更后调用） */
 export const applyTaskbarLyricLayout = (): void => {
   service?.update(resolveLyricWidth());
+};
+
+/** 取回自动关闭提示（主窗口缺失期间暂存，渲染端挂载时消费） */
+export const consumeTaskbarLyricAutoCloseNotice = (): TaskbarLyricAutoCloseReason | null => {
+  const reason = pendingAutoCloseReason;
+  pendingAutoCloseReason = null;
+  return reason;
 };

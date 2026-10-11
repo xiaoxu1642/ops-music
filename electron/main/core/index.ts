@@ -8,7 +8,7 @@ import {
   getTaskbarLyricWindow,
 } from "@main/window";
 import { registerIpcHandlers } from "@main/ipc";
-import { init as initMedia, shutdown as shutdownMedia } from "@main/services/media";
+import { shutdown as shutdownMedia } from "@main/services/media";
 import { initGlobalHotkey } from "@main/services/globalHotkey";
 import { initDatabase, closeDatabase } from "@main/database";
 import { init as initSongCache } from "@main/services/songCache";
@@ -110,7 +110,6 @@ export const initApp = (): void => {
     void initSongCache();
     // 启动下载服务
     void initDownload();
-    initMedia();
     // 恢复歌词相关窗口
     restoreLyricWindows();
     // 注册全局快捷键

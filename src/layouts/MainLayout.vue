@@ -3,6 +3,7 @@ import { useStatusStore } from "@/stores/status";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
 import { useExternalFileHandler } from "@/composables/useExternalFileHandler";
+import { toast } from "@/composables/useToast";
 
 const route = useRoute();
 const status = useStatusStore();
@@ -10,6 +11,38 @@ const settings = useSettingsStore();
 
 // 接入外部音频文件拖拽播放
 useExternalFileHandler();
+
+const { t } = useI18n();
+
+/**
+ * 任务栏歌词被自动关闭（全屏应用/长时间暂停）后询问是否重开
+ * 只弹应用内 toast，不 show/focus 主窗口，避免抢走全屏应用的前台
+ */
+const showTaskbarLyricAutoCloseToast = (): void => {
+  toast.info(t("taskbarLyricAutoClosed"), {
+    sticky: true,
+    actions: [
+      {
+        label: t("common.yes"),
+        onClick: () => {
+          window.api.window.reopenTaskbarLyric().catch(() => {});
+        },
+      },
+      { label: t("common.no") },
+    ],
+  });
+};
+
+let unsubscribeTaskbarLyricAutoClosed: (() => void) | null = null;
+onMounted(async () => {
+  unsubscribeTaskbarLyricAutoClosed = window.api.window.onTaskbarLyricAutoClosed(() => {
+    showTaskbarLyricAutoCloseToast();
+  });
+  // 主窗口不存在期间暂存的提示在此补发
+  const pending = await window.api.window.consumeTaskbarLyricAutoClose();
+  if (pending) showTaskbarLyricAutoCloseToast();
+});
+onBeforeUnmount(() => unsubscribeTaskbarLyricAutoClosed?.());
 
 /** 有歌曲信息时显示播放栏 */
 const showPlayerBar = computed(() => !!useMediaStore().track);

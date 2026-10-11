@@ -27,6 +27,7 @@ features = [
   "Win32_System_Ole",
   "Win32_System_LibraryLoader",
   "Win32_Graphics_Gdi",
+  "Win32_UI_Shell",
 ]
 
 [build-dependencies]

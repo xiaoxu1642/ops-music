@@ -4,6 +4,8 @@ import {
   toggleTaskbarLyricWindow,
   closeTaskbarLyricWindow,
   getTaskbarLyricWindow,
+  createTaskbarLyricWindow,
+  consumeTaskbarLyricAutoCloseNotice,
   updateTaskbarLyricContentWidth,
   minimizeMainWindow,
   toggleMaximizeMainWindow,
@@ -23,6 +25,12 @@ export const registerWindowIpc = (): void => {
     ipcMain.handle("window:closeTaskbarLyric", () => closeTaskbarLyricWindow());
     // 查询任务栏歌词窗口是否打开
     ipcMain.handle("window:isTaskbarLyricOpen", () => !!getTaskbarLyricWindow());
+    // 自动关闭后用户确认重新打开（不重新武装暂停自动销毁计时）
+    ipcMain.handle("window:reopenTaskbarLyric", () => createTaskbarLyricWindow(false) !== null);
+    // 取回自动关闭提示（主窗口缺失期间暂存）
+    ipcMain.handle("window:consumeTaskbarLyricAutoClose", () =>
+      consumeTaskbarLyricAutoCloseNotice(),
+    );
     ipcMain.on("taskbarLyric:setContentWidth", (_event, width: number) => {
       updateTaskbarLyricContentWidth(width);
     });
@@ -30,6 +38,8 @@ export const registerWindowIpc = (): void => {
     ipcMain.handle("window:toggleTaskbarLyric", () => false);
     ipcMain.handle("window:closeTaskbarLyric", () => undefined);
     ipcMain.handle("window:isTaskbarLyricOpen", () => false);
+    ipcMain.handle("window:reopenTaskbarLyric", () => false);
+    ipcMain.handle("window:consumeTaskbarLyricAutoClose", () => null);
   }
 
   // 主窗口控制
