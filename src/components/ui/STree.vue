@@ -54,7 +54,6 @@ const getFlatKey = (item: { _id: string }): string => item._id;
       :items="flattenItems"
       :item-height="itemHeight"
       :get-item-key="getFlatKey as any"
-      item-fixed
       height="100%"
     >
       <template #default="{ item }: { item: any }">

@@ -116,7 +116,6 @@ const getRowKey = (row: Row): string => row.id;
     ref="virtualListRef"
     :items="rows"
     :item-height="rowHeight"
-    item-fixed
     :get-item-key="getRowKey"
     :padding-top="paddingTop"
     :padding-bottom="virtualPaddingBottom"
