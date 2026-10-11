@@ -257,6 +257,7 @@ onBeforeUnmount(() => {
           :src="track?.cover || DEFAULT_COVER"
           alt=""
           draggable="false"
+          decoding="async"
           @error="($event.target as HTMLImageElement).src = DEFAULT_COVER"
         />
       </div>

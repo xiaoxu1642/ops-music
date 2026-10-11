@@ -91,6 +91,7 @@ defineExpose({ pause, resume, refresh });
         v-if="qrUrl"
         :src="qrUrl"
         alt="QR"
+        decoding="async"
         :class="[
           'size-full',
           state === 'scanned' && (avatarUrl || nickname) && 'opacity-30 blur-4',
@@ -107,6 +108,7 @@ defineExpose({ pause, resume, refresh });
             v-if="avatarUrl"
             :src="avatarUrl"
             alt="avatar"
+            decoding="async"
             class="size-12 rounded-full object-cover"
           />
           <div v-if="nickname" class="text-xs font-semibold text-gray-900">{{ nickname }}</div>

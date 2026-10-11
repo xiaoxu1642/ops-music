@@ -96,7 +96,7 @@ const handleLogout = async (): Promise<void> => {
         <span class="text-sm text-on-surface max-w-[7rem] truncate">
           {{ user.profile?.nickname || t("login.unknownUser") }}
         </span>
-        <img v-if="isVip" :src="vipImg" alt="VIP" class="h-4 shrink-0" />
+        <img v-if="isVip" :src="vipImg" alt="VIP" class="h-4 shrink-0" decoding="async" />
         <IconLucideChevronDown
           :class="[
             'size-3 text-on-surface-variant transition-transform duration-200',
@@ -130,7 +130,7 @@ const handleLogout = async (): Promise<void> => {
         >
           Lv.{{ user.level }}
         </span>
-        <img v-if="isVip" :src="vipImg" alt="VIP" class="h-4 shrink-0" />
+        <img v-if="isVip" :src="vipImg" alt="VIP" class="h-4 shrink-0" decoding="async" />
       </div>
       <span
         v-if="user.profile?.signature"

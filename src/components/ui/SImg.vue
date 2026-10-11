@@ -44,6 +44,7 @@ watch(
         v-if="!isLoaded"
         :src="fallback"
         :alt="alt"
+        decoding="async"
         class="absolute w-full h-full object-cover z-0"
       />
     </Transition>
