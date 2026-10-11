@@ -9,6 +9,7 @@ import type { Platform } from "@shared/types/platform";
 import type { ContentScope } from "@/types/collection";
 import type { SortField, SortOrder } from "@/types/list";
 import type { PersonalFmOptions } from "@/types/netease";
+import { throttledLocalStorage } from "@/utils/persistStorage";
 export type { RepeatMode, ShuffleMode } from "@shared/types/player";
 export type { SortField, SortOrder } from "@/types/list";
 import * as queue from "./queue";
@@ -163,7 +164,7 @@ export const useStatusStore = defineStore(
   },
   {
     persist: {
-      storage: localStorage,
+      storage: throttledLocalStorage,
       pick: [
         "playIndex",
         "repeatMode",
