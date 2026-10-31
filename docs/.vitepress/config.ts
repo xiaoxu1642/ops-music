@@ -48,11 +48,7 @@ const zhTheme: DefaultTheme.Config = {
       text: "故障排查",
       items: [
         { text: "调试模式与错误排查", link: "/troubleshooting/debug" },
-        { text: "macOS 常见问题", link: "/troubleshooting/macos" },
-        { text: "Mac 应用显示已损坏", link: "/troubleshooting/macos-damaged" },
         { text: "Windows 7 兼容性问题", link: "/troubleshooting/windows7" },
-        { text: "Ubuntu 沙箱启动失败", link: "/troubleshooting/ubuntu-sandbox" },
-        { text: "Linux Wayland 兼容性", link: "/troubleshooting/wayland" },
       ],
     },
   ],
@@ -72,74 +68,6 @@ const zhTheme: DefaultTheme.Config = {
   },
 };
 
-const enTheme: DefaultTheme.Config = {
-  nav: [
-    { text: "Home", link: "/en/" },
-    { text: "Download", link: "/en/download" },
-    { text: "User Guide", link: "/en/guide" },
-    {
-      text: "Development",
-      items: [
-        { text: "Native Modules", link: "/en/native" },
-        { text: "Contributing", link: "/en/contributing" },
-      ],
-    },
-    { text: "Type Reference", link: "/en/types" },
-    {
-      text: "About",
-      items: [
-        { text: "User Agreement", link: "/en/agreement" },
-        { text: "Privacy Policy", link: "/en/privacy" },
-      ],
-    },
-    { text: "GitHub", link: "https://github.com/xiaoxu1642/ops-music" },
-  ],
-  sidebar: [
-    {
-      text: "Guides",
-      items: [
-        { text: "Download", link: "/en/download" },
-        { text: "User Guide", link: "/en/guide" },
-        { text: "User Agreement", link: "/en/agreement" },
-        { text: "Privacy Policy", link: "/en/privacy" },
-      ],
-    },
-    {
-      text: "Development",
-      items: [
-        { text: "Native Modules", link: "/en/native" },
-        { text: "Type Reference", link: "/en/types" },
-        { text: "Contributing", link: "/en/contributing" },
-      ],
-    },
-    {
-      text: "Troubleshooting",
-      items: [
-        { text: "Debug Mode and Errors", link: "/en/troubleshooting/debug" },
-        { text: "Common macOS Issues", link: "/en/troubleshooting/macos" },
-        { text: "macOS Reports a Damaged App", link: "/en/troubleshooting/macos-damaged" },
-        { text: "Windows 7 Compatibility", link: "/en/troubleshooting/windows7" },
-        { text: "Ubuntu Sandbox Startup Failure", link: "/en/troubleshooting/ubuntu-sandbox" },
-        { text: "Linux Wayland Compatibility", link: "/en/troubleshooting/wayland" },
-      ],
-    },
-  ],
-  outline: { level: [2, 3], label: "On this page" },
-  footer: {
-    message:
-      'Released under AGPL-3.0 | <a href="/en/agreement">User Agreement</a> | <a href="/en/privacy">Privacy Policy</a>',
-    copyright: "Copyright © 2025-present Ops Music",
-  },
-  editLink: {
-    pattern: "https://github.com/xiaoxu1642/ops-music/blob/main/docs/:path?plain=1",
-    text: "View or edit this page",
-  },
-  lastUpdated: {
-    text: "Last updated",
-    formatOptions: { dateStyle: "medium", timeStyle: "short" },
-  },
-};
-
 export default defineConfig({
   title: "Ops Music",
   srcExclude: ["superpowers/**"],
@@ -154,25 +82,11 @@ export default defineConfig({
       },
     ],
   ],
-  locales: {
-    root: {
-      label: "简体中文",
-      lang: "zh-CN",
-      description: "一款简洁而精致的 Windows 桌面音乐播放器",
-      themeConfig: zhTheme,
-    },
-    en: {
-      label: "English",
-      lang: "en-US",
-      link: "/en/",
-      description: "A clean and refined Windows desktop music player",
-      themeConfig: enTheme,
-    },
-  },
   themeConfig: {
     logo: "/favicon.png",
     siteTitle: "Ops Music",
     socialLinks,
+    ...zhTheme,
     search: {
       provider: "local",
       options: {
