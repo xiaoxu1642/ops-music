@@ -330,6 +330,8 @@ const api = {
     matchLocalLyric: (track: unknown) => ipcRenderer.invoke("lyrics:matchLocalLyric", track),
     // LRCLIB 最后兜底歌词
     matchLrclib: (track: unknown) => ipcRenderer.invoke("lyrics:matchLrclib", track),
+    // lrcmux 逐字兜底歌词
+    matchLrcmux: (track: unknown) => ipcRenderer.invoke("lyrics:matchLrcmux", track),
     // 选择本地歌词库目录
     pickLyricRepoDir: () => ipcRenderer.invoke("lyrics:pickLyricRepoDir"),
   },

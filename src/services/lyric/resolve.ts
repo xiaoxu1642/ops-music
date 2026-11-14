@@ -5,7 +5,12 @@ import { isPlatform } from "@shared/types/platform";
 import { detectFormat } from "lyric-kit";
 import { useSettingsStore } from "@/stores/settings";
 import { DEFAULT_LYRIC_FORMAT_ORDER, DEFAULT_LYRIC_SOURCE_ORDER } from "@/types/settings";
-import { requestPlatformLyric, requestLrclibLyric, requestTTMLOverlay } from "./request";
+import {
+  requestLrcmuxLyric,
+  requestLrclibLyric,
+  requestPlatformLyric,
+  requestTTMLOverlay,
+} from "./request";
 
 /** 单个平台返回的在线歌词 */
 export interface OnlineResult {
@@ -240,7 +245,25 @@ export const resolveLocalRepoLyric = async (track: Track): Promise<ResolvedLyric
 export const resolveLrclibLyric = async (track: Track): Promise<ResolvedLyric | null> => {
   const resp = await requestLrclibLyric(track);
   if (!resp.ok || !resp.data) return null;
-  return { source: { source: "online", format: "lrc" }, input: { content: resp.data } };
+  return {
+    source: { source: "online", format: detectFormat(resp.data) },
+    input: { content: resp.data },
+  };
+};
+
+/**
+ * lrcmux 兜底歌词：LRCLIB 之后仍未拿到歌词时的逐字补位
+ * 主进程已把结果转成 TTML 或 LRC，格式由内容现判，行级命中不参与格式竞争
+ * @param track - 歌曲信息
+ * @returns 兜底歌词，未命中返回 null
+ */
+export const resolveLrcmuxLyric = async (track: Track): Promise<ResolvedLyric | null> => {
+  const resp = await requestLrcmuxLyric(track);
+  if (!resp.ok || !resp.data) return null;
+  return {
+    source: { source: "online", format: detectFormat(resp.data) },
+    input: { content: resp.data },
+  };
 };
 
 /**

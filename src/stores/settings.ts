@@ -159,6 +159,7 @@ export const useSettingsStore = defineStore(
       lyricFormatOrder: [...DEFAULT_LYRIC_FORMAT_ORDER],
       smartPreferOnline: false,
       detectBackgroundLyrics: true,
+      enableLrcmuxWordLyric: false,
       cjkTransform: "none",
       adaptiveFontSize: true,
       fontSize: 48,
@@ -322,6 +323,9 @@ export const useSettingsStore = defineStore(
         }
         if (typeof lyric.detectBackgroundLyrics !== "boolean") {
           lyric.detectBackgroundLyrics = true;
+        }
+        if (typeof lyric.enableLrcmuxWordLyric !== "boolean") {
+          lyric.enableLrcmuxWordLyric = false;
         }
         if (!Array.isArray(preset.skipTrackKeywords)) {
           preset.skipTrackKeywords = [...DEFAULT_SKIP_TRACK_KEYWORDS];

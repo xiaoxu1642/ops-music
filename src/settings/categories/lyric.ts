@@ -61,6 +61,13 @@ const lyricCategory: SettingCategory = {
           defaultValue: true,
         },
         {
+          key: "enableLrcmuxWordLyric",
+          type: "switch",
+          binding: { store: "settings", path: "lyric.enableLrcmuxWordLyric" },
+          defaultValue: false,
+          tag: { text: "Beta" },
+        },
+        {
           key: "cjkTransform",
           type: "select",
           binding: { store: "settings", path: "lyric.cjkTransform" },

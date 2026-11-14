@@ -12,6 +12,7 @@ import {
   embeddedLyricFromDetail,
   isBetterFormat,
   resolveLrclibLyric,
+  resolveLrcmuxLyric,
   resolveLocalRepoLyric,
   resolveOnlineByPreference,
   resolveTTMLOverlay,
@@ -23,6 +24,13 @@ import { consumePreloadedLyric } from "@/services/lyric/preload";
 
 /** 竞态 token */
 let currentToken = 0;
+
+/**
+ * 平台自带的逐词格式
+ * 这些来源的歌词与曲目一一对应，可信度高于 lrcmux 就近匹配到的同名异版本，
+ * 已在展示时不再向其请求升级
+ */
+const WORD_LEVEL_FORMATS: readonly LyricFormat[] = ["ttml", "yrc", "qrc", "krc", "lys"];
 
 /**
  * 从外部歌词列表中选出最优格式的索引
@@ -144,6 +152,38 @@ const commitIfBetter = (
 /** 当前 token 是否已触发过 TTML 拉取 */
 let ttmlTriggeredToken = -1;
 
+/** 当前 token 是否已触发过 lrcmux 逐字升级 */
+let lrcmuxTriggeredToken = -1;
+
+/**
+ * 异步静默请求 lrcmux 逐字升级
+ * 主进程只在真拿到多词行时才返回 TTML，行级结果进不了格式竞争，
+ * 因此这条路不会把已有歌词换成别的版本；屏幕空着时行级结果照样可以救场
+ * @param token - 竞态 token
+ * @param track - 歌曲信息
+ * @returns 是否成功提交歌词；不关心结果的调用方可不 await
+ */
+const tryApplyLrcmuxUpgrade = async (token: number, track: Track): Promise<boolean> => {
+  if (token !== currentToken || lrcmuxTriggeredToken === token) return false;
+  if (!useSettingsStore().lyric.enableLrcmuxWordLyric) return false;
+  const media = useMediaStore();
+  // 已有逐字格式（ttml / yrc / qrc / krc / lys）时不升级：
+  // 平台自带的逐词歌词版本可信度高于 lrcmux 就近取到的同名异版本
+  const currentFormat = media.activeLyric?.format ?? null;
+  if (currentFormat && WORD_LEVEL_FORMATS.includes(currentFormat)) return false;
+  lrcmuxTriggeredToken = token;
+  try {
+    const resolved = await resolveLrcmuxLyric(track);
+    if (token !== currentToken || !resolved) return false;
+    return media.parsedLyric.length === 0
+      ? commitResolvedAndHasParsed(token, resolved)
+      : commitIfBetter(token, resolved.source, resolved.input);
+  } catch (err) {
+    console.warn("[lyricLoader] tryApplyLrcmuxUpgrade failed:", err);
+    return false;
+  }
+};
+
 /**
  * 异步静默触发 TTML 覆盖并尝试升级
  * 非阻塞执行，不阻塞基础歌词展示与其它来源抢占
@@ -156,11 +196,14 @@ const tryApplyTTMLOverlay = (token: number, track: Track, online: OnlineResult):
   ttmlTriggeredToken = token;
   resolveTTMLOverlay(track, online)
     .then((ttml) => {
-      if (token !== currentToken || !ttml) return;
-      commitIfBetter(token, ttml.source, ttml.input);
+      if (token !== currentToken) return;
+      if (ttml) commitIfBetter(token, ttml.source, ttml.input);
+      // TTML 没覆盖上（开关关闭、未收录，或当前已是逐字格式）时才轮到 lrcmux
+      void tryApplyLrcmuxUpgrade(token, track);
     })
     .catch((err) => {
       console.warn("[lyricLoader] tryApplyTTMLOverlay failed:", err);
+      void tryApplyLrcmuxUpgrade(token, track);
     });
 };
 
@@ -227,6 +270,7 @@ const tryLocalRepo = async (token: number, track: Track): Promise<boolean> => {
 /**
  * LRCLIB 末位兜底：平台 API、本地歌词库与在线 TTML 都没给出歌词时才请求
  * 只有行级时间戳，因此不参与格式竞争，只在屏幕本来没有歌词时提交
+ * LRCLIB 仍未命中时轮到 lrcmux 救场，它给得出逐字时按 TTML 提交
  * @param token - 竞态 token
  * @param track - 歌曲信息
  * @returns 是否已提交有效歌词
@@ -235,7 +279,9 @@ const lrclibLastResort = async (token: number, track: Track): Promise<boolean> =
   if (token !== currentToken || useMediaStore().parsedLyric.length > 0) return false;
   const resolved = await resolveLrclibLyric(track);
   if (token !== currentToken) return false;
-  return resolved ? commitResolvedAndHasParsed(token, resolved) : false;
+  if (resolved && commitResolvedAndHasParsed(token, resolved)) return true;
+  if (!useSettingsStore().lyric.enableLrcmuxWordLyric) return false;
+  return tryApplyLrcmuxUpgrade(token, track);
 };
 
 /**
@@ -344,6 +390,9 @@ export const loadForTrack = async (detail: TrackDetail | null): Promise<void> =>
       !(await lrclibLastResort(token, track))
     ) {
       commit(token, null, null);
+    } else {
+      // 本地行级歌词或 LRCLIB 兜底已上屏：屏幕上没有逐字，仍可让 lrcmux 补一次
+      void tryApplyLrcmuxUpgrade(token, track);
     }
   } catch (err) {
     console.error("[lyricLoader] loadForTrack failed:", err);
@@ -391,8 +440,12 @@ const refreshPreference = async (): Promise<void> => {
   }
   // 目标是本地
   if (!showingOnline) return;
-  if (local) commitLocal(token, local);
-  else commit(token, null, null);
+  if (local) {
+    commitLocal(token, local);
+    void tryApplyLrcmuxUpgrade(token, track);
+    return;
+  }
+  commit(token, null, null);
 };
 
 /** 监听歌词偏好变化 */
@@ -403,6 +456,7 @@ export const watchLyricPreference = (): void => {
       settings.lyric.lyricSourcePreference,
       settings.lyric.smartPreferOnline,
       settings.lyric.detectBackgroundLyrics,
+      settings.lyric.enableLrcmuxWordLyric,
       settings.system.lyric.enableOnlineTTMLLyric,
       settings.system.localLyric.enableLocalTTMLOverride,
       settings.system.localLyric.repoDir,

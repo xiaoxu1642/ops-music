@@ -6,6 +6,7 @@
  * - lyrics:fetchTTMLOverlay(track)         抓 AMLL TTML DB 的高质量 TTML
  * - lyrics:matchLocalLyric(track)          本地歌词库（.ttml / .lrc / .txt）匹配
  * - lyrics:matchLrclib(track)              LRCLIB 最后兜底
+ * - lyrics:matchLrcmux(track)              lrcmux 逐字兜底
  *
  * 同 key 的并发请求会被 dedup：连按多次切歌只发一次网络。
  */
@@ -14,6 +15,7 @@ import { ipcMain, dialog } from "electron";
 import * as netease from "@main/apis/common/lyric/netease";
 import { fetchTTML } from "@main/apis/common/lyric/ttml";
 import { fetchLrclibLyric } from "@main/apis/common/lyric/lrclib";
+import { fetchLrcmuxLyric } from "@main/apis/common/lyric/lrcmux";
 import { matchLocalLyric } from "@main/services/localLyricRepo";
 import { buildFingerprint, getMatchedId } from "@main/database/lyricMatchCache";
 import { coreLog } from "@main/utils/logger";
@@ -113,6 +115,20 @@ const resolveLrclib = async (track: Track): Promise<LyricTextResponse> => {
   }
 };
 
+/**
+ * lrcmux 逐字兜底：其它来源没给出逐字歌词时才由渲染层调用
+ * @param track - 歌曲信息
+ * @returns TTML 或 LRC 原文响应
+ */
+const resolveLrcmux = async (track: Track): Promise<LyricTextResponse> => {
+  try {
+    return { ok: true, data: await fetchLrcmuxLyric(track) };
+  } catch (err) {
+    coreLog.warn(`[lyrics] matchLrcmux(${track.title}) failed:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+};
+
 export const registerLyricsIpc = (): void => {
   ipcMain.handle("lyrics:matchById", (_evt, platform: Platform, id: string) =>
     dedup(`byId:${platform}:${id}`, () => resolveById(platform, id)),
@@ -136,6 +152,9 @@ export const registerLyricsIpc = (): void => {
   );
   ipcMain.handle("lyrics:matchLrclib", (_evt, track: Track) =>
     dedup(`lrclib:${track.id}`, () => resolveLrclib(track)),
+  );
+  ipcMain.handle("lyrics:matchLrcmux", (_evt, track: Track) =>
+    dedup(`lrcmux:${track.id}`, () => resolveLrcmux(track)),
   );
   ipcMain.handle("lyrics:pickLyricRepoDir", async (): Promise<string | null> => {
     const result = await dialog.showOpenDialog({

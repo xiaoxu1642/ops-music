@@ -69,6 +69,8 @@ export interface LyricsApi {
   matchLocalLyric: (track: Track) => Promise<LyricTextResponse>;
   /** LRCLIB 最后兜底：其它来源都没有歌词时取行级时间戳 LRC */
   matchLrclib: (track: Track) => Promise<LyricTextResponse>;
+  /** lrcmux 逐字兜底：LRCLIB 之后仍未有歌词时才取，命中可能是 TTML 或 LRC */
+  matchLrcmux: (track: Track) => Promise<LyricTextResponse>;
   /** 弹出目录选择器，返回所选本地歌词库目录 */
   pickLyricRepoDir: () => Promise<string | null>;
 }

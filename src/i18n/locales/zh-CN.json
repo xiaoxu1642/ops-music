@@ -776,6 +776,10 @@
       "label": "自动识别背景歌词",
       "description": "根据括号识别背景人声，误判时可关闭"
     },
+    "enableLrcmuxWordLyric": {
+      "label": "lrcmux 逐字歌词",
+      "description": "仅在逐字歌词缺失时请求，可能匹配到 Live 等同名异版本"
+    },
     "cjkTransform": {
       "label": "繁简转换",
       "description": "对歌词文本进行简繁中文或日文汉字转换",

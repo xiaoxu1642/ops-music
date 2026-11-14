@@ -48,29 +48,34 @@ export const clearLyricCache = (): void => {
 };
 
 /**
- * LRCLIB 在表里的 platform 列取值：不是音源平台，只作键区分，
+ * 兜底源在表里的 platform 列取值：不是音源平台，只作键区分，
  * 让兜底歌词与其它在线源共用同一张缓存表
  */
-const LRCLIB_PLATFORM = "lrclib";
+export type LastResortSource = "lrclib" | "lrcmux";
 
 /**
  * 读取 LRCLIB 兜底歌词原文
  * @param key - track 指纹（buildFingerprint）
  * @returns 缓存的 LRC 原文，未命中返回 null
  */
-export const getCachedLrclibLyric = (key: string): string | null => {
+export const getCachedLastResortLyric = (source: LastResortSource, key: string): string | null => {
   const row = getDb()
     .prepare("SELECT data FROM lyric_cache WHERE platform = ? AND platform_id = ?")
-    .get(LRCLIB_PLATFORM, key) as { data: string } | undefined;
+    .get(source, key) as { data: string } | undefined;
   return row?.data ?? null;
 };
 
 /**
- * 写入 LRCLIB 兜底歌词原文；存未解析的 LRC 文本，解析规则升级后旧缓存不作废
+ * 写入兜底源歌词原文；存未解析的文本，解析规则升级后旧缓存不作废
+ * @param source - 兜底源标识
  * @param key - track 指纹（buildFingerprint）
- * @param content - LRC 原文
+ * @param content - 歌词原文
  */
-export const setCachedLrclibLyric = (key: string, content: string): void => {
+export const setCachedLastResortLyric = (
+  source: LastResortSource,
+  key: string,
+  content: string,
+): void => {
   getDb()
     .prepare(
       `INSERT INTO lyric_cache (platform, platform_id, data, fetched_at) VALUES (?, ?, ?, ?)
@@ -78,5 +83,5 @@ export const setCachedLrclibLyric = (key: string, content: string): void => {
          data = excluded.data,
          fetched_at = excluded.fetched_at`,
     )
-    .run(LRCLIB_PLATFORM, key, content, Date.now());
+    .run(source, key, content, Date.now());
 };

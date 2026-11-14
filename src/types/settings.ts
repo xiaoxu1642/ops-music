@@ -127,6 +127,8 @@ export interface LyricSettings {
   smartPreferOnline: boolean;
   /** 自动识别背景歌词 */
   detectBackgroundLyrics: boolean;
+  /** 用 lrcmux 补逐字歌词：仅在屏幕上没有逐字歌词时才请求，命中常落在同名异版本 */
+  enableLrcmuxWordLyric: boolean;
   /** 中文繁简转换模式（基于 OpenCC） */
   cjkTransform: CjkTransformMode;
   /** 字号自适应窗口大小 */

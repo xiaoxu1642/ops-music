@@ -33,3 +33,11 @@ export const requestTTMLOverlay = (track: Track) => window.api.lyrics.fetchTTMLO
  * @returns IPC 请求结果
  */
 export const requestLrclibLyric = (track: Track) => window.api.lyrics.matchLrclib(track);
+
+/**
+ * 请求 lrcmux 逐字兜底歌词
+ * 只在已有歌词够不上逐字精度、且用户开启该源时调用
+ * @param track - 歌曲信息
+ * @returns IPC 请求结果
+ */
+export const requestLrcmuxLyric = (track: Track) => window.api.lyrics.matchLrcmux(track);
