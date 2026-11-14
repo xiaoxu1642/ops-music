@@ -14,6 +14,8 @@ import {
   pickSessionCookies,
 } from "@main/apis/bilibili/core/credential";
 import { BilibiliRequestError } from "@main/apis/bilibili/core/request";
+import { callMigu, clearMiguCookies, mergeMiguCookies } from "@main/apis/migu";
+import { MiguRequestError } from "@main/apis/migu/core/request";
 import { callNetease, clearNeteaseCookies, mergeNeteaseCookies } from "@main/apis/netease";
 import { NeteaseRequestError } from "@main/apis/netease/core/request";
 import { cookieToJson } from "@main/apis/netease/core/cookie";
@@ -36,6 +38,10 @@ const dispatch = async (
       const res = await callBilibili(name, params);
       return { status: res.status, body: res.body };
     }
+    case "migu": {
+      const res = await callMigu(name, params);
+      return { status: res.status, body: res.body };
+    }
     default:
       throw new Error(`unknown platform: ${platform}`);
   }
@@ -50,7 +56,11 @@ export const registerApisIpc = (): void => {
         return { ok: true, ...result };
       } catch (err) {
         coreLog.warn(`[apis] ${platform}.${name} failed:`, err);
-        if (err instanceof NeteaseRequestError || err instanceof BilibiliRequestError) {
+        if (
+          err instanceof NeteaseRequestError ||
+          err instanceof BilibiliRequestError ||
+          err instanceof MiguRequestError
+        ) {
           return {
             ok: false,
             error: err.message,
@@ -70,6 +80,9 @@ export const registerApisIpc = (): void => {
         break;
       case "bilibili":
         clearBilibiliCookies();
+        break;
+      case "migu":
+        clearMiguCookies();
         break;
     }
   });
@@ -114,6 +127,12 @@ export const registerApisIpc = (): void => {
         const parsed = cookieToJson(normalizeBilibiliCookie(raw));
         if (!hasBilibiliSession(parsed)) return { ok: false, error: "missing SESSDATA" };
         mergeBilibiliCookies(pickSessionCookies(parsed));
+        return { ok: true };
+      }
+      case "migu": {
+        const parsed = cookieToJson(raw);
+        if (!parsed.pacmtoken) return { ok: false, error: "missing pacmtoken" };
+        mergeMiguCookies(parsed);
         return { ok: true };
       }
       default:

@@ -4,6 +4,7 @@ import type { QualityLevel } from "@/utils/quality";
 import { useSettingsStore } from "@/stores/settings";
 import { useUserStore } from "@/stores/user";
 import { resolveBilibiliUrl } from "@/apis/song/bilibili";
+import { resolveMiguUrl } from "@/apis/song/migu";
 import { resolveNeteaseUrl } from "@/apis/song/netease";
 import { ErrorCode } from "@shared/types/errors";
 import { handleError } from "@/utils/errors";
@@ -79,6 +80,19 @@ const resolveOnlineUrl = async (
       }
     } catch (err) {
       console.warn("[audio-source] bilibili URL resolve failed:", err);
+      officialErrorCode = ErrorCode.NETWORK_ERROR;
+    }
+  } else if (track.source === "migu" && !options.skipOfficialOnline) {
+    try {
+      // 取流地址统一走本地代理：咪咕部分档位依赖特定 UA，audio-engine 无法自定义请求头
+      const resolved = await resolveMiguUrl(track, songLevel);
+      if (!resolved.available) {
+        officialErrorCode = resolved.errorCode;
+      } else {
+        return { ok: true, url: resolved.url, isTrial: false, provider: "official" };
+      }
+    } catch (err) {
+      console.warn("[audio-source] migu URL resolve failed:", err);
       officialErrorCode = ErrorCode.NETWORK_ERROR;
     }
   }

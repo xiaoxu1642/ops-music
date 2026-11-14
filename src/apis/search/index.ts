@@ -8,6 +8,7 @@ import type { Track } from "@shared/types/player";
 import type { CoverItem } from "@/types/artist";
 import type { Platform } from "@shared/types/platform";
 import * as bilibili from "./bilibili";
+import * as migu from "./migu";
 import * as netease from "./netease";
 
 /** 搜索结果通用 */
@@ -18,9 +19,9 @@ export interface SearchResult<T> {
 }
 
 /** 搜索标签页展示的平台，与 fetcher 的实现范围一致 */
-export const SEARCHABLE_PLATFORMS: Platform[] = ["netease", "bilibili"];
+export const SEARCHABLE_PLATFORMS: Platform[] = ["netease", "migu", "bilibili"];
 
-/** B 站没有专辑/歌手/歌单搜索，对应标签返回空集，不串回网易云的结果 */
+/** B 站没有专辑/歌手/歌单搜索，咪咕首期只做歌曲搜索，对应标签返回空集，不串回网易云的结果 */
 const emptyResult = <T>(): SearchResult<T> => ({ items: [], total: 0, hasMore: false });
 
 /** 搜索单曲 */
@@ -31,6 +32,7 @@ export const searchSongs = async (
   limit: number,
 ): Promise<SearchResult<Track>> => {
   if (platform === "bilibili") return bilibili.songs(keyword, offset, limit);
+  if (platform === "migu") return migu.songs(keyword, offset, limit);
   return netease.songs(keyword, offset, limit);
 };
 
@@ -41,7 +43,7 @@ export const searchAlbums = async (
   offset: number,
   limit: number,
 ): Promise<SearchResult<CoverItem>> => {
-  if (platform === "bilibili") return emptyResult<CoverItem>();
+  if (platform !== "netease") return emptyResult<CoverItem>();
   return netease.albums(keyword, offset, limit);
 };
 
@@ -52,7 +54,7 @@ export const searchArtists = async (
   offset: number,
   limit: number,
 ): Promise<SearchResult<CoverItem>> => {
-  if (platform === "bilibili") return emptyResult<CoverItem>();
+  if (platform !== "netease") return emptyResult<CoverItem>();
   return netease.artists(keyword, offset, limit);
 };
 
@@ -63,6 +65,6 @@ export const searchPlaylists = async (
   offset: number,
   limit: number,
 ): Promise<SearchResult<CoverItem>> => {
-  if (platform === "bilibili") return emptyResult<CoverItem>();
+  if (platform !== "netease") return emptyResult<CoverItem>();
   return netease.playlists(keyword, offset, limit);
 };
