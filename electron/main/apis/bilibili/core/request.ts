@@ -210,10 +210,26 @@ export const getWbiKeys = async (
     return { imgKey: wbiKeysCache.imgKey, subKey: wbiKeysCache.subKey };
   }
 
-  const res = await createBilibiliRequest(ENDPOINT.nav, options);
-  const keys = extractWbiKeys(res.body as BilibiliNavResponse);
+  let navBody: Record<string, unknown>;
+  try {
+    const res = await createBilibiliRequest(ENDPOINT.nav, options);
+    navBody = res.body;
+  } catch (err) {
+    // 游客态 nav 返回 -101（账号未登录），但 data.wbi_img 仍然完整——
+    // 密钥才是这个请求的目的，-101 不能挡住取密钥
+    if (err instanceof BilibiliRequestError && err.response.body?.data) {
+      navBody = err.response.body;
+    } else {
+      throw err;
+    }
+  }
+  const keys = extractWbiKeys(navBody as BilibiliNavResponse);
   if (!keys)
-    throw new BilibiliRequestError({ ...res, body: { code: -1, message: "nav missing wbi_img" } });
+    throw new BilibiliRequestError({
+      status: 200,
+      body: { code: -1, message: "nav missing wbi_img" },
+      cookie: {},
+    });
 
   wbiKeysCache = { ...keys, expires: now + WBI_KEYS_TTL_MS };
   coreLog.info("[bilibili] WBI 密钥已刷新");

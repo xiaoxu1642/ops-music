@@ -66,6 +66,16 @@ export const buildBilibiliSearchParams = (
   search_type: "video",
 });
 
+/**
+ * 构造搜索接口路径（无签名版，游客可用）
+ * @param keyword - 关键词
+ * @param page - 页码，从 1 开始
+ * @param rows - 每页条数
+ * @returns 带 query 的路径
+ */
+export const buildBilibiliSearchPath = (keyword: string, page: number, rows: number): string =>
+  `${ENDPOINT.search}?${new URLSearchParams(buildBilibiliSearchParams(keyword, page, rows)).toString()}`;
+
 const toItems = (response: BilibiliSearchResponse): BilibiliSearchItem[] =>
   (response.data?.result ?? [])
     .filter((item) => item.type === "video" && item.bvid)
@@ -84,15 +94,20 @@ const search: BilibiliModule = async (query, http) => {
   const keyword = String(query.keywords ?? "");
   const page = Number(query.page ?? 1);
   const rows = Number(query.limit ?? 20);
-  const params = buildBilibiliSearchParams(keyword, page, rows);
   const options = { cookie: query.cookie as Record<string, string> | undefined };
+  // 双通道：游客走无签名版（2026-11 实测 WBI 版对游客一律 -101），登录态走 WBI 版更稳
+  const useWbi = Boolean(options.cookie?.SESSDATA);
+  const request = () =>
+    useWbi
+      ? http.wbi(ENDPOINT.searchWbi, buildBilibiliSearchParams(keyword, page, rows), options)
+      : http.get(buildBilibiliSearchPath(keyword, page, rows), options);
 
-  const res = await http.wbi(ENDPOINT.search, params, options).catch(async () => {
+  const res = await request().catch(async () => {
     // 命中风控（412 / HTML 页 / 非 JSON 响应）：等一秒半再试一次，避免偶发的「无结果」。
     // 模块层不打日志（同 netease modules，导入日志层会带进 electron 依赖），
     // 两次都失败时异常会冒到 IPC 层统一记录。
     await new Promise((resolve) => setTimeout(resolve, RISK_CONTROL_RETRY_DELAY_MS));
-    return await http.wbi(ENDPOINT.search, params, options);
+    return await request();
   });
 
   const data = res.body as BilibiliSearchResponse;

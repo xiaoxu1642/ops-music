@@ -19,7 +19,7 @@ import type {
   BilibiliSubtitleItem,
   BilibiliSubtitleResponse,
 } from "../core/types";
-import { videoReferer, loadView } from "./video_detail";
+import { videoReferer, loadView, API_REFERER } from "./video_detail";
 
 /** B 站 AI 生成字幕的语言前缀 */
 const AI_SUBTITLE_LAN_PREFIX = "ai-";
@@ -89,7 +89,7 @@ const EMPTY_LYRIC: BilibiliLyricResult = { lyric: "", lan: "", isAi: false };
 const lyric: BilibiliModule = async (query, http) => {
   const bvid = String(query.bvid ?? "");
   const cookie = query.cookie as Record<string, string> | undefined;
-  const referer = videoReferer(bvid);
+
   const view = await loadView(bvid, http, cookie);
 
   let cid = Number(query.cid ?? 0) || view.cid;
@@ -100,13 +100,18 @@ const lyric: BilibiliModule = async (query, http) => {
     page = view.pages[0];
   }
 
-  const playerRes = await http.wbi(ENDPOINT.playerV2, { bvid, cid }, { referer, cookie });
+  const playerRes = await http.wbi(
+    ENDPOINT.playerV2,
+    { bvid, cid },
+    { referer: API_REFERER, cookie },
+  );
   const subtitles = (playerRes.body as BilibiliPlayerResponse).data?.subtitle?.subtitles ?? [];
   const primary = selectPrimarySubtitle(subtitles);
   if (!primary) return { status: 200, body: EMPTY_LYRIC, cookie: playerRes.cookie };
 
+  // 字幕正文在 aisubtitle 域，需要视频页 Referer（request 层允许完整 URL，走 Node 网络栈）
   const subtitleRes = await http.get(normalizeResourceUrl(primary.item.subtitle_url), {
-    referer,
+    referer: videoReferer(bvid),
     cookie,
   });
   const body = (subtitleRes.body as BilibiliSubtitleResponse).body ?? [];

@@ -23,15 +23,22 @@ export interface MiguSearchSong {
   /** 版权 ID，listen 接口必需 */
   copyrightId?: string;
   songName?: string;
+  /** 歌手列表（by-contentids 旧结构） */
   singers?: Array<{ name?: string; id?: string }>;
-  /** 专辑信息 */
+  /** 歌手列表（bmw/search 新结构） */
+  singerList?: Array<{ name?: string; id?: string }>;
+  /** 专辑信息（旧结构） */
   albums?: MiguAlbum[];
+  /** 专辑名（bmw/search 新结构，纯字符串） */
+  album?: string;
   /** 时长（秒） */
   duration?: string | number;
   /** 封面地址（可能是 // 协议相对或 / 开头路径） */
   img1?: string;
   /** VIP 标记（showTag 含 vip 或 chargeAuditions） */
   showTag?: string;
+  /** VIP 标记（bmw/search 新结构为数组） */
+  showTags?: string[];
   chargeAuditions?: string;
 }
 

@@ -18,12 +18,19 @@ import type {
 } from "../core/types";
 
 /**
- * 视频页地址，同时作为 playurl 与音频流的 Referer
+ * 视频页地址，音频流（CDN 取流）的 Referer
+ *
+ * 注意：接口请求（view / playurl）的 Referer 只能给站点根——带路径的会被
+ * Chromium 网络栈判非法直接拦掉（net::ERR_BLOCKED_BY_CLIENT）；
+ * 带路径的只允许本地代理发往 CDN 的取流请求使用（Node 侧发出，不经 Chromium）
  * @param bvid - BV 号
  * @returns 视频页 URL
  */
 export const videoReferer = (bvid: string): string =>
   `${VIDEO_PAGE_DOMAIN}/video/${encodeURIComponent(bvid)}`;
+
+/** 接口请求统一用站点根 Referer */
+export const API_REFERER = `${VIDEO_PAGE_DOMAIN}/`;
 
 /**
  * 取默认分 P 的 cid：优先 pages[0]，回落详情里的 cid
@@ -50,7 +57,7 @@ export const loadView = async (
   if (hit) return hit.body as BilibiliVideoDetail;
 
   const res = await http.get(`${ENDPOINT.view}?bvid=${encodeURIComponent(bvid)}`, {
-    referer: videoReferer(bvid),
+    referer: API_REFERER,
     cookie,
   });
   const data = res.body as BilibiliViewResponse;

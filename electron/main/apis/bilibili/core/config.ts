@@ -22,8 +22,10 @@ export const ANONYMOUS_COOKIE: Record<string, string> = { buvid3: "0" };
 export const ENDPOINT = {
   /** 导航信息：WBI 密钥来源，同时是登录态校验接口 */
   nav: "/x/web-interface/nav",
-  /** 视频搜索（WBI 签名版：2025 起无签名接口普遍 412 风控） */
-  search: "/x/web-interface/wbi/search/type",
+  /** 视频搜索（游客可用的无签名版，2026-11 实测；WBI 版游客被 -101 拦截） */
+  search: "/x/web-interface/search/type",
+  /** 视频搜索（WBI 签名版：登录态下更稳） */
+  searchWbi: "/x/web-interface/wbi/search/type",
   /** 视频详情（分 P / UP 主 / 合集） */
   view: "/x/web-interface/view",
   /** 播放地址（DASH，需 WBI 签名） */

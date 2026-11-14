@@ -26,7 +26,7 @@ import type {
   BilibiliPlayUrlResponse,
   BilibiliStream,
 } from "../core/types";
-import { videoReferer, loadView } from "./video_detail";
+import { videoReferer, loadView, API_REFERER } from "./video_detail";
 
 /** 站方字段名不统一，按优先级取第一个非空地址（同 Otter） */
 const AUDIO_URL_FIELDS = ["baseUrl", "base_url", "backupUrl", "backup_url", "url"] as const;
@@ -112,17 +112,19 @@ const attachProxyUrl = async (stream: BilibiliStream): Promise<BilibiliStream> =
 const song_url: BilibiliModule = async (query, http) => {
   const bvid = String(query.bvid ?? "");
   const cookie = query.cookie as Record<string, string> | undefined;
-  const referer = videoReferer(bvid);
+  // 流 headers 用带路径的视频页 Referer（CDN 校验用，经本地代理发出）；
+  // 接口请求一律站点根，带路径的会被 Chromium 拦
+  const streamReferer = videoReferer(bvid);
   const cid = Number(query.cid ?? (await loadView(bvid, http, cookie)).cid);
   if (!cid) throw new Error(`bilibili 未解析到 cid：${bvid}`);
 
-  const options = { referer, cookie };
+  const options = { referer: API_REFERER, cookie };
   const params = { fnval: FNVAL_DASH, bvid, cid };
 
   let dashError: unknown = null;
   try {
     const res = await http.wbi(ENDPOINT.playurl, params, options);
-    const stream = selectDash(res.body as BilibiliPlayUrlResponse, referer);
+    const stream = selectDash(res.body as BilibiliPlayUrlResponse, streamReferer);
     if (stream) return { status: 200, body: await attachProxyUrl(stream), cookie: res.cookie };
   } catch (err) {
     dashError = err;
@@ -133,7 +135,7 @@ const song_url: BilibiliModule = async (query, http) => {
     `${ENDPOINT.playurlDurl}?fnval=${FNVAL_DURL}&bvid=${encodeURIComponent(bvid)}&cid=${cid}`,
     options,
   );
-  const stream = selectDurl(durlRes.body as BilibiliPlayUrlResponse, referer);
+  const stream = selectDurl(durlRes.body as BilibiliPlayUrlResponse, streamReferer);
   if (!stream) {
     const dashMsg = dashError instanceof Error ? dashError.message : "DASH 响应无音频条目";
     throw new Error(`bilibili 未取到音频地址：${bvid}/${cid}（${dashMsg}）`);

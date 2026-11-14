@@ -20,14 +20,16 @@ const search: MiguModule = async (query, http) => {
   const songs = extractSongList(res.body)
     .map(normalizeMiguSong)
     .filter((song): song is NonNullable<typeof song> => song !== null);
-  const total = Number((res.body as { total?: unknown }).total ?? 0);
+  // bmw/search 只给 hasNext 布尔，没有 total；用近似值满足 UI 的分页展示
+  const hasNext = Boolean((res.body as { data?: { hasNext?: boolean } })?.data?.hasNext);
+  const total = hasNext ? (pageNo + 1) * rows : (pageNo - 1) * rows + songs.length;
 
   return {
     status: 200,
     body: {
       items: songs,
       total,
-      hasMore: total > 0 ? pageNo * rows < total : songs.length >= rows,
+      hasMore: hasNext || songs.length >= rows,
     },
     cookie: res.cookie,
   };

@@ -25,10 +25,13 @@ export const normalizeMiguImageUrl = (raw: string | undefined): string => {
 export const normalizeMiguSong = (raw: MiguSearchSong | MiguSongInfo): MiguSong | null => {
   const contentId = raw.contentId;
   if (!contentId) return null;
-  const singer = raw.singers?.[0];
+  const singer = raw.singers?.[0] ?? raw.singerList?.[0];
   const album = raw.albums?.[0];
   const durationSec = Number(raw.duration ?? 0);
-  const showTag = raw.showTag ?? "";
+  const vipMarked =
+    raw.chargeAuditions === "1" ||
+    /vip/i.test(raw.showTag ?? "") ||
+    (raw.showTags?.includes("vip") ?? false);
   return {
     id: contentId,
     copyrightId: raw.copyrightId ?? "",
@@ -36,10 +39,11 @@ export const normalizeMiguSong = (raw: MiguSearchSong | MiguSongInfo): MiguSong 
     artist: singer?.name ?? "未知歌手",
     artistId: singer?.id,
     albumId: album?.id,
-    album: album?.albumName ?? album?.name,
+    album:
+      album?.albumName ?? album?.name ?? (typeof raw.album === "string" ? raw.album : undefined),
     duration: Number.isFinite(durationSec) && durationSec > 0 ? durationSec * 1000 : 0,
     cover: normalizeMiguImageUrl(raw.img1 ?? album?.albumImgUrl),
-    isVip: raw.chargeAuditions === "1" || /vip/i.test(showTag),
+    isVip: vipMarked,
   };
 };
 
@@ -52,6 +56,18 @@ export const normalizeMiguSong = (raw: MiguSearchSong | MiguSongInfo): MiguSong 
  * @returns 歌曲条目数组，找不到返回空数组
  */
 export const extractSongList = (body: unknown): MiguSearchSong[] => {
+  // bmw/search 新结构：data.items[] 每项嵌套 song 对象
+  const items = (body as { data?: { items?: Array<{ song?: unknown }> } } | undefined)?.data?.items;
+  if (Array.isArray(items)) {
+    const songs = items
+      .map((entry) => entry?.song)
+      .filter(
+        (song): song is MiguSearchSong =>
+          typeof song === "object" && song !== null && "contentId" in (song as object),
+      );
+    if (songs.length > 0) return songs;
+  }
+
   const known = [body, (body as { data?: unknown })?.data]
     .flatMap((node) => [node, (node as { songResultData?: unknown })?.songResultData])
     .flatMap((node) => [node, (node as { result?: unknown })?.result])

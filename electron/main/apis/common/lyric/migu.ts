@@ -13,7 +13,7 @@ import { net } from "electron";
 import { USER_AGENT } from "@main/apis/migu/core/config";
 import { resourceInfoUrl } from "@main/apis/migu/core/request";
 import { callMigu } from "@main/apis/migu";
-import { normalizeMiguSong } from "@main/apis/migu/core/song";
+import type { MiguSong } from "@shared/types/migu";
 import { decryptMrc, formatMrc } from "./miguMrc";
 import { getCachedLyric, setCachedLyric } from "@main/database/lyricCache";
 import { buildFingerprint, getMatchedId, setMatchedId } from "@main/database/lyricMatchCache";
@@ -105,12 +105,8 @@ export const getByQuery = async (track: Track): Promise<LyricMatchResult | null>
       keywords: `${track.artists[0]?.name ?? ""} ${track.title}`,
       page: 1,
     });
-    const items = ((body as { items?: Array<Record<string, unknown>> }).items ?? []) as Parameters<
-      typeof normalizeMiguSong
-    >[0][];
-    const songs = items
-      .map(normalizeMiguSong)
-      .filter((song): song is NonNullable<typeof song> => song !== null);
+    // search 模块已归一化，items 直接就是 MiguSong
+    const songs = (body as { items?: MiguSong[] }).items ?? [];
     const best = pickBestCandidate(
       songs.map((song) => ({
         name: song.title,

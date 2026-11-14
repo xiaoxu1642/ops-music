@@ -22,6 +22,8 @@ let cachedKey: KeyObject | null = null;
 const getRsaKey = async (): Promise<KeyObject> => {
   if (cachedKey) return cachedKey;
   const res = await fetch(PUBLICKEY_URL, {
+    // 站方只认 POST，GET 会被 302 到登录页拿不到公钥
+    method: "POST",
     headers: { Referer: "https://passport.migu.cn/login", Origin: "https://passport.migu.cn" },
     signal: AbortSignal.timeout(8000),
   });

@@ -5,15 +5,14 @@
  * （竞品 quality.ts 口径，盲改不校验存在性 ⇒ 每档改写后用 Range 探测，失败逐级回退，
  * PQ 原链是上游直接给的，作为最终保底）。
  *
- * 播放链路必须用签发的本地代理地址：咪咕部分档位与接口依赖特定 UA，
- * `ffmpeg_audio` 的 HTTP 源无法自定义请求头，统一经 streamProxy 转发。
+ * 实测（2026-11）：freetyst 直链无 Referer/UA 校验，去 query 后可长期复用，
+ * 直接返回裸地址给 audio-engine 拉流，不走本地代理。
  */
 
-import { ENDPOINT, MIGU_TONES, QUALITY_TO_TONES, STREAM_HEADERS, TONE_LABEL } from "../core/config";
+import { ENDPOINT, MIGU_TONES, QUALITY_TO_TONES, TONE_LABEL } from "../core/config";
 import type { MiguToneSpec } from "../core/config";
 import { probeMiguUrl } from "../core/request";
 import type { MiguListenUrlResponse, MiguModule } from "../core/types";
-import { createProxiedStreamUrl } from "@main/services/streamProxy";
 
 /**
  * 把 PQ 直链改写成目标档位地址
@@ -42,8 +41,17 @@ const song_url: MiguModule = async (query, http) => {
       copyrightId,
     )}&resourceType=2&toneFlag=PQ`,
   );
-  const pqUrl = (res.body as MiguListenUrlResponse)?.data?.url;
-  if (!pqUrl) throw new Error(`migu 未取到播放地址：${contentId}`);
+  const body = res.body as MiguListenUrlResponse;
+  const data = body?.data as
+    { url?: string; oriUrl?: string; auditionsLength?: number; dialogInfo?: unknown } | undefined;
+  const pqUrl = data?.url;
+  if (!pqUrl) {
+    // VIP / 版权受限歌曲：code 000000 但只回试听信息不下发 URL
+    if (data?.auditionsLength || data?.dialogInfo) {
+      throw new Error(`migu vip required: ${contentId}`);
+    }
+    throw new Error(`migu 未取到播放地址：${contentId}`);
+  }
 
   const tones = QUALITY_TO_TONES[toneKey] ?? [MIGU_TONES.PQ];
   let chosen: { url: string; tone: MiguToneSpec } | null = null;
@@ -59,12 +67,14 @@ const song_url: MiguModule = async (query, http) => {
   }
 
   const target = chosen ?? { url: pqUrl, tone: MIGU_TONES.PQ };
-  const proxyUrl = await createProxiedStreamUrl({ url: target.url, headers: STREAM_HEADERS });
+  // 实测（2026-11）：freetyst 直链无 Referer/UA 校验、去 query 后可长期复用，
+  // audio-engine 直接拉裸地址，无需本地代理转发
+  const url = target.url.split("?")[0];
 
   return {
     status: 200,
     body: {
-      proxyUrl,
+      url,
       tone: target.tone.tone,
       toneLabel: TONE_LABEL[target.tone.tone],
       format: formatFromExt(target.tone.ext),

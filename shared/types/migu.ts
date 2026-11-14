@@ -23,10 +23,10 @@ export interface MiguSong {
   isVip: boolean;
 }
 
-/** 归一化后的取流结果（经 streamProxy 签发） */
+/** 归一化后的取流结果（裸地址直拉，实测无防盗链） */
 export interface MiguStream {
-  /** 本地代理地址，播放链路必须用它 */
-  proxyUrl: string;
+  /** 音频直链（去 query，可直接交给播放引擎） */
+  url: string;
   /** 咪咕档位码 */
   tone: string;
   /** 档位中文标签 */
