@@ -11,12 +11,16 @@ import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
 import { useMediaStore } from "@/stores/media";
 import * as queue from "@/stores/queue";
+import { isAutoMixReady, connectAutoMixComponents } from "@/services/automix";
+import { AUTOMIX_ARM_LEAD_MS } from "@shared/constants/playback";
 
 /** 预载结果 */
 export interface NextTrackPreloadResult {
   trackId: string;
   /** 已就绪的原生槽位标识，缺省表示仅解析或缓存了音源 */
   preparedId?: string;
+  /** 仅在 AutoMix 就绪时存在，使用当前曲的展示时间轴 */
+  autoMixStartMs?: number;
   source: ResolvedTrackSource | null;
   contextKey: string;
 }
@@ -29,6 +33,7 @@ let currentContextKey: string | null = null;
 let pendingCover: HTMLImageElement | null = null;
 let transitionPreparedId: string | null = null;
 let stopContextWatch: (() => void) | null = null;
+let stopAutoMixComponents: (() => void) | null = null;
 
 /**
  * 拼装上下文指纹，用于去重与作废
@@ -37,6 +42,7 @@ let stopContextWatch: (() => void) | null = null;
  */
 const buildContextKey = (track: Track): string => {
   const settings = useSettingsStore();
+  const status = useStatusStore();
 
   const parts = [
     track.id,
@@ -48,6 +54,9 @@ const buildContextKey = (track: Track): string => {
     settings.player.songLevel,
     settings.player.transitionMode,
     settings.player.transitionPreference,
+    ...(settings.player.transitionMode === "automix"
+      ? [isAutoMixReady(), status.speed, status.pitch, status.currentTrack?.id]
+      : []),
     settings.player.allowTrialPlay,
   ];
 
@@ -137,18 +146,26 @@ export const peekPreparedTrack = (track: Track): NextTrackPreloadResult | null =
 };
 
 /**
- * 将备用槽位所有权交给在途交接，设置变更从下一次预载开始生效。
+ * 将可交接槽位交给在途过渡，无对拍计划时由调用方安排交叉过渡
  * @param track - 本次交接的目标曲目
  * @param expectedId - 后台通知对应的槽位标识
+ * @param positionMs - 当前曲展示时间，用于只在入场前提交变速
  * @returns 已接管的预载结果，迟到通知或槽位失效时返回 null
  */
 export const beginPreparedTransition = (
   track: Track,
   expectedId?: string,
+  positionMs?: number,
 ): NextTrackPreloadResult | null => {
   if (transitionPreparedId) return null;
   const prepared = peekPreparedTrack(track);
   if (!prepared?.source || (expectedId && prepared.preparedId !== expectedId)) return null;
+  if (
+    positionMs != null &&
+    prepared.autoMixStartMs != null &&
+    positionMs < prepared.autoMixStartMs - AUTOMIX_ARM_LEAD_MS
+  )
+    return null;
   const result = consumePreloadedTrack(track);
   if (!result?.preparedId) return null;
   transitionPreparedId = result.preparedId;
@@ -156,12 +173,17 @@ export const beginPreparedTransition = (
 };
 
 /**
- * 释放交接所有权，再按最新设置调度下一曲。
+ * 释放交接所有权，再按最新设置调度下一曲
  * @param id - 本次交接持有的槽位标识
+ * @param rejected - 交接失败时保留的音源缓存，同一上下文不再重建 PCM 重试
  */
-export const finishPreparedTransition = (id: string): void => {
+export const finishPreparedTransition = (id: string, rejected?: NextTrackPreloadResult): void => {
   if (transitionPreparedId !== id) return;
   transitionPreparedId = null;
+  if (rejected) {
+    cachedResult = { ...rejected, preparedId: undefined, autoMixStartMs: undefined };
+    currentContextKey = rejected.contextKey;
+  }
   void window.api.player.cancelPrepared(id).catch(console.warn);
   scheduleNextTrackPreload();
 };
@@ -258,24 +280,35 @@ export const scheduleNextTrackPreload = (): void => {
         if (cachedPath) source = { source: cachedPath, fromCache: true, provider: "cache" };
       }
       let preparedId: string | undefined;
+      let autoMixStartMs: number | undefined;
       if (source.provider === "local" || source.fromCache) {
-        const ready = await window.api.player.prepareNext(
+        const result = await window.api.player.prepareNext(
           id,
           source.source,
           candidateTrack.cueStartMs,
-          settings.player.transitionMode === "crossfade"
+          settings.player.transitionMode !== "none"
             ? settings.player.transitionPreference
+            : undefined,
+          settings.player.transitionMode === "automix"
+            ? { mode: "automix", endMs: candidateTrack.cueEndMs }
             : undefined,
         );
         if (token !== currentToken) return;
-        if (ready) preparedId = id;
+        if (result.ready) preparedId = id;
+        autoMixStartMs = result.autoMixStartMs;
       }
       if (!preparedId) {
         await window.api.player.cancelPrepared(id);
         if (token !== currentToken) return;
         nativePreloadId = null;
       }
-      cachedResult = { trackId: candidateTrack.id, source, contextKey, preparedId };
+      cachedResult = {
+        trackId: candidateTrack.id,
+        source,
+        contextKey,
+        preparedId,
+        autoMixStartMs,
+      };
       if (!preparedId) {
         console.info("[player:preload] 下一曲音源已准备，PCM 未预载", {
           trackId: candidateTrack.id,
@@ -299,12 +332,17 @@ export const scheduleNextTrackPreload = (): void => {
 export const installNextTrackPreloadWatchers = (): void => {
   if (stopContextWatch) return;
   const settings = useSettingsStore();
+  if (settings.player.transitionMode === "automix")
+    stopAutoMixComponents = connectAutoMixComponents();
   const status = useStatusStore();
   stopContextWatch = watch(
     () => [
       settings.player.preloadNextTrack,
       settings.player.transitionMode,
       settings.player.transitionPreference,
+      ...(settings.player.transitionMode === "automix"
+        ? [isAutoMixReady(), status.speed, status.pitch]
+        : []),
       settings.system.cache.songCache.enabled,
       settings.player.songLevel,
       settings.player.allowTrialPlay,
@@ -323,7 +361,15 @@ export const installNextTrackPreloadWatchers = (): void => {
       settings.system.localLyric.enableLocalTTMLOverride,
       settings.system.localLyric.repoDir,
     ],
-    scheduleNextTrackPreload,
+    () => {
+      if (settings.player.transitionMode === "automix") {
+        stopAutoMixComponents ??= connectAutoMixComponents();
+      } else {
+        stopAutoMixComponents?.();
+        stopAutoMixComponents = null;
+      }
+      scheduleNextTrackPreload();
+    },
     { flush: "post" },
   );
 };
@@ -332,5 +378,7 @@ export const installNextTrackPreloadWatchers = (): void => {
 export const disposeNextTrackPreload = (): void => {
   stopContextWatch?.();
   stopContextWatch = null;
+  stopAutoMixComponents?.();
+  stopAutoMixComponents = null;
   invalidateNextTrackPreload();
 };

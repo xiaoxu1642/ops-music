@@ -1,5 +1,5 @@
 import type { IpcResponse, LoadResult, PlaybackContext, Track } from "@shared/types/player";
-import { TRANSITION_LOOKAHEAD_MS } from "@shared/constants/playback";
+import { AUTOMIX_LOOKAHEAD_MS, TRANSITION_LOOKAHEAD_MS } from "@shared/constants/playback";
 import type { TagEditRequest, TagWriteOutcome } from "@shared/types/tagEditor";
 import type { PersonalFmOptions } from "@/types/netease";
 import { handleEvent } from "./events";
@@ -24,6 +24,7 @@ import {
   invalidateNextTrackPreload,
   installNextTrackPreloadWatchers,
   beginPreparedTransition,
+  peekPreparedTrack,
   finishPreparedTransition,
   scheduleNextTrackPreload,
 } from "@/services/nextTrackPreloader";
@@ -927,7 +928,7 @@ export const trySmartTransition = async (
   const status = useStatusStore();
   if (
     transitionInFlight ||
-    settings.player.transitionMode !== "crossfade" ||
+    settings.player.transitionMode === "none" ||
     !status.isPlaying ||
     status.trackLoading ||
     status.fmMode ||
@@ -941,7 +942,10 @@ export const trySmartTransition = async (
   const remainingWallMs = remainingMs / Math.max(status.speed, 0.1);
   if (
     !Number.isFinite(remainingWallMs) ||
-    remainingWallMs > TRANSITION_LOOKAHEAD_MS[settings.player.transitionPreference] ||
+    remainingWallMs >
+      (settings.player.transitionMode === "automix"
+        ? AUTOMIX_LOOKAHEAD_MS
+        : TRANSITION_LOOKAHEAD_MS[settings.player.transitionPreference]) ||
     remainingWallMs < 1000
   )
     return;
@@ -954,7 +958,18 @@ export const trySmartTransition = async (
     shuffleMode: status.shuffleMode,
   });
   if (!candidate) return;
-  const prepared = beginPreparedTransition(candidate.track, preparedId);
+  const slot = peekPreparedTrack(candidate.track);
+  const autoMix = settings.player.transitionMode === "automix" && slot?.autoMixStartMs != null;
+  // 不适合 AutoMix 的曲目对按设置改用交叉过渡，关闭时交给曲尾正常切歌
+  if (
+    (!autoMix &&
+      settings.player.transitionMode === "automix" &&
+      !settings.player.automixCrossfadeFallback) ||
+    (autoMix && (Math.abs(status.speed - 1) >= 0.0001 || status.pitch !== 0)) ||
+    (!autoMix && remainingWallMs > TRANSITION_LOOKAHEAD_MS[settings.player.transitionPreference])
+  )
+    return;
+  const prepared = beginPreparedTransition(candidate.track, preparedId, positionMs);
   if (!prepared?.preparedId || !prepared.source) return;
   const shouldLog = lastLoggedTransitionId !== prepared.preparedId;
   if (shouldLog) lastLoggedTransitionId = prepared.preparedId;
@@ -962,6 +977,7 @@ export const trySmartTransition = async (
   const oldTrackId = status.currentTrack?.id;
   const token = trackToken;
   transitionInFlight = true;
+  let completed = false;
   try {
     const result = await window.api.player.transitionPrepared(
       prepared.preparedId,
@@ -973,6 +989,7 @@ export const trySmartTransition = async (
         context: status.currentPlaybackContext,
         autoPlay: true,
       },
+      ...(autoMix ? ["automix" as const] : []),
     );
     if (token !== trackToken) {
       if (shouldLog) console.info("[player:transition] 交叉过渡已被新的播放操作取消");
@@ -1005,10 +1022,12 @@ export const trySmartTransition = async (
     const stopAfterTrack = autoClose.onTrackEnded();
     status.playIndex = candidate.index;
     await loadTrack(candidate.track, status.currentPlaybackContext, true, result, prepared.source);
+    completed = true;
     if (stopAfterTrack) await pause();
   } finally {
     transitionInFlight = false;
-    finishPreparedTransition(prepared.preparedId);
+    if (completed || token !== trackToken) finishPreparedTransition(prepared.preparedId);
+    else finishPreparedTransition(prepared.preparedId, prepared);
   }
 };
 

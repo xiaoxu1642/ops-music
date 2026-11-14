@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "./native/automix-worker",
   "./native/audio-engine",
   "./native/media-ctrl",
   "./native/taskbar-lyric",

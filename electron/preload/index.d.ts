@@ -13,6 +13,7 @@ import { StatsApi } from "@shared/types/stats";
 import { PlaylistApi } from "@shared/types/playlist";
 import { OpenccApi } from "@shared/types/opencc";
 import { CommentsApi } from "@shared/types/comment";
+import type { AutoMixApi } from "@shared/types/automix";
 
 declare global {
   interface Window {
@@ -20,6 +21,7 @@ declare global {
     api: {
       config: ConfigApi;
       player: PlayerApi;
+      automix: AutoMixApi;
       system: {
         installType: "nsis" | "portable" | "appx";
         platform: NodeJS.Platform;

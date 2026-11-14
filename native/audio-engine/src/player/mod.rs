@@ -21,6 +21,7 @@ mod events;
 pub(crate) mod preload;
 mod transition;
 
+pub use crossfade::AutoMixSettings;
 #[cfg(test)]
 use events::playback_completion_event;
 pub use events::{EventEmitter, PlayerEvent, PlayerState};
@@ -226,6 +227,12 @@ impl InnerPlayer {
     ) {
         self.emit(PlayerEvent::TransitionChanged {
             active,
+            mode: if self.transition_dsp.as_ref().is_some_and(|dsp| dsp.automix) {
+                "automix"
+            } else {
+                "crossfade"
+            }
+            .to_string(),
             reason: reason.map(str::to_owned),
             fade_seconds,
         });
@@ -512,7 +519,9 @@ impl InnerPlayer {
     }
 
     /// 设置播放速度（自动 clamp 到 [0.5, 2.0]）
+    /// @param speed - 用户播放倍率，调整时撤回自动混音
     pub fn set_speed(&mut self, speed: f32) {
+        self.cancel_automix();
         self.tempo.lock().set_speed(speed);
         if let Some(next) = &self.transition_dsp {
             next.tempo.lock().set_speed(speed);
@@ -524,7 +533,9 @@ impl InnerPlayer {
 
     /// 设置音调偏移（半音，自动 clamp 到 [-12, 12]）
     /// sync=ON 时立即下发；sync=OFF 时只更新内部值，不影响声音
+    /// @param semitones - 用户音调偏移
     pub fn set_pitch(&mut self, semitones: i8) {
+        self.cancel_automix();
         self.tempo.lock().set_pitch(semitones);
         if let Some(next) = &self.transition_dsp {
             next.tempo.lock().set_pitch(semitones);
@@ -532,7 +543,9 @@ impl InnerPlayer {
     }
 
     /// 设置"音调同步"开关（true = 变速保音调，默认）
+    /// @param sync - 是否在用户变速时保持音调
     pub fn set_pitch_sync(&mut self, sync: bool) {
+        self.cancel_automix();
         self.tempo.lock().set_pitch_sync(sync);
         if let Some(next) = &self.transition_dsp {
             next.tempo.lock().set_pitch_sync(sync);

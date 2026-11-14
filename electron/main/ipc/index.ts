@@ -13,11 +13,13 @@ import { registerStatsIpc } from "./stats";
 import { registerPlaylistIpc } from "./playlist";
 import { registerOpenccIpc } from "./opencc";
 import { registerCommentsIpc } from "./comments";
+import { registerAutoMixIpc } from "./automix";
 
 /** 注册所有 IPC 处理 */
 export const registerIpcHandlers = (): void => {
   registerSystemIpc();
   registerPlayerIpc();
+  registerAutoMixIpc();
   registerConfigIpc();
   registerLibraryIpc();
   registerNowPlayingIpc();

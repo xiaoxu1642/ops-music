@@ -17,6 +17,7 @@ declare module 'vue' {
     AMLLLyrics: typeof import('./src/components/player/Lyrics/AMLLLyrics.vue')['default']
     AudioInfoDialog: typeof import('./src/components/modals/AudioInfoDialog.vue')['default']
     AutoCloseDialog: typeof import('./src/components/modals/AutoCloseDialog.vue')['default']
+    AutoMixComponents: typeof import('./src/components/settings/custom/AutoMixComponents.vue')['default']
     BilibiliAccountDialog: typeof import('./src/components/modals/BilibiliAccountDialog.vue')['default']
     ContextMenuContent: typeof import('reka-ui')['ContextMenuContent']
     ContextMenuItem: typeof import('reka-ui')['ContextMenuItem']

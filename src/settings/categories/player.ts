@@ -6,6 +6,7 @@ import IconLucidePlay from "~icons/lucide/play";
 import { getActiveDeviceId } from "@/core/player";
 import { setDeviceVolume } from "@/services/deviceVolume";
 import { useStatusStore } from "@/stores/status";
+import AutoMixComponents from "@/components/settings/custom/AutoMixComponents.vue";
 
 const playerCategory: SettingCategory = {
   id: "player",
@@ -117,17 +118,20 @@ const playerCategory: SettingCategory = {
           options: [
             { value: "none", labelKey: "settings.transitionMode.none" },
             { value: "crossfade", labelKey: "settings.transitionMode.crossfade" },
+            {
+              value: "automix",
+              labelKey: "settings.transitionMode.automix",
+            },
           ],
           defaultValue: "none",
           confirm: {
-            when: (next) =>
-              next === "crossfade" && !useSettingsStore().system.cache.songCache.enabled,
-            titleKey: "settings.confirm.preloadCacheTitle",
-            contentKey: "settings.confirm.preloadCacheContent",
+            when: (next) => next === "crossfade" || next === "automix",
+            titleKey: "settings.confirm.highResourceTitle",
+            contentKey: "settings.confirm.transitionHighResourceContent",
             type: "warning",
           },
           action: async (mode) => {
-            if (mode !== "crossfade") return;
+            if (mode !== "crossfade" && mode !== "automix") return;
             const settings = useSettingsStore();
             settings.player.preloadNextTrack = true;
             if (!settings.system.cache.songCache.enabled) {
@@ -135,6 +139,19 @@ const playerCategory: SettingCategory = {
             }
           },
           children: [
+            {
+              key: "automixComponents",
+              type: "custom",
+              component: AutoMixComponents,
+              visible: () => useSettingsStore().player.transitionMode === "automix",
+            },
+            {
+              key: "automixCrossfadeFallback",
+              type: "switch",
+              binding: { store: "settings", path: "player.automixCrossfadeFallback" },
+              defaultValue: true,
+              visible: () => useSettingsStore().player.transitionMode === "automix",
+            },
             {
               key: "transitionPreference",
               type: "select",
@@ -147,8 +164,7 @@ const playerCategory: SettingCategory = {
               defaultValue: "standard",
             },
           ],
-          childrenCondition: () => useSettingsStore().player.transitionMode === "crossfade",
-          hideChildren: true,
+          childrenCondition: () => useSettingsStore().player.transitionMode !== "none",
         },
       ],
     },
