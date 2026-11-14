@@ -31,6 +31,7 @@ const SESSION_MUTATING: ReadonlySet<string> = new Set(["token_validate"]);
  */
 const NON_CACHEABLE: ReadonlySet<string> = new Set([
   "song_url",
+  "check_token",
   "token_validate",
   "login_send_code",
   "login_verify",

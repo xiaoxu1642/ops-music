@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/user";
 import { useBilibiliAccountStore } from "@/stores/bilibiliAccount";
+import { useMiguAccountStore } from "@/stores/miguAccount";
 import { dialog } from "@/composables/useDialog";
 import { toast } from "@/composables/useToast";
 import { withPicSize } from "@/utils/format/netease";
@@ -15,6 +16,8 @@ const router = useRouter();
 const user = useUserStore();
 const bilibili = useBilibiliAccountStore();
 const bilibiliOpen = ref(false);
+const migu = useMiguAccountStore();
+const miguOpen = ref(false);
 
 const loginOpen = ref(false);
 const popoverOpen = ref(false);
@@ -24,6 +27,7 @@ onMounted(() => {
   void user.fetchStatus();
   // 只在有缓存身份时校验，未登录过 B 站的用户不为此多发一次请求
   if (bilibili.isLoggedIn) void bilibili.fetchStatus();
+  if (migu.isLoggedIn) void migu.fetchStatus();
 });
 
 const isVip = computed(() => !!user.profile?.vipType && user.profile.vipType !== 0);
@@ -198,7 +202,24 @@ const handleLogout = async (): Promise<void> => {
     </template>
   </SButton>
 
+  <!-- 咪咕账号入口，与其他平台账号相互独立 -->
+  <SButton
+    class="app-no-drag"
+    variant="tertiary"
+    :size="40"
+    circle
+    :title="migu.profile?.phoneMask || t('login.miguTitle')"
+    @click="miguOpen = true"
+  >
+    <template #icon>
+      <IconLucideSmartphone v-if="migu.isLoggedIn" />
+      <IconLucideMusic v-else />
+    </template>
+  </SButton>
+
   <BilibiliAccountDialog v-model:open="bilibiliOpen" />
+
+  <MiguAccountDialog v-model:open="miguOpen" />
 
   <LoginDialog v-model:open="loginOpen" />
 </template>

@@ -314,7 +314,16 @@
     "bilibiliTitle": "哔哩哔哩账号",
     "bilibiliLogin": "网页登录",
     "bilibiliWaiting": "等待登录完成…",
-    "bilibiliLogoutConfirmDesc": "确认退出哔哩哔哩账号？"
+    "bilibiliLogoutConfirmDesc": "确认退出哔哩哔哩账号？",
+    "miguTitle": "咪咕音乐账号",
+    "miguTip": "使用手机号短信验证码登录咪咕音乐，登录后可解锁会员音质与完整歌曲",
+    "miguPhonePlaceholder": "请输入手机号",
+    "miguSendCode": "发送验证码",
+    "miguCodePlaceholder": "请输入短信验证码",
+    "miguVerify": "登录",
+    "miguResend": "重新发送验证码",
+    "miguCodeSent": "验证码已发送",
+    "miguLogoutConfirmDesc": "确认退出咪咕音乐账号？"
   },
   "search": {
     "title": "搜索",
