@@ -4,7 +4,7 @@ import { getEngine } from "@main/services/engine";
 import { playerLog } from "@main/utils/logger";
 import { automixCacheDir } from "@main/utils/paths";
 import type { JsAutoMixFeatures } from "@splayer/audio-engine";
-import type { AutoMixProfile } from "@shared/types/automix";
+import type { AutoMixAnalysisContext, AutoMixProfile } from "@shared/types/automix";
 import { getAutoMixComponentStatus } from "./components";
 import { runAutoMixModel, runAutoMixTask } from "./inference";
 import { createAutoMixProfile } from "./features";
@@ -27,11 +27,13 @@ export interface AnalysisTrack {
  * 按需分析两曲的首尾窗口，模型完成或取消后立即归还进程内存
  * @param tracks - 当前曲尾和下一曲头的本地音源范围
  * @param signal - 本次预载的取消信号
+ * @param context - 本次预载的分析观测上下文
  * @returns 可用档案，组件缺失或不足模型上下文时为空
  */
 export const analyzeAutoMixTracks = (
   tracks: AnalysisTrack[],
   signal: AbortSignal,
+  context?: AutoMixAnalysisContext,
 ): Promise<AutoMixProfile[] | null> =>
   runAutoMixTask(signal, async () => {
     const components = await getAutoMixComponentStatus();
@@ -75,7 +77,7 @@ export const analyzeAutoMixTracks = (
         features.push(metadata);
         windows.push({ input, output, frames: mel.length / MEL_BINS });
       }
-      await runAutoMixModel("beat", windows, signal);
+      await runAutoMixModel("beat", windows, signal, context);
       for (const [offset, index] of pending.entries()) {
         const data = await readFile(windows[offset].output);
         if (data.byteLength !== windows[offset].frames * 8) throw new Error("节拍预测帧数不匹配");

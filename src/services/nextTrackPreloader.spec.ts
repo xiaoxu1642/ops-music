@@ -117,6 +117,11 @@ describe("下一曲真实预载", () => {
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
     await flushPromises();
+    expect(mocks.prepare.mock.calls[0]![4]).toEqual({
+      mode: "automix",
+      endMs: undefined,
+      analysisContext: { generation: expect.any(Number) },
+    });
     const track = mocks.candidate.track as Track;
     expect(preloader.beginPreparedTransition(track, undefined, 10_000)).toBeNull();
     expect(preloader.beginPreparedTransition(track, undefined, 17_999)).toBeNull();

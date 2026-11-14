@@ -1,8 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Track } from "@shared/types/player";
 
 const mocks = vi.hoisted(() => {
   const track = { id: "next", source: "netease", title: "Next", artists: [], duration: 1000 };
+  const shared = {
+    repeatMode: "off" as "off" | "one" | "list",
+    shuffleMode: "off" as "off" | "on",
+    queueLength: { value: 6 },
+    queue: { value: [{ ...track, id: "old" }, track] },
+    setQueue: vi.fn(),
+    handleEvent: vi.fn(),
+    handleError: vi.fn(),
+  };
   const media = {
     track: { ...track, id: "old" },
     setPlaybackContext: vi.fn(),
@@ -15,12 +24,17 @@ const mocks = vi.hoisted(() => {
     transitionPreference: "standard" as "conservative" | "standard" | "eager",
     transitionMode: "crossfade" as "crossfade" | "automix",
     automixCrossfadeFallback: false,
+    shared,
     media,
     status: {
       currentTrack: { ...track, id: "old" },
       playIndex: 0,
-      shuffleMode: "off",
-      repeatMode: "off",
+      get shuffleMode() {
+        return shared.shuffleMode;
+      },
+      get repeatMode() {
+        return shared.repeatMode;
+      },
       fmMode: false,
       abLoop: { enable: false },
       duration: 10000,
@@ -43,10 +57,11 @@ const mocks = vi.hoisted(() => {
     load: vi.fn(),
     stop: vi.fn(),
     invalidate: vi.fn(),
+    fmNext: vi.fn(),
   };
 });
-vi.mock("./events", () => ({ handleEvent: vi.fn() }));
-vi.mock("./fm", () => ({}));
+vi.mock("./events", () => ({ handleEvent: mocks.shared.handleEvent }));
+vi.mock("./fm", () => ({ next: mocks.fmNext }));
 vi.mock("./stats", () => ({ installPlayStats: vi.fn(), onTrackEnded: mocks.onTrackEnded }));
 vi.mock("@/stores/settings", () => ({
   useSettingsStore: () => ({
@@ -70,9 +85,9 @@ vi.mock("@/stores/media", () => ({
 vi.mock("@/stores/history", () => ({ useHistoryStore: () => ({ record: vi.fn() }) }));
 vi.mock("@/stores/library", () => ({ useLibraryStore: vi.fn() }));
 vi.mock("@/stores/queue", () => ({
-  queue: { value: [{ ...mocks.track, id: "old" }, mocks.track] },
-  queueLength: { value: 2 },
-  setQueue: vi.fn(),
+  queue: mocks.shared.queue,
+  queueLength: mocks.shared.queueLength,
+  setQueue: mocks.shared.setQueue,
   updateQueueTracks: vi.fn(),
 }));
 vi.mock("@/services/playback", () => ({
@@ -108,8 +123,19 @@ vi.mock("@/composables/useFavorite", () => ({ useFavorite: vi.fn() }));
 vi.mock("@/composables/useToast", () => ({ toast: { info: vi.fn() } }));
 vi.mock("@/utils/color", () => ({ extractColorFromUrl: vi.fn() }));
 vi.mock("@/utils/errors", () => ({
-  handleError: vi.fn(),
-  isSkippableError: (code: string) => code === "FILE_DECODE_ERROR",
+  handleError: mocks.shared.handleError,
+  isSkippableError: (code: string) => code === "FILE_DECODE_ERROR" || code === "URL_RESOLVE_FAILED",
+  isNoSourceSkippableError: (code: string) =>
+    code === "FILE_NOT_FOUND" ||
+    code === "FILE_NO_AUDIO_STREAM" ||
+    code === "FILE_DECODE_ERROR" ||
+    code === "NETEASE_UNAVAILABLE" ||
+    code === "NETEASE_VIP_REQUIRED" ||
+    code === "NETEASE_TRIAL_DISABLED" ||
+    code === "MIGU_UNAVAILABLE" ||
+    code === "MIGU_VIP_REQUIRED" ||
+    code === "MIGU_TRIAL_DISABLED" ||
+    code === "BILIBILI_UNAVAILABLE",
 }));
 vi.mock("@/utils/preset/skipKeywords", () => ({ shouldSkipKeywordTrack: () => false }));
 vi.mock("@/i18n", () => ({ default: { global: { t: (value: string) => value } } }));
@@ -118,16 +144,37 @@ describe("切歌消费真实预载", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    mocks.shared.repeatMode = "off";
+    mocks.shared.shuffleMode = "off";
+    mocks.shared.queueLength.value = 2;
+    mocks.shared.queue.value = [{ ...mocks.track, id: "old" }, mocks.track];
     mocks.media.track = { ...mocks.track, id: "old" };
     mocks.status.currentTrack = { ...mocks.track, id: "old" };
     mocks.status.playIndex = 0;
+    mocks.status.fmMode = false;
+    mocks.status.state = "playing";
+    mocks.status.isPlaying = true;
+    mocks.status.trackLoading = false;
+    mocks.status.currentSource = "old";
+    mocks.consume.mockReturnValue(null);
+    mocks.fmNext.mockResolvedValue(null);
     mocks.load.mockResolvedValue({
       success: true,
       data: { detail: {}, mediaInfo: { duration: 1000 } },
     });
     mocks.stop.mockResolvedValue({ success: true });
     Object.assign(window, {
-      api: { player: { load: mocks.load, stop: mocks.stop, transitionPrepared: mocks.transition } },
+      api: {
+        player: {
+          load: mocks.load,
+          stop: mocks.stop,
+          transitionPrepared: mocks.transition,
+          play: vi.fn().mockResolvedValue({ success: true }),
+          pause: vi.fn().mockResolvedValue({ success: true }),
+          seek: vi.fn().mockResolvedValue({ success: true }),
+          syncPlayMode: vi.fn(),
+        },
+      },
     });
   });
 
@@ -262,6 +309,141 @@ describe("切歌消费真实预载", () => {
     );
   });
 
+  describe("无可用音源自动跳下一首", () => {
+    beforeEach(() => {
+      mocks.resolve.mockReset();
+      mocks.shared.handleEvent.mockReset();
+      mocks.shared.handleError.mockReset();
+      mocks.shared.repeatMode = "off";
+      mocks.shared.queueLength.value = 3;
+      mocks.shared.queue.value = [
+        { ...mocks.track, id: "old" },
+        mocks.track,
+        { ...mocks.track, id: "third" },
+      ];
+      mocks.status.currentTrack = mocks.track;
+      mocks.status.playIndex = 0;
+    });
+
+    const failWith = (error: string): void => {
+      mocks.resolve.mockImplementationOnce((_track, options) => {
+        options.onError(error);
+        return null;
+      });
+    };
+    const succeedNext = (): void => {
+      mocks.resolve.mockResolvedValue({
+        source: "https://music/next",
+        fromCache: false,
+        provider: "official",
+      });
+    };
+    const startUnavailableTrack = async (autoPlay = true): Promise<void> => {
+      const { loadTrack } = await import("./index");
+      await loadTrack(mocks.track as Track, undefined, autoPlay);
+    };
+
+    it("内部 stopped 状态事件作废全局代次后仍在一秒自动切歌并播放", async () => {
+      vi.useFakeTimers();
+      failWith("NETEASE_UNAVAILABLE");
+      await startUnavailableTrack();
+      succeedNext();
+      mocks.status.currentTrack = mocks.track;
+      mocks.shared.handleEvent.mockImplementationOnce(async (event) => {
+        if (event.type !== "status") return;
+        const { invalidatePlaybackOperationForInternalStatus } = await import("./index");
+        invalidatePlaybackOperationForInternalStatus();
+      });
+      await mocks.shared.handleEvent({
+        type: "status",
+        data: { state: "stopped", position: 0, duration: 0, volume: 1 },
+      });
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(mocks.status.playIndex).toBe(1);
+      expect(mocks.load.mock.calls[0][1]).toEqual(expect.objectContaining({ autoPlay: true }));
+    });
+
+    it("暂停态恢复传入 autoPlay=false 时失败跳曲仍自动播放", async () => {
+      vi.useFakeTimers();
+      failWith("NETEASE_UNAVAILABLE");
+      await startUnavailableTrack(false);
+      succeedNext();
+      mocks.status.currentTrack = mocks.track;
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(mocks.load.mock.calls[0][1]).toEqual(expect.objectContaining({ autoPlay: true }));
+    });
+
+    it("一轮队列内连续五首不可播放后停并提示", async () => {
+      vi.useFakeTimers();
+      mocks.shared.queueLength.value = 6;
+      mocks.shared.queue.value = Array.from({ length: 6 }, (_, index) => ({
+        ...mocks.track,
+        id: `song-${index}`,
+      }));
+      mocks.status.currentTrack = mocks.shared.queue.value[0] as typeof mocks.status.currentTrack;
+      for (let index = 0; index < 5; index++) failWith("NETEASE_UNAVAILABLE");
+      const { loadTrack } = await import("./index");
+      await loadTrack(mocks.status.currentTrack as Track);
+      for (let index = 1; index < 5; index++) {
+        mocks.status.currentTrack = mocks.shared.queue.value[
+          index
+        ] as typeof mocks.status.currentTrack;
+        await vi.advanceTimersByTimeAsync(1000);
+      }
+      expect(mocks.status.playIndex).toBe(4);
+      expect(mocks.shared.handleError).toHaveBeenCalledWith("MAX_CONSECUTIVE_FAILURES");
+      expect(mocks.status.state).toBe("stopped");
+    });
+
+    it.each(["NETWORK_ERROR", "NETWORK_TIMEOUT", "NETEASE_LOGIN_EXPIRED"])(
+      "%s 不排跳曲定时器也不增加失败计数",
+      async (error) => {
+        vi.useFakeTimers();
+        failWith(error);
+        await startUnavailableTrack();
+        expect(vi.getTimerCount()).toBe(0);
+        expect(mocks.status.state).toBe("idle");
+        succeedNext();
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(mocks.load).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["stop", "seek"] as const)("用户主动 %s 取消待跳曲意图", async (method) => {
+      vi.useFakeTimers();
+      failWith("NETEASE_UNAVAILABLE");
+      await startUnavailableTrack();
+      succeedNext();
+      const player = await import("./index");
+      if (method === "stop") await player.stop();
+      else await player.seek(500);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(mocks.load).not.toHaveBeenCalled();
+    });
+
+    it("单曲循环且队列只有一首时停并提示，不死循环", async () => {
+      vi.useFakeTimers();
+      mocks.shared.repeatMode = "one";
+      mocks.shared.queueLength.value = 1;
+      mocks.shared.queue.value = [{ ...mocks.track, id: "only" }];
+      mocks.status.currentTrack = {
+        ...mocks.track,
+        id: "only",
+      } as typeof mocks.status.currentTrack;
+      failWith("NETEASE_UNAVAILABLE");
+      const { loadTrack } = await import("./index");
+      await loadTrack(mocks.status.currentTrack as Track);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(mocks.load).not.toHaveBeenCalled();
+      expect(mocks.shared.handleError).toHaveBeenCalledWith("MAX_CONSECUTIVE_FAILURES");
+      expect(mocks.status.state).toBe("stopped");
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+  });
+
   it("缓存音源失效后重新解析，并且不能把旧槽位代次带到重试中", async () => {
     mocks.consume.mockReturnValue({
       preparedId: "stale",
@@ -296,7 +478,7 @@ describe("交叉过渡的队列交接", () => {
     mocks.status.position = 0;
     mocks.status.state = "playing";
     mocks.status.trackLoading = false;
-    mocks.status.repeatMode = "off";
+    mocks.shared.repeatMode = "off";
     mocks.status.abLoop.enable = false;
     mocks.status.fmMode = false;
     mocks.transitionPreference = "standard";
@@ -502,7 +684,7 @@ describe("交叉过渡的队列交接", () => {
   });
 
   it("单曲循环时不提前交叉切换", async () => {
-    mocks.status.repeatMode = "one";
+    mocks.shared.repeatMode = "one";
     const { trySmartTransition } = await import("./index");
     await trySmartTransition(5000);
     expect(mocks.transition).not.toHaveBeenCalled();

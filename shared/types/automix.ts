@@ -77,6 +77,14 @@ export type AutoMixArrangement = Omit<AutoMixPlan, "stems">;
 export interface AutoMixPrepareOptions {
   mode: TransitionMode;
   endMs?: number;
+  analysisContext?: AutoMixAnalysisContext;
+}
+
+/** 分析任务的观测上下文，不参与分析决策 */
+export interface AutoMixAnalysisContext {
+  generation: number;
+  remainingMs?: number;
+  fullscreen?: boolean | "unknown";
 }
 
 /** 分析组件管理接口，不会在查询状态时自动下载 */

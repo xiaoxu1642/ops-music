@@ -16,7 +16,7 @@ import {
   getActiveDeviceId,
   hasReachedSeekTarget,
   insertManyToQueue,
-  invalidatePlaybackOperation,
+  invalidatePlaybackOperationForInternalStatus,
   isSmartTransitionActive,
   isSeeking,
   markSeek,
@@ -73,7 +73,7 @@ export const handleEvent = async (event: PlayerEvent): Promise<void> => {
       if (event.data.state === "loading" || status.trackLoading) break;
       status.state = event.data.state;
       if (event.data.state === "idle" || event.data.state === "stopped") {
-        invalidatePlaybackOperation();
+        invalidatePlaybackOperationForInternalStatus();
       }
       // seek 期间不从 status 事件更新 position，避免回跳；position 更新统一由 position 事件负责
       if (!isSeeking()) {

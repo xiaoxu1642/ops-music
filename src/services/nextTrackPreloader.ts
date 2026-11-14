@@ -290,7 +290,11 @@ export const scheduleNextTrackPreload = (): void => {
             ? settings.player.transitionPreference
             : undefined,
           settings.player.transitionMode === "automix"
-            ? { mode: "automix", endMs: candidateTrack.cueEndMs }
+            ? {
+                mode: "automix",
+                endMs: candidateTrack.cueEndMs,
+                analysisContext: { generation: currentToken },
+              }
             : undefined,
         );
         if (token !== currentToken) return;

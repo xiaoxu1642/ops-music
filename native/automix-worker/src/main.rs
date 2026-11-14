@@ -32,6 +32,8 @@ struct Request {
     model: PathBuf,
     windows: Vec<Window>,
     #[serde(default)]
+    analysis_id: Option<String>,
+    #[serde(default)]
     cpu_only: bool,
 }
 
@@ -236,9 +238,13 @@ fn run() -> Result<Value> {
             results.push(json!({"frames": samples.len() / 2, "structure": {"vocals": vocals}}));
         }
     }
-    Ok(
-        json!({"windows": results, "backend": backend, "memoryMb": (peak_memory() as f64 / 1_048_576.0).round(), "seconds": began.elapsed().as_secs_f64()}),
-    )
+    Ok(json!({
+        "windows": results,
+        "analysisId": request.analysis_id.unwrap_or_default(),
+        "backend": backend,
+        "memoryMb": (peak_memory() as f64 / 1_048_576.0).round(),
+        "seconds": began.elapsed().as_secs_f64()
+    }))
 }
 
 /// 只向标准输出写协议结果，失败原因由主进程统一记录

@@ -4,6 +4,8 @@ import { arrangeAutoMix } from "./automix/arrangement";
 import type { AutoMixProfile } from "@shared/types/automix";
 
 const mocks = vi.hoisted(() => ({
+  handlers: new Map<string, (...args: unknown[]) => unknown>(),
+  nativeLoader: vi.fn(),
   prepare: vi.fn(),
   cancel: vi.fn(),
   analyze: vi.fn(),
@@ -191,10 +193,21 @@ describe("后台曲尾交接通知", () => {
     mocks.automix.mockResolvedValue([profile(), profile()]);
     const service = await import("./playerPreload");
     service.setCurrentTransitionRange(0, 20_000, "current.wav");
+    const context = { generation: 7, remainingMs: 12_000, fullscreen: "unknown" as const };
     await service.prepareNextTrack("next", "next.wav", 0, "standard", {
       mode: "automix",
+      analysisContext: context,
     });
     expect(service.getPreparedAutoMixPlan("next")).toBeDefined();
+    expect(mocks.automix).toHaveBeenCalledWith(expect.any(Array), expect.any(AbortSignal), context);
+    expect(mocks.enhance).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Array),
+      expect.any(Array),
+      20_000,
+      expect.any(AbortSignal),
+      context,
+    );
     expect(mocks.enhance).toHaveBeenCalledOnce();
     expect(mocks.analyze).not.toHaveBeenCalled();
     expect(service.takeTransitionReady(19_000)).toBeNull();
@@ -244,5 +257,200 @@ describe("后台曲尾交接通知", () => {
     expect(await pending).toBe(false);
     expect(mocks.prepare).not.toHaveBeenCalled();
     expect(service.takeTransitionReady(5000)).toBeNull();
+  });
+
+  it("原生全屏模块不可用时仍按原行为准备，并将上下文记录为未知", async () => {
+    const { handlers, nativeLoader } = mocks;
+    nativeLoader.mockReturnValue(null);
+    vi.resetModules();
+    vi.doMock("electron", () => ({
+      ipcMain: {
+        handle: (name: string, callback: (...args: unknown[]) => unknown) =>
+          handlers.set(name, callback),
+        on: vi.fn(),
+      },
+      powerMonitor: { on: vi.fn() },
+      app: { on: vi.fn(), isPackaged: false },
+    }));
+    vi.doMock("@main/services/engine", () => ({
+      getPlayer: () => ({
+        getPosition: () => 5,
+        getDuration: () => 10,
+        getSpeed: () => 1,
+      }),
+      resetPlayer: vi.fn(),
+      onPlayerCreated: vi.fn(),
+      onPlayerReset: vi.fn(),
+    }));
+    vi.doMock("@main/services/playerPreload", () => ({
+      prepareNextTrack: mocks.prepare,
+      cancelPreparedTrack: vi.fn(),
+      takeTransitionReady: vi.fn(),
+      setCurrentTransitionRange: vi.fn(),
+      getTransitionEndMs: (end: number) => end,
+      getPreparedAutoMixPlan: vi.fn(),
+      installPreparedAutoMixStems: vi.fn(),
+    }));
+    vi.doMock("@main/utils/logger", () => ({
+      playerLog: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
+      coreLog: { debug: vi.fn(), error: vi.fn() },
+      mediaLog: vi.fn(),
+      nativeLog: { debug: vi.fn(), error: vi.fn() },
+    }));
+    vi.doMock("@main/utils/nativeLoader", () => ({ loadNativeModule: nativeLoader }));
+    vi.doMock("@main/utils/metadata", () => ({
+      parseArtists: () => [],
+      parseAlbum: () => undefined,
+      formatArtists: () => "",
+      artistNames: () => [],
+    }));
+    vi.doMock("@main/services/automix/planner", () => ({
+      canAutoMix: () => true,
+      planAutoMix: vi.fn(),
+      planAutoMixBridge: vi.fn(),
+    }));
+    vi.doMock("@main/services/media", () => ({
+      setMetadata: vi.fn(),
+      setPlayState: vi.fn(),
+      setTimeline: vi.fn(),
+      onEvent: vi.fn(),
+    }));
+    vi.doMock("@main/services/nowPlaying", () => ({ prepareTransition: vi.fn() }));
+    vi.doMock("@main/services/device", () => ({
+      cancelPendingReinit: vi.fn(),
+      startDeviceMonitoring: vi.fn(),
+      stopDeviceMonitoring: vi.fn(),
+    }));
+    vi.doMock("@main/utils/broadcast", () => ({ sendToMain: vi.fn() }));
+    vi.doMock("@main/utils/encoding", () => ({}));
+    vi.doMock("@main/utils/protocol", () => ({ toCacheUrl: vi.fn() }));
+    vi.doMock("@main/utils/config", () => ({
+      appName: "SPlayer",
+      getSongCacheDir: () => "cache",
+    }));
+    vi.doMock("@main/utils/fetchBytes", () => ({}));
+    vi.doMock("@main/utils/powerBlocker", () => ({}));
+    vi.doMock("@main/services/neteaseScrobble", () => ({ onTrackLoaded: vi.fn() }));
+    vi.doMock("@main/services/songCache", () => ({}));
+    vi.doMock("@main/services/thumbar", () => ({ getThumbar: () => null }));
+    vi.doMock("@main/services/tray", () => ({
+      setTraySongName: vi.fn(),
+      setTrayPlayState: vi.fn(),
+    }));
+    vi.doMock("@main/services/thumbnail", () => ({ setTaskbarThumbnailCover: vi.fn() }));
+    vi.doMock("@main/window", () => ({ getMainWindow: () => null }));
+    vi.doMock("@main/store", () => ({ store: { get: () => false } }));
+    vi.doMock("@splayer/audio-engine", () => ({ JsPlayerEvent: class {} }));
+    const { registerPlayerIpc } = await import("@main/ipc/player");
+    registerPlayerIpc();
+    mocks.prepare.mockResolvedValue(true);
+    const handler = handlers.get("player:prepareNext")!;
+    await handler(null, "next", "next.wav", 0, "standard", {
+      mode: "automix",
+      analysisContext: { generation: 3 },
+    });
+    expect(nativeLoader).toHaveBeenCalledWith("taskbar-lyric.node", "taskbar-lyric");
+    expect(mocks.prepare).toHaveBeenCalledWith(
+      "next",
+      "next.wav",
+      0,
+      "standard",
+      expect.objectContaining({
+        mode: "automix",
+        analysisContext: expect.objectContaining({
+          generation: 3,
+          remainingMs: 5000,
+          fullscreen: "unknown",
+        }),
+      }),
+    );
+    expect(nativeLoader).toHaveBeenCalledOnce();
+  });
+
+  it("普通交叉过渡预载不读取全屏态，也不补充分析上下文", async () => {
+    const { handlers, nativeLoader } = mocks;
+    nativeLoader.mockClear();
+    vi.resetModules();
+    vi.doMock("electron", () => ({
+      ipcMain: {
+        handle: (name: string, callback: (...args: unknown[]) => unknown) =>
+          handlers.set(name, callback),
+        on: vi.fn(),
+      },
+      powerMonitor: { on: vi.fn() },
+      app: { on: vi.fn(), isPackaged: false },
+    }));
+    vi.doMock("@main/services/engine", () => ({
+      getPlayer: () => ({ getPosition: () => 5, getDuration: () => 10, getSpeed: () => 1 }),
+      resetPlayer: vi.fn(),
+      onPlayerCreated: vi.fn(),
+      onPlayerReset: vi.fn(),
+    }));
+    vi.doMock("@main/services/playerPreload", () => ({
+      prepareNextTrack: mocks.prepare,
+      cancelPreparedTrack: vi.fn(),
+      takeTransitionReady: vi.fn(),
+      setCurrentTransitionRange: vi.fn(),
+      getTransitionEndMs: (end: number) => end,
+      getPreparedAutoMixPlan: vi.fn(),
+      installPreparedAutoMixStems: vi.fn(),
+    }));
+    vi.doMock("@main/utils/logger", () => ({
+      playerLog: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
+      coreLog: { debug: vi.fn(), error: vi.fn() },
+      mediaLog: vi.fn(),
+      nativeLog: { debug: vi.fn(), error: vi.fn() },
+    }));
+    vi.doMock("@main/utils/nativeLoader", () => ({ loadNativeModule: nativeLoader }));
+    vi.doMock("@main/utils/metadata", () => ({
+      parseArtists: () => [],
+      parseAlbum: () => undefined,
+      formatArtists: () => "",
+      artistNames: () => [],
+    }));
+    vi.doMock("@main/services/automix/planner", () => ({
+      canAutoMix: () => true,
+      planAutoMix: vi.fn(),
+      planAutoMixBridge: vi.fn(),
+    }));
+    vi.doMock("@main/services/media", () => ({
+      setMetadata: vi.fn(),
+      setPlayState: vi.fn(),
+      setTimeline: vi.fn(),
+      onEvent: vi.fn(),
+    }));
+    vi.doMock("@main/services/nowPlaying", () => ({ prepareTransition: vi.fn() }));
+    vi.doMock("@main/services/device", () => ({
+      cancelPendingReinit: vi.fn(),
+      startDeviceMonitoring: vi.fn(),
+      stopDeviceMonitoring: vi.fn(),
+    }));
+    vi.doMock("@main/utils/broadcast", () => ({ sendToMain: vi.fn() }));
+    vi.doMock("@main/utils/encoding", () => ({}));
+    vi.doMock("@main/utils/protocol", () => ({ toCacheUrl: vi.fn() }));
+    vi.doMock("@main/utils/config", () => ({
+      appName: "SPlayer",
+      getSongCacheDir: () => "cache",
+    }));
+    vi.doMock("@main/utils/fetchBytes", () => ({}));
+    vi.doMock("@main/utils/powerBlocker", () => ({}));
+    vi.doMock("@main/services/neteaseScrobble", () => ({ onTrackLoaded: vi.fn() }));
+    vi.doMock("@main/services/songCache", () => ({}));
+    vi.doMock("@main/services/thumbar", () => ({ getThumbar: () => null }));
+    vi.doMock("@main/services/tray", () => ({
+      setTraySongName: vi.fn(),
+      setTrayPlayState: vi.fn(),
+    }));
+    vi.doMock("@main/services/thumbnail", () => ({ setTaskbarThumbnailCover: vi.fn() }));
+    vi.doMock("@main/window", () => ({ getMainWindow: () => null }));
+    vi.doMock("@main/store", () => ({ store: { get: () => false } }));
+    vi.doMock("@splayer/audio-engine", () => ({ JsPlayerEvent: class {} }));
+    const { registerPlayerIpc } = await import("@main/ipc/player");
+    registerPlayerIpc();
+    mocks.prepare.mockResolvedValue(true);
+    const handler = handlers.get("player:prepareNext")!;
+    await handler(null, "next", "next.wav", 0, "standard");
+    expect(nativeLoader).not.toHaveBeenCalled();
+    expect(mocks.prepare).toHaveBeenCalledWith("next", "next.wav", 0, "standard", undefined);
   });
 });

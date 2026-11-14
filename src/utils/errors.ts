@@ -30,6 +30,20 @@ const SKIPPABLE_ERRORS = new Set<string>([
   ErrorCode.BILIBILI_PROXY_MISSING,
 ]);
 
+/** 平台明确不可播放、可进入自动失败跳曲的单曲错误 */
+const NO_SOURCE_SKIPPABLE_ERRORS = new Set<string>([
+  ErrorCode.FILE_NOT_FOUND,
+  ErrorCode.FILE_NO_AUDIO_STREAM,
+  ErrorCode.FILE_DECODE_ERROR,
+  ErrorCode.NETEASE_VIP_REQUIRED,
+  ErrorCode.NETEASE_TRIAL_DISABLED,
+  ErrorCode.NETEASE_UNAVAILABLE,
+  ErrorCode.MIGU_VIP_REQUIRED,
+  ErrorCode.MIGU_TRIAL_DISABLED,
+  ErrorCode.MIGU_UNAVAILABLE,
+  ErrorCode.BILIBILI_UNAVAILABLE,
+]);
+
 /** 需要用 dialog 强提示的严重错误（阻断性，用户必须介入） */
 const CRITICAL_ERRORS = new Set<string>([ErrorCode.DEVICE_NOT_FOUND, ErrorCode.DEVICE_INIT_FAILED]);
 
@@ -38,6 +52,10 @@ const pendingCritical = new Set<string>();
 
 /** 是否为可通过跳曲解决的错误 */
 export const isSkippableError = (code: string): boolean => SKIPPABLE_ERRORS.has(code);
+
+/** 是否为平台明确不可播放、可自动跳下一首的错误 */
+export const isNoSourceSkippableError = (code: string): boolean =>
+  NO_SOURCE_SKIPPABLE_ERRORS.has(code);
 
 /** 统一处理错误码：静默的忽略，严重的弹 dialog，其他 toast 提示 */
 export const handleError = (error: string): void => {

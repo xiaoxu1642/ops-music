@@ -165,14 +165,17 @@ export const prepareNextTrack = async (
       range?.source &&
       canAutoMix(player.getSpeed(), player.getPitch())
     ) {
+      const context = options?.analysisContext;
       const tracks = [
         { source: range.source, startMs: range.startMs, endMs: range.endMs, tail: true },
         { source, startMs, endMs: options.endMs, tail: false },
       ];
-      const profiles = await analyzeAutoMixTracks(tracks, task.analysis.signal).catch((error) => {
-        if (!task.analysis.signal.aborted) playerLog.warn("AutoMix 分析不可用", error);
-        return null;
-      });
+      const profiles = await analyzeAutoMixTracks(tracks, task.analysis.signal, context).catch(
+        (error) => {
+          if (!task.analysis.signal.aborted) playerLog.warn("AutoMix 分析不可用", error);
+          return null;
+        },
+      );
       if (task.analysis.signal.aborted) return false;
       if (profiles) {
         const synced = planAutoMix(profiles[0], profiles[1], range.endMs);
@@ -190,6 +193,7 @@ export const prepareNextTrack = async (
             profiles,
             range.endMs,
             task.analysis.signal,
+            context,
           ).catch((error) => {
             if (!task.analysis.signal.aborted) playerLog.warn("AutoMix 分轨编排不可用", error);
             return undefined;

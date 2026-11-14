@@ -2,7 +2,7 @@ import path from "node:path";
 import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { getEngine } from "@main/services/engine";
 import { automixCacheDir } from "@main/utils/paths";
-import type { AutoMixPlan, AutoMixProfile } from "@shared/types/automix";
+import type { AutoMixAnalysisContext, AutoMixPlan, AutoMixProfile } from "@shared/types/automix";
 import type { AnalysisTrack } from "./analysisHost";
 import { runAutoMixModel, runAutoMixTask } from "./inference";
 import { measureVocalActivity, refineAutoMixVocals } from "./vocals";
@@ -29,12 +29,14 @@ interface Separation {
  * @param tracks - 两路实际音源
  * @param ranges - 绝对毫秒窗口，第一项属于当前曲
  * @param signal - 当前预载的取消信号
+ * @param context - 本次预载的分析观测上下文
  * @returns 分离结果，调用方负责保留或删除目录
  */
 const separate = async (
   tracks: AnalysisTrack[],
   ranges: { startMs: number; endMs: number }[],
   signal: AbortSignal,
+  context?: AutoMixAnalysisContext,
 ): Promise<Separation> => {
   workspace ??= rm(automixCacheDir, { recursive: true, force: true })
     .then(() => mkdir(automixCacheDir, { recursive: true }))
@@ -61,6 +63,7 @@ const separate = async (
       "demucs",
       windows,
       signal,
+      context,
     );
     return {
       directory,
@@ -81,6 +84,7 @@ const separate = async (
  * @param profiles - 可复用的首尾分析证据
  * @param currentEndMs - 当前曲目或 CUE 的有效终点
  * @param signal - 当前预载的取消信号
+ * @param context - 本次预载的分析观测上下文
  * @returns 依据实际声部活动编排的计划，唱句会被截断时为空
  */
 export const enhanceAutoMixPlan = (
@@ -89,6 +93,7 @@ export const enhanceAutoMixPlan = (
   profiles: AutoMixProfile[],
   currentEndMs: number,
   signal: AbortSignal,
+  context?: AutoMixAnalysisContext,
 ): Promise<AutoMixPlan | undefined> =>
   runAutoMixTask(signal, async () => {
     const identities = await Promise.all(
@@ -117,7 +122,7 @@ export const enhanceAutoMixPlan = (
       playerLog.info("AutoMix 跳过区间超出声部分离窗口，不做混音");
       return undefined;
     }
-    const separation = await separate(tracks, ranges, signal);
+    const separation = await separate(tracks, ranges, signal, context);
     const { directory, windows, frames, vocals } = separation;
     const voices = profiles.map((profile, index) =>
       measureVocalActivity(profile, vocals[index], windows[index].startMs),

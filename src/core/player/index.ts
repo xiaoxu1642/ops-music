@@ -32,7 +32,7 @@ import { getNextTrackCandidate } from "./candidate";
 import { installPlayStats, onTrackEnded } from "./stats";
 import { useFavorite } from "@/composables/useFavorite";
 import { extractColorFromUrl } from "@/utils/color";
-import { handleError, isSkippableError } from "@/utils/errors";
+import { handleError, isNoSourceSkippableError, isSkippableError } from "@/utils/errors";
 import { ErrorCode } from "@shared/types/errors";
 import { shouldSkipKeywordTrack } from "@/utils/preset/skipKeywords";
 import { toast } from "@/composables/useToast";
@@ -79,39 +79,85 @@ let consecutiveFailures = 0;
 const MAX_CONSECUTIVE_FAILURES = 5;
 /** 失败后跳下一首的节流延迟（毫秒） */
 const SKIP_ON_ERROR_DELAY_MS = 1000;
+/** 失败跳曲意图，内部 stop 的 idle/stopped 事件不会作废它 */
+let pendingFailureSkip: {
+  token: number;
+  queueLength: number;
+  startIndex: number;
+  error: string;
+} | null = null;
+/** 一轮失败跳曲的起点；成功、用户操作或队列替换时清空 */
+let failureSkipRoundStart: number | null = null;
+
+/** 清空失败跳曲状态 */
+const resetFailureSkip = (): void => {
+  pendingFailureSkip = null;
+  failureSkipRoundStart = null;
+  consecutiveFailures = 0;
+};
+
+/** 记录一次平台明确不可播放的失败跳曲意图 */
+const armFailureSkip = (error: string): void => {
+  const status = useStatusStore();
+  const queueLength = queue.queueLength.value;
+  const startIndex = failureSkipRoundStart ?? status.playIndex;
+  failureSkipRoundStart = startIndex;
+  pendingFailureSkip = {
+    token: trackToken,
+    queueLength,
+    startIndex,
+    error,
+  };
+};
 
 /**
  * 单曲级失败兜底
  * 达到连续失败上限 / 队列长度则交 onQueueEnded 停下
- * @param myToken - 调用方进入失败路径时的 token 快照
- * @param getCurrentToken - 取该 token 的最新值，setTimeout 触发时再次比对
- * @param autoPlay - 跳曲后是否自动播放
+ * @param myToken - 失败意图代次
  */
-const skipOnFailure = async (
-  myToken: number,
-  getCurrentToken: () => number,
-  autoPlay = true,
-): Promise<void> => {
+const skipOnFailure = async (myToken: number): Promise<void> => {
+  const skip = pendingFailureSkip;
+  if (!skip || skip.token !== myToken) return;
   consecutiveFailures++;
+  const status = useStatusStore();
   if (
     consecutiveFailures >= MAX_CONSECUTIVE_FAILURES ||
-    consecutiveFailures >= queue.queueLength.value
+    (!status.fmMode && consecutiveFailures >= skip.queueLength) ||
+    (!status.fmMode && status.repeatMode === "one" && skip.queueLength <= 1)
   ) {
     const reachedMax = consecutiveFailures >= MAX_CONSECUTIVE_FAILURES;
     consecutiveFailures = 0;
+    pendingFailureSkip = null;
     await onQueueEnded();
-    if (reachedMax) {
+    if (reachedMax || skip) {
       handleError(ErrorCode.MAX_CONSECUTIVE_FAILURES);
     }
     return;
   }
   setTimeout(() => {
-    if (myToken === getCurrentToken()) nextTrack(autoPlay);
+    if (pendingFailureSkip?.token !== myToken) return;
+    pendingFailureSkip = null;
+    void nextTrack(true, true);
   }, SKIP_ON_ERROR_DELAY_MS);
 };
 
 /** load() 的结果；失败时附带错误码，跳曲决策交给调用方 */
 export type LoadOutcome = { ok: true; track: Track | null } | { ok: false; error?: string };
+
+/** 作废在途加载和交接，防止迟到响应覆盖用户的新操作。 */
+export const invalidatePlaybackOperation = (): number => {
+  resetFailureSkip();
+  loadToken++;
+  useStatusStore().transitioning = false;
+  return ++trackToken;
+};
+
+/** 作废在途加载并保留失败跳曲意图，供内部状态事件使用 */
+export const invalidatePlaybackOperationForInternalStatus = (): number => {
+  loadToken++;
+  useStatusStore().transitioning = false;
+  return trackToken;
+};
 
 /**
  * 切歌通用前置
@@ -177,7 +223,7 @@ export const load = async (
     if (token !== loadToken) return { ok: false };
     if (result.success && result.data) {
       const { detail, mediaInfo } = result.data;
-      consecutiveFailures = 0;
+      resetFailureSkip();
       const media = useMediaStore();
       // 把引擎提取的 mediaInfo 与已有 Track 合并；身份字段保留
       media.enrichTrack(mediaInfo, detail);
@@ -320,7 +366,7 @@ const loadTrackSourceWithFallback = async (
  * @param context - 本次播放的来源上下文
  * @param autoPlay - 是否自动播放，暂停态恢复（如源失效跳曲）时传 false，全程不发声
  */
-const loadTrack = async (
+export const loadTrack = async (
   track: Track | null,
   context?: PlaybackContext,
   autoPlay = true,
@@ -349,7 +395,7 @@ const loadTrack = async (
   // 已准备的槽位由原生 load 接管；提前 stop 会连同备用槽一起释放
   if (!transitionResult && !preloaded?.preparedId) void window.api.player.stop();
   // 是否可跳曲
-  let shouldSkip = false;
+  let failureError: string | undefined;
   try {
     const loaded: LoadSourceResult =
       transitionResult && transitionSource
@@ -378,12 +424,12 @@ const loadTrack = async (
       void window.api.player.stop();
       useMediaStore().setLyric(null, null);
       if (loaded.error) handleError(loaded.error);
-      shouldSkip = Boolean(loaded.error && isSkippableError(loaded.error));
+      if (loaded.error && isNoSourceSkippableError(loaded.error)) failureError = loaded.error;
     } else {
       const { result, resolved } = loaded;
-      if (!result.ok && result.error && isSkippableError(result.error)) {
+      if (!result.ok && result.error && isNoSourceSkippableError(result.error)) {
         handleError(result.error);
-        shouldSkip = true;
+        failureError = result.error;
       } else if (result.ok) {
         // 用户主动触发的成功播放记入历史；initPlayer 的恢复路径走 load() 不经此处
         void useHistoryStore().record(track);
@@ -398,12 +444,14 @@ const loadTrack = async (
   } finally {
     if (myToken === trackToken) {
       const status = useStatusStore();
-      if (shouldSkip || status.state !== "playing") {
+      if (failureError || status.state !== "playing") {
         status.trackLoading = false;
       }
     }
   }
-  if (shouldSkip) await skipOnFailure(myToken, () => trackToken, autoPlay);
+  if (!failureError || myToken !== trackToken) return;
+  armFailureSkip(failureError);
+  await skipOnFailure(pendingFailureSkip!.token);
 };
 
 /**
@@ -416,6 +464,7 @@ export const reloadCurrentTrack = async (forcePlay?: boolean): Promise<boolean> 
   const media = useMediaStore();
   const track = media.track;
   if (!track || track.source === "local") return false;
+  resetFailureSkip();
   const status = useStatusStore();
   const shouldPlay = forcePlay ?? status.isPlaying;
   const resumePosition = Math.round(playback.getCurrentTime());
@@ -501,6 +550,7 @@ export const play = async (): Promise<void> => {
     pendingPlayAfterRestore = true;
     return;
   }
+  resetFailureSkip();
   if ((status.state === "stopped" || status.state === "idle") && status.currentTrack) {
     const memoryPos = status.position;
     await loadTrack(status.currentTrack, status.currentPlaybackContext);
@@ -522,6 +572,7 @@ export const play = async (): Promise<void> => {
 
 /** 切换播放/暂停 */
 export const togglePlay = (): void => {
+  resetFailureSkip();
   const status = useStatusStore();
   if (isRestoringLastTrack) {
     pendingPlayAfterRestore = !pendingPlayAfterRestore;
@@ -536,6 +587,7 @@ export const togglePlay = (): void => {
 
 /** 暂停播放 */
 export const pause = async (): Promise<void> => {
+  resetFailureSkip();
   const status = useStatusStore();
   const prev = status.state;
   status.state = "paused";
@@ -545,13 +597,6 @@ export const pause = async (): Promise<void> => {
     status.state = prev;
     playback.setPlaying(true);
   }
-};
-
-/** 作废在途加载和交接，防止迟到响应覆盖用户的新操作。 */
-export const invalidatePlaybackOperation = (): number => {
-  loadToken++;
-  useStatusStore().transitioning = false;
-  return ++trackToken;
 };
 
 /** 停止播放并重置进度 */
@@ -751,6 +796,7 @@ export const playFrom = async (
   context?: PlaybackContext,
 ): Promise<void> => {
   if (items.length === 0) return;
+  resetFailureSkip();
   const status = useStatusStore();
   const media = useMediaStore();
   // 退出特殊模式
@@ -778,6 +824,7 @@ const resumeAfterTagWrite = async (
   wasPlaying: boolean,
 ): Promise<void> => {
   if (!track.path) return;
+  resetFailureSkip();
   const myToken = ++trackToken;
   invalidateNextTrackPreload();
   useMediaStore().setTrack(track);
@@ -841,6 +888,7 @@ export const saveTrackTags = async (edits: TagEditRequest[]): Promise<TagWriteOu
  */
 export const playHeartMode = async (tracks: readonly Track[]): Promise<void> => {
   if (tracks.length === 0) return;
+  resetFailureSkip();
   const status = useStatusStore();
   queue.setQueue(tracks);
   status.playIndex = 0;
@@ -863,6 +911,7 @@ export const exitHeartMode = (): void => {
  * @returns 是否成功进入并开始播放
  */
 export const playPersonalFm = async (options?: PersonalFmOptions): Promise<boolean> => {
+  resetFailureSkip();
   const status = useStatusStore();
   const track = await fm.start(options);
   if (!track) return false;
@@ -878,6 +927,7 @@ export const playPersonalFm = async (options?: PersonalFmOptions): Promise<boole
  */
 export const dislikeFmTrack = async (): Promise<void> => {
   if (!useStatusStore().fmMode) return;
+  resetFailureSkip();
   const playedSec = Math.max(0, Math.round(playback.getCurrentTime() / 1000));
   const next = await fm.dislikeCurrent(playedSec);
   if (next) await loadTrack(next);
@@ -887,12 +937,17 @@ export const dislikeFmTrack = async (): Promise<void> => {
  * 播放下一首
  * @param autoPlay - 是否自动播放
  */
-export const nextTrack = async (autoPlay = true): Promise<void> => {
+export const nextTrack = async (autoPlay = true, fromFailureSkip = false): Promise<void> => {
+  if (!fromFailureSkip) resetFailureSkip();
   const status = useStatusStore();
   // 私人 FM
   if (status.fmMode) {
     const next = await fm.next();
     if (next) await loadTrack(next, undefined, autoPlay);
+    else if (fromFailureSkip) {
+      await onQueueEnded();
+      handleError(ErrorCode.MAX_CONSECUTIVE_FAILURES);
+    }
     return;
   }
   if (queue.queueLength.value === 0) return;
@@ -1037,6 +1092,7 @@ export const trySmartTransition = async (
  * @param index - 队列位置
  */
 export const playAtIndex = async (index: number): Promise<void> => {
+  resetFailureSkip();
   const status = useStatusStore();
   if (index < 0 || index >= queue.queueLength.value) return;
   if (index === status.playIndex) {
@@ -1051,6 +1107,7 @@ export const playAtIndex = async (index: number): Promise<void> => {
 
 /** 播放上一首，首位时回绕到末尾 */
 export const prevTrack = async (): Promise<void> => {
+  resetFailureSkip();
   const status = useStatusStore();
   if (status.fmMode) return;
   if (queue.queueLength.value === 0) return;
@@ -1137,6 +1194,7 @@ export const setShuffleMode = (mode: ShuffleMode): void => {
  * @param index - 要移除的队列位置
  */
 export const removeFromQueue = async (index: number): Promise<void> => {
+  resetFailureSkip();
   const status = useStatusStore();
   if (index < 0 || index >= queue.queueLength.value) return;
   const isCurrentPlaying = index === status.playIndex;
@@ -1240,6 +1298,7 @@ export const insertManyToQueue = (
  * 如果是当前正在播放的歌曲则继续播放，不重新加载
  */
 export const playNow = async (item: Track, context?: PlaybackContext): Promise<void> => {
+  resetFailureSkip();
   const status = useStatusStore();
   const media = useMediaStore();
   // 同一首歌且已成功加载
@@ -1391,6 +1450,7 @@ export const initPlayer = async (): Promise<void> => {
 
 /** 恢复上次播放状态 */
 export const restoreLastTrack = async (): Promise<void> => {
+  resetFailureSkip();
   const status = useStatusStore();
   const settings = useSettingsStore();
   const media = useMediaStore();

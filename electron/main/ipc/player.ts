@@ -35,11 +35,12 @@ import {
 import { setTaskbarThumbnailCover } from "@main/services/thumbnail";
 import { getMainWindow, setTaskbarProgress } from "@main/window";
 import { store } from "@main/store";
-import { appName, getSongCacheDir } from "@main/utils/config";
+import { appName, externalAppName, getSongCacheDir } from "@main/utils/config";
 import * as songCache from "@main/services/songCache";
 import { parseArtists, parseAlbum, formatArtists, artistNames } from "@main/utils/metadata";
 import { playerLog } from "@main/utils/logger";
 import { updatePowerBlocker, releasePowerBlocker } from "@main/utils/powerBlocker";
+import { loadNativeModule } from "@main/utils/nativeLoader";
 import { ErrorCode } from "@shared/types/errors";
 import type {
   Artist,
@@ -298,7 +299,7 @@ const completeTrackLoad = (
     durationMs,
   });
   mediaService.setPlayState({ status: autoPlay ? "Playing" : "Paused" });
-  getMainWindow()?.setTitle(header);
+  getMainWindow()?.setTitle(externalAppName);
   setTraySongName(header);
   setTrayPlayState(autoPlay ? "playing" : "paused");
   if (!isRemote) setTaskbarThumbnailCover(meta.cover);
@@ -346,6 +347,27 @@ const completeTrackLoad = (
   };
 };
 
+/**
+ * 读取本次分析开始前的全屏态
+ * @returns 模块不可用时返回 unknown，调用方按原行为继续
+ */
+const readFullscreenState = (): boolean | "unknown" => {
+  try {
+    const native = loadNativeModule<{ isFullscreenAppRunning(): boolean }>(
+      "taskbar-lyric.node",
+      "taskbar-lyric",
+    );
+    if (!native) {
+      playerLog.warn("AutoMix 全屏态不可用");
+      return "unknown";
+    }
+    return native.isFullscreenAppRunning();
+  } catch (error) {
+    playerLog.warn("AutoMix 全屏态不可用", error);
+    return "unknown";
+  }
+};
+
 /** 播放器相关 IPC */
 export const registerPlayerIpc = (): void => {
   ipcMain.handle(
@@ -358,7 +380,28 @@ export const registerPlayerIpc = (): void => {
       preference?: TransitionPreference,
       options?: AutoMixPrepareOptions,
     ): Promise<PreparedTrackResult> => {
-      const ready = await prepareNextTrack(id, source, startMs, preference, options);
+      let analysisOptions = options;
+      if (options?.mode === "automix") {
+        const player = getPlayer();
+        const positionMs = toMs(player.getPosition());
+        const fallbackEndMs = activeCueRange
+          ? activeCueRange.startMs + activeCueRange.durationMs
+          : toMs(player.getDuration());
+        const speed = player.getSpeed();
+        const remainingMs = Math.round(
+          Math.max(0, getTransitionEndMs(fallbackEndMs, positionMs, speed) - positionMs) /
+            Math.max(speed, 1),
+        );
+        analysisOptions = {
+          ...options,
+          analysisContext: {
+            generation: options.analysisContext?.generation ?? 0,
+            remainingMs,
+            fullscreen: readFullscreenState(),
+          },
+        };
+      }
+      const ready = await prepareNextTrack(id, source, startMs, preference, analysisOptions);
       const plan = ready ? getPreparedAutoMixPlan(id) : undefined;
       return {
         ready,
@@ -528,7 +571,7 @@ export const registerPlayerIpc = (): void => {
           durationMs,
         });
         mediaService.setPlayState({ status: autoPlay ? "Playing" : "Paused" });
-        getMainWindow()?.setTitle(header);
+        getMainWindow()?.setTitle(externalAppName);
         setTraySongName(header);
         setTrayPlayState(autoPlay ? "playing" : "paused");
       };

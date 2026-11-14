@@ -31,6 +31,9 @@ export const appVersion = app.getVersion();
 /** 应用名称 */
 export const appName = app.getName();
 
+/** 对外展示的应用名称（窗口标题与系统音频会话） */
+export const externalAppName = "OpsMusic";
+
 /** 当前生效的缓存根目录 */
 export const getAppCacheDir = (): string => store.get("cache.dir") || defaultCacheDir;
 

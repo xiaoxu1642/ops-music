@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   stop: vi.fn(),
   seek: vi.fn(),
   metadata: vi.fn(),
+  title: vi.fn(),
   prepareTransition: vi.fn(),
   cancel: vi.fn(),
   mediaEvent: (_event: { type: string; positionMs?: number }) => {},
@@ -20,6 +21,7 @@ vi.mock("electron", () => ({
   },
   powerMonitor: { on: vi.fn() },
   app: { on: vi.fn() },
+  shell: { openExternal: vi.fn() },
 }));
 vi.mock("@main/services/engine", () => {
   const player = {
@@ -30,6 +32,7 @@ vi.mock("@main/services/engine", () => {
     getDuration: () => 10,
     getPosition: () => 5,
     getSpeed: () => 1,
+    getVolume: () => 1,
     getCoverRaw: () => null,
     getStatus: () => ({ state: "playing" }),
   };
@@ -67,7 +70,11 @@ vi.mock("@main/services/device", () => ({
 vi.mock("@main/utils/broadcast", () => ({ sendToMain: vi.fn() }));
 vi.mock("@main/utils/encoding", () => ({}));
 vi.mock("@main/utils/protocol", () => ({ toCacheUrl: () => undefined }));
-vi.mock("@main/utils/config", () => ({ appName: "SPlayer", getSongCacheDir: () => "cache" }));
+vi.mock("@main/utils/config", () => ({
+  appName: "SPlayer",
+  externalAppName: "OpsMusic",
+  getSongCacheDir: () => "cache",
+}));
 vi.mock("@main/utils/fetchBytes", () => ({}));
 vi.mock("@main/utils/powerBlocker", () => ({}));
 vi.mock("@main/services/neteaseScrobble", () => ({ onTrackLoaded: vi.fn() }));
@@ -75,7 +82,11 @@ vi.mock("@main/services/songCache", () => ({}));
 vi.mock("@main/services/thumbar", () => ({ getThumbar: () => null }));
 vi.mock("@main/services/tray", () => ({ setTraySongName: vi.fn(), setTrayPlayState: vi.fn() }));
 vi.mock("@main/services/thumbnail", () => ({ setTaskbarThumbnailCover: vi.fn() }));
-vi.mock("@main/window", () => ({ getMainWindow: () => null }));
+vi.mock("@main/window", () => ({
+  getMainWindow: () => ({ setTitle: mocks.title }),
+  setTaskbarProgress: vi.fn(),
+  setTaskbarThumbnailCover: vi.fn(),
+}));
 vi.mock("@main/store", () => ({ store: { get: () => false } }));
 
 const meta = { title: "Next", duration: 10, artist: "", album: "" };
@@ -156,5 +167,10 @@ describe("交接响应的主进程竞态保护", () => {
     ).toMatchObject({ success: true, data: { playback: { state: "playing" } } });
     expect(mocks.metadata).toHaveBeenCalledOnce();
     expect(mocks.prepareTransition).toHaveBeenCalledOnce();
+  });
+
+  it("加载歌曲时外部窗口标题固定为 OpsMusic", async () => {
+    await invoke("player:load", "next.wav", options);
+    expect(mocks.title).toHaveBeenCalledWith("OpsMusic");
   });
 });
