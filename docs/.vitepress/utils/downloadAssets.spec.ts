@@ -20,6 +20,21 @@ describe("parseDownloadAsset", () => {
       expect(parse(name)).toBeNull();
     },
   );
+
+  it.each(["Ops Music-1.2.5-x64.zip", "Ops.Music-1.2.5-x64.zip"])(
+    "Windows 免安装 zip 归到 Windows %s",
+    (name) => {
+      expect(parse(name)).toMatchObject({ platform: "Windows", arch: "x64", format: "zip" });
+    },
+  );
+
+  it("macOS 通用 zip 仍归到 macOS", () => {
+    expect(parse("Ops-Music-1.2.5-universal.zip")).toMatchObject({
+      platform: "macOS",
+      arch: "universal",
+      format: "zip",
+    });
+  });
 });
 
 describe("selectRecommendedAssets", () => {
@@ -32,6 +47,14 @@ describe("selectRecommendedAssets", () => {
     expect(selectRecommendedAssets(assets, "Windows", "x64").map((asset) => asset.format)).toEqual([
       "installer",
       "portable",
+    ]);
+  });
+
+  it("Windows 只有免安装 zip 时也能推荐", () => {
+    const assets = [parse("Ops.Music-1.2.5-x64.zip")].filter((asset) => asset !== null);
+
+    expect(selectRecommendedAssets(assets, "Windows", "x64").map((asset) => asset.format)).toEqual([
+      "zip",
     ]);
   });
 

@@ -63,7 +63,8 @@ export const parseDownloadAsset = (
     platform = "Windows";
     format = lower.includes("portable") ? "portable" : "installer";
   } else if (lower.endsWith(".dmg") || lower.endsWith(".zip")) {
-    platform = "macOS";
+    const windowsArch = /(?:^|[^a-z0-9])(?:x64|amd64|x86_64)(?:[^a-z0-9]|$)/.test(lower);
+    platform = lower.endsWith(".dmg") || !windowsArch ? "macOS" : "Windows";
     format = lower.endsWith(".dmg") ? "dmg" : "zip";
   } else {
     const linuxFormat = LINUX_FORMATS.find((item) => lower.endsWith(item.suffix));
