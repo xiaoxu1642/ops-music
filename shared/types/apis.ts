@@ -3,7 +3,7 @@
  */
 
 /** 支持的音源平台 */
-export type ApiPlatform = "netease";
+export type ApiPlatform = "netease" | "migu" | "bilibili";
 
 /** 通用响应包装 */
 export type ApiCallResponse =

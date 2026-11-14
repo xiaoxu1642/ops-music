@@ -39,6 +39,20 @@ export enum ErrorCode {
   NETEASE_TRIAL_DISABLED = "NETEASE_TRIAL_DISABLED",
   /** 在线歌曲暂无可用官方音源 */
   NETEASE_UNAVAILABLE = "NETEASE_UNAVAILABLE",
+  /** 咪咕登录态已失效 */
+  MIGU_LOGIN_EXPIRED = "MIGU_LOGIN_EXPIRED",
+  /** 咪咕歌曲需要会员或单独购买 */
+  MIGU_VIP_REQUIRED = "MIGU_VIP_REQUIRED",
+  /** 咪咕歌曲仅有试听源且试听播放被禁用 */
+  MIGU_TRIAL_DISABLED = "MIGU_TRIAL_DISABLED",
+  /** 咪咕歌曲暂无可用音源 */
+  MIGU_UNAVAILABLE = "MIGU_UNAVAILABLE",
+  /** B 站取流或接口被风控拦截 */
+  BILIBILI_RISK_CONTROL = "BILIBILI_RISK_CONTROL",
+  /** B 站歌曲暂无可用音源 */
+  BILIBILI_UNAVAILABLE = "BILIBILI_UNAVAILABLE",
+  /** B 站登录态已失效 */
+  BILIBILI_LOGIN_EXPIRED = "BILIBILI_LOGIN_EXPIRED",
 
   // 标签编辑相关
   /** 读取文件标签失败 */

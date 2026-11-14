@@ -55,6 +55,9 @@ export const embeddedLyricFromDetail = (detail: TrackDetail | null): LocalLyric 
 /** 平台主格式可达列表 */
 const PLATFORM_MAIN_FORMATS: Record<Platform, LyricFormat[]> = {
   netease: ["yrc", "lrc"],
+  // 咪咕 MRC 逐字解密后落 LRC 形态（带逐字 span）；B 站 CC 字幕转 LRC
+  migu: ["lrc"],
+  bilibili: ["lrc"],
 };
 
 /**

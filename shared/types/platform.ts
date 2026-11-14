@@ -1,13 +1,15 @@
 /** 平台类型 */
-export type Platform = "netease";
+export type Platform = "netease" | "migu" | "bilibili";
 
 /** 平台简写 */
 export const PLATFORM_SHORT_NAME: Record<Platform, string> = {
   netease: "NCM",
+  migu: "MG",
+  bilibili: "BILI",
 };
 
 /** 全部平台 */
-export const ALL_PLATFORMS: Platform[] = ["netease"];
+export const ALL_PLATFORMS: Platform[] = ["netease", "migu", "bilibili"];
 
 const PLATFORM_SET = new Set<string>(ALL_PLATFORMS);
 
