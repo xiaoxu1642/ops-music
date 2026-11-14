@@ -127,6 +127,14 @@ const request = async (
     (res.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ?? [];
   const cookie = parseSetCookie(setCookie);
 
+  // 混淆接口返回非 JSON 字节流，跳过文本解析，由调用方自行解密
+  if (options.raw) {
+    const raw = await res.arrayBuffer();
+    const response: MiguRequestResponse = { status: res.status, body: {}, cookie, raw };
+    if (res.status >= 400) throw new MiguRequestError(response);
+    return response;
+  }
+
   const text = await res.text();
   let body: Record<string, unknown>;
   try {
@@ -171,23 +179,3 @@ export const createMiguPost = (
 /** resourceinfo.do 在 app.u.nf 域，请求层默认拼 app.c.nf，这里给歌词桥用完整 URL */
 export const resourceInfoUrl = (resourceId: string): string =>
   `https://app.u.nf.migu.cn${ENDPOINT.resourceInfo}?resourceType=2&resourceId=${encodeURIComponent(resourceId)}`;
-
-/**
- * 改档后的 CDN 直链可达性探测：拉前 64 字节即取消，200/206 均视为可用
- * @param url - 咪咕音频 CDN 直链
- * @returns 是否可用
- */
-export const probeMiguUrl = async (url: string): Promise<boolean> => {
-  try {
-    const res = await net.fetch(url, {
-      method: "GET",
-      headers: { Range: "bytes=0-63" },
-      signal: AbortSignal.timeout(5000),
-    });
-    // 只探测不消费：取消 body 立即释放连接
-    await res.body?.cancel();
-    return res.status === 200 || res.status === 206;
-  } catch {
-    return false;
-  }
-};

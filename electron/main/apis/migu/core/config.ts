@@ -32,6 +32,8 @@ export const ENDPOINT = {
   songInfo: "/resource/song/by-contentids/v2.0",
   /** 播放地址（明文 JSON，上游固定返回 PQ 档） */
   listenUrl: "/MIGUM3.0/strategy/pc/listen/v1.0",
+  /** 会员鉴权播放地址（pacmtoken 放请求头，响应为混淆 JSON） */
+  listenUrlV2: "/strategy/pc/listen/v2.0",
   /** 可听性检查（VIP / 版权限制判定） */
   canListen: "/strategy/pc/can-listen/v1.0",
   /** 歌曲元信息（lrcUrl / mrcUrl 来源） */

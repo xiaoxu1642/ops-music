@@ -72,6 +72,8 @@ export interface MiguRequestResponse {
   body: Record<string, unknown>;
   /** 响应里新拿到的 cookie（pacmtoken 轮换续期用） */
   cookie: Record<string, string>;
+  /** 原始响应字节（仅 raw 请求携带） */
+  raw?: ArrayBuffer;
 }
 
 /** 请求选项 */
@@ -86,6 +88,8 @@ export interface MiguRequestOptions {
   body?: Record<string, unknown>;
   /** 表单请求体（POST 用，passport 登录系接口） */
   form?: Record<string, string>;
+  /** 原始二进制响应（混淆接口用）：body 为空对象，字节放 raw，HTTP 错误仍抛出 */
+  raw?: boolean;
 }
 
 /** 请求层注入的 http 能力：get / post */
