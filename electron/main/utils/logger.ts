@@ -100,3 +100,4 @@ export const nativeLog = log.scope("native");
 export const songCacheLog = log.scope("songCache");
 export const downloadLog = log.scope("download");
 export const neteaseLog = log.scope("netease");
+export const bilibiliLog = log.scope("bilibili");

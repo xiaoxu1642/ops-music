@@ -1,5 +1,6 @@
 import path from "node:path";
 import { net, protocol, session } from "electron";
+import { USER_AGENT } from "@main/apis/bilibili/core/config";
 import { getAppCacheDir } from "./config";
 
 /** cache:// 协议方案名 */
@@ -68,4 +69,34 @@ export const toCacheUrl = (filePath: string | undefined | null): string | undefi
   // 路径不在缓存根目录下时拒绝生成 URL，避免产出可逃逸的 cache:// 链接
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return undefined;
   return `${SCHEME}://${relative.replace(/\\/g, "/")}`;
+};
+
+/** B 站图片 CDN 域名：搜索封面、视频封面与 UP 主头像都在这些域下发 */
+const BILIBILI_IMAGE_HOSTS = ["i0.hdslb.com", "i1.hdslb.com", "i2.hdslb.com"] as const;
+
+/** 图片域只校验来源站点，指向站点根即可 */
+const BILIBILI_IMAGE_REFERER = "https://www.bilibili.com/";
+
+/**
+ * 为 B 站图片域名注入 Referer 与桌面 Chrome UA
+ *
+ * 渲染层直接以 <img> 拉封面，图片请求走 webRequest 拦截；
+ * 只命中图片 CDN 域名，音频取流走本地代理（streamProxy），不在此列
+ * @param partition - 生效的 session 分区
+ */
+export const handleBilibiliImageHeaders = (partition: string): void => {
+  session
+    .fromPartition(partition)
+    .webRequest.onBeforeSendHeaders(
+      { urls: BILIBILI_IMAGE_HOSTS.map((host) => `*://${host}/*`) },
+      (details, callback) => {
+        callback({
+          requestHeaders: {
+            ...details.requestHeaders,
+            Referer: BILIBILI_IMAGE_REFERER,
+            "User-Agent": USER_AGENT,
+          },
+        });
+      },
+    );
 };

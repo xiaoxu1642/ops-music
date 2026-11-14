@@ -11,6 +11,7 @@ import { registerIpcHandlers } from "@main/ipc";
 import { shutdown as shutdownMedia } from "@main/services/media";
 import { initGlobalHotkey } from "@main/services/globalHotkey";
 import { initDatabase, closeDatabase } from "@main/database";
+import { stopStreamProxy } from "@main/services/streamProxy";
 import { init as initSongCache } from "@main/services/songCache";
 import { init as initDownload } from "@main/services/downloadManager";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
@@ -147,6 +148,7 @@ export const initApp = (): void => {
   // 退出前清理
   app.on("before-quit", () => {
     coreLog.info("应用即将退出，清理资源");
+    stopStreamProxy();
     shutdownMedia();
     closeDatabase();
   });

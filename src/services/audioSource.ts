@@ -3,6 +3,7 @@ import { isPlatform } from "@shared/types/platform";
 import type { QualityLevel } from "@/utils/quality";
 import { useSettingsStore } from "@/stores/settings";
 import { useUserStore } from "@/stores/user";
+import { resolveBilibiliUrl } from "@/apis/song/bilibili";
 import { resolveNeteaseUrl } from "@/apis/song/netease";
 import { ErrorCode } from "@shared/types/errors";
 import { handleError } from "@/utils/errors";
@@ -65,6 +66,19 @@ const resolveOnlineUrl = async (
       }
     } catch (err) {
       console.warn("[audio-source] official URL resolve failed:", err);
+      officialErrorCode = ErrorCode.NETWORK_ERROR;
+    }
+  } else if (track.source === "bilibili" && !options.skipOfficialOnline) {
+    try {
+      // 取流地址只能走本地代理：裸地址缺 Referer 会被站方 403
+      const resolved = await resolveBilibiliUrl(track);
+      if (!resolved.available) {
+        officialErrorCode = resolved.errorCode;
+      } else {
+        return { ok: true, url: resolved.url, isTrial: false, provider: "official" };
+      }
+    } catch (err) {
+      console.warn("[audio-source] bilibili URL resolve failed:", err);
       officialErrorCode = ErrorCode.NETWORK_ERROR;
     }
   }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SSelectOption } from "@/components/ui/SSelect.vue";
+import type { TrackSource } from "@shared/types/player";
 import type { QualityLevel } from "@/utils/quality";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
@@ -13,8 +14,13 @@ const { t } = useI18n();
 const media = useMediaStore();
 const settings = useSettingsStore();
 
+/** 单一音质的在线源：引擎只拿到一股流，切档位重载只会重复取流并打断播放 */
+const SINGLE_QUALITY_SOURCES: readonly TrackSource[] = ["bilibili"];
+
 /** 是否支持切换在线音质 */
-const canSwitchQuality = computed(() => isPlatform(media.track?.source));
+const canSwitchQuality = computed(
+  () => isPlatform(media.track?.source) && !SINGLE_QUALITY_SOURCES.includes(media.track!.source),
+);
 
 /** 实际播放音质；详情加载前使用歌曲自身的音质信息。 */
 const quality = computed(() => media.detail?.quality ?? media.track?.quality);

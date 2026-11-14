@@ -20,6 +20,14 @@ const SKIPPABLE_ERRORS = new Set<string>([
   ErrorCode.NETEASE_VIP_REQUIRED,
   ErrorCode.NETEASE_TRIAL_DISABLED,
   ErrorCode.NETEASE_UNAVAILABLE,
+  ErrorCode.MIGU_LOGIN_EXPIRED,
+  ErrorCode.MIGU_VIP_REQUIRED,
+  ErrorCode.MIGU_TRIAL_DISABLED,
+  ErrorCode.MIGU_UNAVAILABLE,
+  ErrorCode.BILIBILI_LOGIN_EXPIRED,
+  ErrorCode.BILIBILI_RISK_CONTROL,
+  ErrorCode.BILIBILI_UNAVAILABLE,
+  ErrorCode.BILIBILI_PROXY_MISSING,
 ]);
 
 /** 需要用 dialog 强提示的严重错误（阻断性，用户必须介入） */

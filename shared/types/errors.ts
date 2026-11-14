@@ -53,6 +53,8 @@ export enum ErrorCode {
   BILIBILI_UNAVAILABLE = "BILIBILI_UNAVAILABLE",
   /** B 站登录态已失效 */
   BILIBILI_LOGIN_EXPIRED = "BILIBILI_LOGIN_EXPIRED",
+  /** B 站取流地址未携带本地代理信封 */
+  BILIBILI_PROXY_MISSING = "BILIBILI_PROXY_MISSING",
 
   // 标签编辑相关
   /** 读取文件标签失败 */
