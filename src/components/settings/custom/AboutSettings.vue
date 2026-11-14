@@ -84,6 +84,36 @@ const dependencies: Dependency[] = [
     description: "网易云音乐 API 备份 + 增强",
     url: "https://github.com/neteasecloudmusicapienhanced/api-enhanced",
   },
+  {
+    name: "TaskBarLyrics",
+    description: "Windows 任务栏歌词实现参考",
+    url: "https://github.com/xiaoxu1642/TaskBarLyrics",
+  },
+  {
+    name: "bilibili-api-python",
+    description: "B 站音源 WBI 签名与取流参考",
+    url: "https://github.com/qianxuntudou-ops/bilibili-api-python",
+  },
+  {
+    name: "folia-major",
+    description: "歌词引擎与 AutoMix 决策层参考",
+    url: "https://github.com/chthollyphile/folia-major",
+  },
+  {
+    name: "miguMusic-api-enhanced",
+    description: "咪咕音乐 API 接口与会员取流参考",
+    url: "https://github.com/Domdkw/miguMusic-api-enhanced",
+  },
+  {
+    name: "music-lib",
+    description: "多平台音源取流链路参考",
+    url: "https://github.com/guohuiyuan/music-lib",
+  },
+  {
+    name: "SPlayer-Next",
+    description: "AutoMix 子系统回移植上游",
+    url: "https://github.com/SPlayer-Dev/SPlayer-Next",
+  },
 ];
 </script>
 
