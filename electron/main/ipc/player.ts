@@ -8,8 +8,9 @@ import {
   installPreparedAutoMixStems,
 } from "@main/services/playerPreload";
 import { extname } from "node:path";
-import { app, ipcMain, powerMonitor } from "electron";
-import { sendToMain } from "@main/utils/broadcast";
+import { app, ipcMain, nativeImage, powerMonitor } from "electron";
+import { createHash } from "node:crypto";
+import { isWindowPresentable, sendToMain } from "@main/utils/broadcast";
 import { readFileAutoEncoding } from "@main/utils/encoding";
 import { toCacheUrl } from "@main/utils/protocol";
 import { toMs } from "@main/utils/time";
@@ -93,6 +94,47 @@ const toEnginePositionMs = (positionMs: number): number =>
 const fail = (code: ErrorCode, error?: unknown) => {
   if (error) playerLog.error(`${code}:`, error);
   return { success: false as const, error: code };
+};
+
+/** 在线封面 256px bitmap 缓存上限 */
+const COVER_BITMAP_CACHE_LIMIT = 8;
+/** URL → 256px bitmap，仅保留近期切歌封面 */
+const coverBitmapCache = new Map<string, { hash: string; bitmap: Buffer }>();
+/** 正在下载的在线封面，按 URL 合并重复切歌 */
+const coverBitmapInFlight = new Map<string, Promise<{ source: Buffer; hash: string } | null>>();
+
+/** 获取在线封面的 256px bitmap，命中缓存时不重复下载或缩放 */
+const getCoverBitmap = async (url: string): Promise<{ source: Buffer; hash: string } | null> => {
+  const hash = createHash("sha256").update(url).digest("hex");
+  const cached = coverBitmapCache.get(url);
+  if (cached?.hash === hash) {
+    coverBitmapCache.delete(url);
+    coverBitmapCache.set(url, cached);
+    return { source: cached.bitmap, hash };
+  }
+  const bytes = await fetchBytes(url, { requireImage: true });
+  if (!bytes) return null;
+  let image = nativeImage.createFromBuffer(bytes);
+  if (image.isEmpty()) return null;
+  const { width, height } = image.getSize();
+  if (width > 256 || height > 256) {
+    image = width >= height ? image.resize({ width: 256 }) : image.resize({ height: 256 });
+  }
+  const bitmap = image.toBitmap();
+  coverBitmapCache.set(url, { hash, bitmap });
+  while (coverBitmapCache.size > COVER_BITMAP_CACHE_LIMIT) {
+    coverBitmapCache.delete(coverBitmapCache.keys().next().value!);
+  }
+  return { source: bitmap, hash };
+};
+
+/** 合并同一 URL 的在线封面下载与缩放 */
+const loadCoverBitmap = (url: string): Promise<{ source: Buffer; hash: string } | null> => {
+  const existing = coverBitmapInFlight.get(url);
+  if (existing) return existing;
+  const task = getCoverBitmap(url);
+  coverBitmapInFlight.set(url, task);
+  return task.finally(() => coverBitmapInFlight.delete(url));
 };
 
 /** 判断原生错误是否为设备错误 */
@@ -200,8 +242,10 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
           type: "position",
           data: { position: posMs, duration: durMs },
         };
-        // 主窗口隐藏时跳过高频推送
-        if (getMainWindow()?.isVisible()) sendToMain("player:event", positionEvent);
+        // 主窗口隐藏或最小化时跳过高频推送
+        const mainWindow = getMainWindow();
+        if (mainWindow && isWindowPresentable(mainWindow))
+          sendToMain("player:event", positionEvent);
         mediaService.setTimeline({ currentMs: posMs, totalMs: durMs });
         nowPlaying.onPosition(posMs, true);
         neteaseScrobble.onPosition(posMs);
@@ -305,17 +349,17 @@ const completeTrackLoad = (
   if (!isRemote) setTaskbarThumbnailCover(meta.cover);
   neteaseScrobble.onTrackLoaded(authoritative, options.context, durationMs, autoPlay);
   if (coverUrl) {
-    void fetchBytes(coverUrl).then((buf) => {
-      if (!buf || seq !== loadSeq) return;
+    void loadCoverBitmap(coverUrl).then((cover) => {
+      if (!cover || seq !== loadSeq) return;
       mediaService.setMetadata({
         title: displayTitle,
         artists: artistNames(displayArtists),
         album: displayAlbum,
-        coverData: buf,
+        coverData: cover.source,
         coverUrl,
         durationMs,
       });
-      setTaskbarThumbnailCover(buf);
+      setTaskbarThumbnailCover(cover.source);
     });
   }
   const quality = {

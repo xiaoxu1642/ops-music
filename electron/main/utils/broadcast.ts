@@ -10,10 +10,14 @@ import { getMainWindow } from "@main/window";
 export const broadcast = (channel: string, data: unknown, visibleOnly = false): void => {
   for (const win of BrowserWindow.getAllWindows()) {
     if (win.isDestroyed()) continue;
-    if (visibleOnly && !win.isVisible()) continue;
+    if (visibleOnly && !isWindowPresentable(win)) continue;
     win.webContents.send(channel, data);
   }
 };
+
+/** 窗口是否真实可见：任务栏歌词窗口嵌在任务栏里，isVisible() 恒为真，需由专用门控另行判断 */
+export const isWindowPresentable = (win: BrowserWindow): boolean =>
+  !win.isDestroyed() && !win.isMinimized() && win.isVisible();
 
 /**
  * 向主窗口推送事件

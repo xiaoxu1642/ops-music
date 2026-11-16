@@ -11,23 +11,20 @@ import RekaResolver from "reka-ui/resolver";
 import Components from "unplugin-vue-components/vite";
 import pkg from "./package.json" with { type: "json" };
 
-/** 获取当前 git 提交 */
-const getGitCommit = (): string => {
+/** 获取构建期 git 元数据 */
+const getGitMetadata = (): { commit: string; date: string } => {
   try {
-    return execSync("git rev-parse HEAD").toString().trim().slice(0, 7) || "unknown";
+    const metadata = execSync("git log -1 --format=%H%x1f%cI").toString().trim().split("\x1f");
+    return {
+      commit: metadata[0]?.slice(0, 7) || "unknown",
+      date: metadata[1] || "unknown",
+    };
   } catch {
-    return "unknown";
+    return { commit: "unknown", date: "unknown" };
   }
 };
 
-/** 获取当前 git 提交日期 */
-const getGitDate = (): string => {
-  try {
-    return execSync("git log -1 --format=%cI").toString().trim() || "unknown";
-  } catch {
-    return "unknown";
-  }
-};
+const gitMetadata = getGitMetadata();
 
 export default defineConfig({
   main: {
@@ -69,8 +66,8 @@ export default defineConfig({
       __APP_AUTHOR__: JSON.stringify(pkg.author.name),
       __APP_HOMEPAGE__: JSON.stringify(pkg.homepage),
       __APP_AUTHOR_URL__: JSON.stringify(pkg.author.url),
-      __COMMIT_HASH__: JSON.stringify(getGitCommit()),
-      __COMMIT_DATE__: JSON.stringify(getGitDate()),
+      __COMMIT_HASH__: JSON.stringify(gitMetadata.commit),
+      __COMMIT_DATE__: JSON.stringify(gitMetadata.date),
     },
     server: {
       port: 14558,
@@ -84,6 +81,15 @@ export default defineConfig({
         input: {
           index: resolve(__dirname, "index.html"),
           "taskbar-lyric": resolve(__dirname, "windows/taskbar-lyric/index.html"),
+        },
+        output: {
+          manualChunks(id): string | null {
+            if (!id.includes("node_modules")) return null;
+            if (id.includes("/marked/") || id.includes("\\marked\\")) return "markdown";
+            if (id.includes("/localforage/") || id.includes("\\localforage\\")) return "storage";
+            if (id.includes("/reka-ui/") || id.includes("\\reka-ui\\")) return "reka-ui";
+            return null;
+          },
         },
       },
     },

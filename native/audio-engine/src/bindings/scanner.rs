@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::thread;
 
@@ -11,7 +11,8 @@ use tracing::info;
 use crate::scanner;
 
 /// 全局扫描取消标志
-static SCAN_CANCEL: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
+static SCAN_CANCEL: Mutex<Option<(u64, Arc<AtomicBool>)>> = Mutex::new(None);
+static NEXT_SCAN_ID: AtomicU64 = AtomicU64::new(1);
 
 /// 已有文件记录，用于增量扫描比对
 #[napi(object)]
@@ -119,7 +120,8 @@ pub fn scan_dirs(
 
     // 创建取消标志并保存到全局，供 cancel_scan 使用
     let cancel = Arc::new(AtomicBool::new(false));
-    *SCAN_CANCEL.lock() = Some(Arc::clone(&cancel));
+    let scan_id = NEXT_SCAN_ID.fetch_add(1, Ordering::Relaxed);
+    *SCAN_CANCEL.lock() = Some((scan_id, Arc::clone(&cancel)));
 
     thread::spawn(move || {
         let emit = |event: scanner::ScanEvent| {
@@ -164,8 +166,10 @@ pub fn scan_dirs(
             &emit,
         );
 
-        // 扫描结束后清除全局取消标志
-        *SCAN_CANCEL.lock() = None;
+        let mut slot = SCAN_CANCEL.lock();
+        if slot.as_ref().is_some_and(|(id, _)| *id == scan_id) {
+            *slot = None;
+        }
     });
 
     Ok(())
@@ -174,7 +178,7 @@ pub fn scan_dirs(
 /// 取消正在进行的扫描任务
 #[napi]
 pub fn cancel_scan() {
-    if let Some(cancel) = SCAN_CANCEL.lock().as_ref() {
+    if let Some((_, cancel)) = SCAN_CANCEL.lock().as_ref() {
         cancel.store(true, Ordering::Release);
         info!("已发送扫描取消信号");
     }

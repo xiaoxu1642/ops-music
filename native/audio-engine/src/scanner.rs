@@ -15,6 +15,7 @@ use tracing::{debug, info, warn};
 use walkdir::WalkDir;
 
 use crate::metadata;
+use crate::metadata::folder_cover::FolderImageCache;
 
 /// 支持的音频文件扩展名
 const AUDIO_EXTENSIONS: &[&str] = &[
@@ -108,6 +109,15 @@ fn collect_removed_paths(
 ///
 /// 新 API 下 AudioReader 不再要求重采样参数，扫库每文件省一次 SwrContext 分配
 pub(crate) fn probe_fast(path: &str, cover_cache_dir: Option<&str>) -> Option<ScannedTrack> {
+    let mut cover_cache = FolderImageCache::new();
+    probe_fast_cached(path, cover_cache_dir, &mut cover_cache)
+}
+
+pub(crate) fn probe_fast_cached(
+    path: &str,
+    cover_cache_dir: Option<&str>,
+    cover_cache: &mut FolderImageCache,
+) -> Option<ScannedTrack> {
     let file = fs::File::open(path).ok()?;
     let reader = AudioReader::new(crate::decoder::input::AudioInput::new(file).ok()?).ok()?;
 
@@ -129,8 +139,8 @@ pub(crate) fn probe_fast(path: &str, cover_cache_dir: Option<&str>) -> Option<Sc
     let raw_metadata = reader.metadata();
     let tags = metadata::extract_tags(&raw_metadata);
 
-    let cover =
-        cover_cache_dir.and_then(|dir| metadata::extract_cover_thumbnail(&reader, path, dir));
+    let cover = cover_cache_dir
+        .and_then(|dir| metadata::extract_cover_thumbnail_cached(&reader, path, dir, cover_cache));
 
     Some(ScannedTrack {
         path: path.to_string(),
@@ -271,6 +281,7 @@ pub fn scan_directories(
     let parse_start = Instant::now();
     let mut scanned: u32 = 0;
     let mut batch: Vec<ScannedTrack> = Vec::with_capacity(BATCH_SIZE);
+    let mut cover_cache = FolderImageCache::new();
 
     for (path_str, mtime, ctime, size) in &audio_files {
         if cancel.load(Ordering::Relaxed) {
@@ -289,7 +300,7 @@ pub fn scan_directories(
             .file_name()
             .map(|n| n.to_string_lossy().into_owned());
 
-        match probe_fast(path_str, cover_cache_dir) {
+        match probe_fast_cached(path_str, cover_cache_dir, &mut cover_cache) {
             Some(mut track) => {
                 track.file_size = *size;
                 track.mtime = *mtime;

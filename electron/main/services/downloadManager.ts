@@ -30,6 +30,8 @@ import type {
 
 /** 进度推送节流间隔 */
 const PROGRESS_INTERVAL_MS = 250;
+/** 下载状态防抖落库间隔 */
+const STATE_PERSIST_DEBOUNCE_MS = 300;
 /** 拒绝的响应 Content-Type 前缀（命中即非音频） */
 const REJECTED_MIME_PREFIXES = ["text/html", "application/json", "application/xml", "text/xml"];
 
@@ -68,6 +70,9 @@ const tasks = new Map<string, Pending>();
 const queue: string[] = [];
 /** 当前正在下载的 taskId；null 表示空闲 */
 let active: string | null = null;
+/** 待落库任务，按任务 ID 合并最新的瞬时状态 */
+const pendingPersist = new Map<string, DownloadTask>();
+let persistTimer: NodeJS.Timeout | null = null;
 
 /** 渲染层解析结果的等待门 */
 interface ResolutionGate {
@@ -93,8 +98,43 @@ const artistString = (req: DownloadRequest): string =>
 const broadcastState = (task: DownloadTask): void => {
   // 已删除的任务：收尾态（如中断产生的 canceled）不再写回 DB / 推送，否则会在删行后复活
   if (tasks.get(task.taskId)?.removed) return;
-  db.upsert(task);
+  pendingPersist.set(task.taskId, task);
+  if (persistTimer === null) {
+    persistTimer = setTimeout(() => {
+      persistTimer = null;
+      const pending = [...pendingPersist.values()];
+      pendingPersist.clear();
+      for (const pendingTask of pending) db.upsert(pendingTask);
+    }, STATE_PERSIST_DEBOUNCE_MS);
+  }
   broadcast("download:state", task);
+};
+
+/** 相同字段值不重复广播状态或写盘 */
+const broadcastStateIfChanged = (task: DownloadTask, previous: DownloadTask): void => {
+  if (
+    previous.status === task.status &&
+    previous.received === task.received &&
+    previous.total === task.total &&
+    previous.filePath === task.filePath &&
+    previous.errorCode === task.errorCode &&
+    previous.tagWarning === task.tagWarning &&
+    previous.finishedAt === task.finishedAt
+  ) {
+    return;
+  }
+  broadcastState(task);
+};
+
+/** 将剩余下载状态立即写盘 */
+const flushPersist = (): void => {
+  if (persistTimer !== null) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  const pending = [...pendingPersist.values()];
+  pendingPersist.clear();
+  for (const task of pending) db.upsert(task);
 };
 
 /** 跨盘安全移动 */
@@ -217,6 +257,7 @@ const runTask = async (
   controller: AbortController,
 ): Promise<void> => {
   const partPath = path.join(tmpDir(), `${req.taskId}.part`);
+  const before = { ...task };
 
   try {
     // 轮到才向渲染层即时解析
@@ -282,7 +323,7 @@ const runTask = async (
     task.filePath = finalPath;
     task.tagWarning = !tagOk;
     task.finishedAt = Date.now();
-    broadcastState(task);
+    broadcastStateIfChanged(task, before);
     downloadLog.info(`完成 ${req.track.title} → ${finalPath}`);
   } catch (err) {
     await fsp.unlink(partPath).catch(() => {});
@@ -294,7 +335,7 @@ const runTask = async (
       downloadLog.error(`失败 ${req.track.title}:`, err);
     }
     task.finishedAt = Date.now();
-    broadcastState(task);
+    broadcastStateIfChanged(task, before);
   }
 };
 
@@ -307,7 +348,8 @@ const pump = async (): Promise<void> => {
   if (!pending) return void pump();
   active = taskId;
   pending.task.status = "downloading";
-  broadcastState(pending.task);
+  const beforeDownloading = { ...pending.task, status: "queued" as const };
+  broadcastStateIfChanged(pending.task, beforeDownloading);
   try {
     await runTask(pending.req, pending.task, pending.controller);
   } finally {
@@ -374,9 +416,10 @@ export const cancel = (taskId: string): void => {
   const idx = queue.indexOf(taskId);
   if (idx !== -1) queue.splice(idx, 1);
   tasks.delete(taskId);
+  const beforeCanceled = { ...pending.task, status: "queued" as const };
   pending.task.status = "canceled";
   pending.task.finishedAt = Date.now();
-  broadcastState(pending.task);
+  broadcastStateIfChanged(pending.task, beforeCanceled);
 };
 
 /** 下载附带的歌词文件可能的扩展名 */
@@ -409,6 +452,7 @@ export const remove = (taskId: string): void => {
       tasks.delete(taskId);
     }
   }
+  pendingPersist.delete(taskId);
   const filePath = db.findById(taskId)?.filePath;
   db.remove(taskId);
   if (filePath) void deleteDownloadedFile(filePath);
@@ -429,6 +473,7 @@ export const init = async (): Promise<void> => {
     await Promise.all(entries.map((name) => fsp.unlink(path.join(dir, name)).catch(() => {})));
   } catch {}
   app.on("before-quit", () => {
+    flushPersist();
     for (const pending of tasks.values()) pending.controller.abort();
   });
 };

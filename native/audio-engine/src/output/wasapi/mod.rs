@@ -13,7 +13,7 @@ pub use format::negotiate_exclusive_format;
 use format::{build_wave_format, resolve_endpoint};
 use pcm::fill_buffer;
 
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
 use std::thread::JoinHandle;
@@ -50,6 +50,88 @@ pub struct ExclusiveFormat {
     pub container_bits: u16,
     /// 有效位深（16 / 24 / 32）
     pub valid_bits: u16,
+}
+
+/// 渲染线程错误码：0 表示无运行期失败，非 0 对应等待/缓冲错误
+const RUNTIME_ERROR_NONE: u32 = 0;
+const RUNTIME_ERROR_WAIT: u32 = 1;
+const RUNTIME_ERROR_GET_BUFFER: u32 = 2;
+const RUNTIME_ERROR_RELEASE_BUFFER: u32 = 3;
+
+/// 渲染线程运行期状态，供状态线程低频读取并统一上报
+struct RuntimeStatus {
+    error_code: AtomicU32,
+    error_detail: AtomicU32,
+    late_wakes: AtomicU64,
+    longest_gap_ns: AtomicU64,
+}
+
+impl RuntimeStatus {
+    fn new() -> Self {
+        Self {
+            error_code: AtomicU32::new(RUNTIME_ERROR_NONE),
+            error_detail: AtomicU32::new(0),
+            late_wakes: AtomicU64::new(0),
+            longest_gap_ns: AtomicU64::new(0),
+        }
+    }
+
+    fn record_wait_failure(&self, code: u32) {
+        self.error_detail.store(code, Ordering::Relaxed);
+        self.error_code.store(RUNTIME_ERROR_WAIT, Ordering::Release);
+    }
+
+    fn record_get_buffer_failure(&self, code: i32) {
+        self.error_detail.store(code as u32, Ordering::Relaxed);
+        self.error_code
+            .store(RUNTIME_ERROR_GET_BUFFER, Ordering::Release);
+    }
+
+    fn record_release_failure(&self, code: i32) {
+        self.error_detail.store(code as u32, Ordering::Relaxed);
+        self.error_code
+            .store(RUNTIME_ERROR_RELEASE_BUFFER, Ordering::Release);
+    }
+
+    fn record_wake(&self, gap: Duration, period: Duration) {
+        if gap > period * 2 {
+            self.late_wakes.fetch_add(1, Ordering::Relaxed);
+            self.longest_gap_ns
+                .fetch_max(gap.as_nanos() as u64, Ordering::Relaxed);
+        }
+    }
+
+    fn report(&self, period: Duration) {
+        let error_code = self.error_code.load(Ordering::Acquire);
+        if error_code != RUNTIME_ERROR_NONE {
+            let detail = self.error_detail.load(Ordering::Relaxed);
+            match error_code {
+                RUNTIME_ERROR_WAIT => warn!(code = detail, "独占模式等待周期事件失败"),
+                RUNTIME_ERROR_GET_BUFFER => warn!(hresult = detail, "独占模式获取渲染缓冲失败"),
+                RUNTIME_ERROR_RELEASE_BUFFER => {
+                    warn!(hresult = detail, "独占模式提交渲染缓冲失败")
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        let late_wakes = self.late_wakes.load(Ordering::Relaxed);
+        if late_wakes > 0 {
+            warn!(
+                late_wakes,
+                longest_gap_ms = Duration::from_nanos(self.longest_gap_ns.load(Ordering::Relaxed))
+                    .as_secs_f64()
+                    * 1000.0,
+                period_ms = period.as_secs_f64() * 1000.0,
+                "独占输出唤醒间隔超过两个设备周期"
+            );
+        }
+        debug!(late_wakes, "独占模式渲染线程退出");
+    }
+
+    fn has_failure(&self) -> bool {
+        self.error_code.load(Ordering::Acquire) != RUNTIME_ERROR_NONE
+    }
 }
 
 /// 独占模式打开失败分类，调用方据此决定回退提示文案
@@ -134,7 +216,10 @@ pub struct ExclusiveStream {
     /// 渲染线程关闭信号（手动重置）
     shutdown_event: EventHandle,
     render_thread: Option<JoinHandle<()>>,
+    report_status: Arc<RuntimeStatus>,
+    period: Duration,
     paused: Arc<AtomicBool>,
+    failure_callback: Arc<dyn Fn() + Send + Sync + 'static>,
 }
 
 // 句柄经 EventHandle 包装（内核等待/信号调用线程安全）；
@@ -160,6 +245,10 @@ impl Drop for ExclusiveStream {
         self.shutdown_event.set();
         if let Some(handle) = self.render_thread.take() {
             let _ = handle.join();
+        }
+        self.report_status.report(self.period);
+        if self.report_status.has_failure() {
+            (self.failure_callback)();
         }
         if let Some(client) = self.client.take() {
             unsafe {
@@ -253,10 +342,12 @@ pub fn open_exclusive_stream(
             let buffer_frames = client.GetBufferSize()?;
 
             let paused_flag = Arc::new(AtomicBool::new(paused));
+            let status = Arc::new(RuntimeStatus::new());
             let thread_client = ComSend(client.clone());
             let thread_render = ComSend(render);
             let thread_format = format;
             let thread_paused = Arc::clone(&paused_flag);
+            let thread_status = Arc::clone(&status);
             let (startup_tx, startup_rx) = sync_channel(1);
             let render_thread = std::thread::Builder::new()
                 .name("wasapi-exclusive".into())
@@ -272,7 +363,7 @@ pub fn open_exclusive_stream(
                         volume,
                         stopped,
                         thread_paused,
-                        on_failure,
+                        thread_status,
                         startup_tx,
                     );
                 })
@@ -302,7 +393,12 @@ pub fn open_exclusive_stream(
                 period_event: period_handle,
                 shutdown_event: shutdown_handle,
                 render_thread: Some(render_thread),
+                report_status: status,
+                period: Duration::from_secs_f64(
+                    f64::from(buffer_frames) / f64::from(format.sample_rate),
+                ),
                 paused: paused_flag,
+                failure_callback: on_failure,
             })
         })();
 
@@ -353,7 +449,7 @@ fn render_loop(
     volume: Arc<AtomicU32>,
     stopped: Arc<AtomicBool>,
     paused: Arc<AtomicBool>,
-    on_failure: Arc<dyn Fn() + Send + Sync + 'static>,
+    status: Arc<RuntimeStatus>,
     startup_tx: SyncSender<Result<()>>,
 ) {
     if let Err(error) = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }
@@ -389,8 +485,6 @@ fn render_loop(
     let block_align = usize::from(format.channels * format.container_bits / 8);
     let period = Duration::from_secs_f64(f64::from(buffer_frames) / f64::from(format.sample_rate));
     let mut last_wake = Instant::now();
-    let mut late_wakes = 0u64;
-    let mut longest_gap = Duration::ZERO;
 
     loop {
         let wait = unsafe { WaitForMultipleObjects(&wait_handles, false, INFINITE) };
@@ -398,8 +492,7 @@ fn render_loop(
             break;
         }
         if wait.0 > WAIT_OBJECT_0.0 + 1 {
-            warn!(code = wait.0, "独占模式等待周期事件失败");
-            on_failure();
+            status.record_wait_failure(wait.0);
             break;
         }
 
@@ -407,18 +500,14 @@ fn render_loop(
         let gap = now.duration_since(last_wake);
         last_wake = now;
         if !paused.load(Ordering::Acquire) && !stopped.load(Ordering::Acquire) {
-            longest_gap = longest_gap.max(gap);
-            if gap > period * 2 {
-                late_wakes += 1;
-            }
+            status.record_wake(gap, period);
         }
 
         // 独占事件驱动模式
         let buffer_ptr = match unsafe { render.GetBuffer(buffer_frames) } {
             Ok(ptr) => ptr,
             Err(error) => {
-                warn!(error = %error, "独占模式获取渲染缓冲失败");
-                on_failure();
+                status.record_get_buffer_failure(error.code().0);
                 break;
             }
         };
@@ -431,8 +520,7 @@ fn render_loop(
         fill_buffer(byte_buffer, &mut source, gain, silent, &format);
 
         if let Err(error) = unsafe { render.ReleaseBuffer(buffer_frames, 0) } {
-            warn!(error = %error, "独占模式提交渲染缓冲失败");
-            on_failure();
+            status.record_release_failure(error.code().0);
             break;
         }
     }
@@ -440,15 +528,6 @@ fn render_loop(
     unsafe {
         let _ = client.Stop();
     }
-    if late_wakes > 0 {
-        warn!(
-            late_wakes,
-            longest_gap_ms = longest_gap.as_secs_f64() * 1000.0,
-            period_ms = period.as_secs_f64() * 1000.0,
-            "独占输出唤醒间隔超过两个设备周期"
-        );
-    }
-    debug!(late_wakes, "独占模式渲染线程退出");
 }
 
 /// 读取实际开流失败的 HRESULT，保留稳定的回退提示分类。

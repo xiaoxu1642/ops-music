@@ -4,12 +4,13 @@ use ffmpeg_audio::SourceAudioInfo;
 
 mod cover;
 mod editor;
-mod folder_cover;
+pub(crate) mod folder_cover;
 mod lyrics;
 mod tag_fields;
 
 pub use cover::{
-    cover_thumb_path, extract_cover_thumbnail, make_thumbnail_jpeg, read_attached_pic,
+    cover_thumb_path, extract_cover_thumbnail, extract_cover_thumbnail_cached, make_thumbnail_jpeg,
+    read_attached_pic,
 };
 pub use editor::{read_tags, write_tags, TagWriteRequest};
 pub use lyrics::{extract_embedded_lyric, find_all_external_lyrics, ExternalLyric};

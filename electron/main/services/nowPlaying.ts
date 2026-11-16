@@ -51,6 +51,8 @@ let playState: PlayerState = "idle";
 let playSpeed = 1.0;
 /** 当前曲目对应的歌词偏移（ms，正值为歌词提前） */
 let currentLyricOffsetMs = 0;
+/** 歌词内容或曲目切换的版本，任务栏据此判断是否要重新拉取快照 */
+let lyricVersion = 0;
 
 /** 内部事件总线 */
 const emitter = new EventEmitter<NowPlayingEvents>();
@@ -109,6 +111,7 @@ export const update = (track: Track | null, lyric: LyricLine[], source: LyricDat
   if (trackChanged) {
     emitter.emit("track-change", { track });
   }
+  lyricVersion += 1;
   // 曲目或歌词源任一变化都重读偏移并广播
   const key = track?.id ? offsetKey(track.id, source) : "";
   if (trackChanged || key !== currentOffsetKey) {
@@ -247,9 +250,13 @@ export const clear = (): void => {
   currentSource = null;
   currentLyricOffsetMs = 0;
   currentOffsetKey = "";
+  lyricVersion += 1;
   emitter.emit("lyric-change", snapshot());
   emitter.emit("lyric-offset-change", { trackId: null, offsetMs: 0 });
 };
+
+/** 获取当前歌词版本 */
+export const getLyricVersion = (): number => lyricVersion;
 
 /** 订阅歌曲切换 */
 export const onTrackChange = (listener: (data: { track: Track | null }) => void): (() => void) => {

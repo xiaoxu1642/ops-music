@@ -94,6 +94,37 @@ const textCollator = new Intl.Collator(undefined, {
   numeric: true,
 });
 
+/** 搜索输入防抖窗口（毫秒） */
+const SEARCH_DEBOUNCE_MS = 200;
+const debouncedSearchQuery = ref(props.searchQuery);
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => props.searchQuery,
+  (query) => {
+    clearTimeout(searchDebounceTimer);
+    if (!query) {
+      debouncedSearchQuery.value = query;
+      return;
+    }
+    searchDebounceTimer = setTimeout(() => {
+      debouncedSearchQuery.value = query;
+    }, SEARCH_DEBOUNCE_MS);
+  },
+);
+onBeforeUnmount(() => clearTimeout(searchDebounceTimer));
+
+const searchKeys = new WeakMap<Track, string>();
+
+const getSearchKey = (track: Track): string => {
+  let key = searchKeys.get(track);
+  if (key === undefined) {
+    key =
+      `${track.title ?? ""}\n${(track.artists ?? []).map((artist) => artist.name ?? "").join("\n")}\n${track.album?.name ?? ""}`.toLocaleLowerCase();
+    searchKeys.set(track, key);
+  }
+  return key;
+};
+
 /** 当前播放歌曲 ID */
 const playingId = computed(() => media.track?.id);
 
@@ -148,16 +179,9 @@ const sortTitleText = computed(() => {
 
 /** 根据搜索关键词过滤后的列表 */
 const filteredItems = computed(() => {
-  const query = props.searchQuery.trim().toLowerCase();
+  const query = debouncedSearchQuery.value.trim().toLocaleLowerCase();
   if (!query) return props.items;
-  return props.items.filter((track) => {
-    const title = (track.title ?? "").toLowerCase();
-    const artists = (track.artists ?? [])
-      .map((artist) => (artist.name ?? "").toLowerCase())
-      .join(" ");
-    const album = track.album?.name?.toLowerCase() ?? "";
-    return title.includes(query) || artists.includes(query) || album.includes(query);
-  });
+  return props.items.filter((track) => getSearchKey(track).includes(query));
 });
 
 /** 排序后列表 */

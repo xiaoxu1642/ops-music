@@ -108,6 +108,9 @@ export const handleEvent = async (event: PlayerEvent): Promise<void> => {
     case "position": {
       // 歌曲加载中不更新进度
       if (status.trackLoading) break;
+      const settings = useSettingsStore();
+      const transitionEnabled =
+        settings.player.preloadNextTrack || settings.player.transitionMode !== "none";
       // seek 后丢弃旧位置，直到后端推送的位置到达 seek 目标附近
       if (!hasReachedSeekTarget(event.data.position)) break;
       const adjusted = playback.setCurrentTime(event.data.position);
@@ -122,9 +125,11 @@ export const handleEvent = async (event: PlayerEvent): Promise<void> => {
       abLoop.checkLoop(adjusted);
       // 推进延时缓存调度
       cacheScheduler.tick(adjusted);
-      void trySmartTransition(adjusted).catch((error) => {
-        console.warn("[player] 播放过渡失败", error);
-      });
+      if (transitionEnabled) {
+        void trySmartTransition(adjusted).catch((error) => {
+          console.warn("[player] 播放过渡失败", error);
+        });
+      }
       const track = useMediaStore().track;
       if (track?.cueEndMs != null && status.isPlaying && status.duration > 0) {
         if (adjusted >= status.duration - 250 && !isSmartTransitionActive())

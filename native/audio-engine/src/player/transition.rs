@@ -28,7 +28,10 @@ impl OldThreads {
     /// 在工作线程上 join 所有旧 timer/fade，返回旧解码线程 handle 供调用方继续使用
     /// 忽略 join 错误：辅助线程 panic 不阻止新加载，主播放路径不依赖它们
     pub fn join_aux(self) -> Option<JoinHandle<decoder::DecoderData>> {
-        for h in [self.position_timer, self.fade_handle].into_iter().flatten() {
+        for h in [self.position_timer, self.fade_handle]
+            .into_iter()
+            .flatten()
+        {
             let _ = h.join();
         }
         self.decoder_thread

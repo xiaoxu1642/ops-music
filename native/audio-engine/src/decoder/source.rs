@@ -126,10 +126,7 @@ impl Iterator for DecoderSampleReader {
         // 慢速路径：从共享缓冲区非阻塞获取，跳过空数据块
         loop {
             match self.shared.try_pop() {
-                PopResult::Chunk(mut chunk) => {
-                    self.shared
-                        .recycle_fft_buffer(std::mem::take(&mut chunk.fft_samples));
-
+                PopResult::Chunk(chunk) => {
                     if !chunk.player_samples.is_empty() {
                         self.local_source_samples = chunk.source_sample_count;
                         self.reported_source_samples = 0;

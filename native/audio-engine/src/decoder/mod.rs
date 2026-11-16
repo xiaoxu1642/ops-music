@@ -4,7 +4,7 @@ mod reader;
 mod stem_processing;
 use processing::run_dsp_safely;
 pub(crate) use reader::HTTP_PROXY;
-use reader::{build_resamplers, open_source, run_decoding_loop};
+use reader::{build_player_resampler, open_source, run_decoding_loop};
 
 pub(crate) mod buffer;
 pub(crate) mod source;
@@ -39,24 +39,13 @@ pub const DEFAULT_OUTPUT_CHANNELS: u16 = 2;
 /// 播放输出默认采样率
 pub const DEFAULT_TARGET_SAMPLE_RATE: u32 = 48_000;
 
-/// FFT 计算所需的目标采样率
-pub const FFT_TARGET_SAMPLE_RATE: u32 = 48_000;
-
-/// FFT 始终分析双声道视图，与真实播放输出声道链路相互独立
-const FFT_CHANNELS: u16 = 2;
-
 /// 自定义 File IO 读取失败时，ffmpeg_audio 的 read 回调可能映射为此错误码
 const AVERROR_EIO: i32 = sys::averror(libc::EIO);
 
 /// 解码会话所需的资源（跨 seek 复用，避免重建 ffmpeg_audio 上下文）
-///
-/// 此处必须进行 1-to-N 分发，因为需要两个可能存在采样率差异的音源
-///  - 播放重采样器输出设备采样率、设备声道数的交错 f32
-///  - FFT 重采样器输出 48kHz 的 stereo f32
 pub struct DecoderData {
     reader: AudioReader,
     player_resampler: Resampler,
-    fft_resampler: Resampler,
     /// 网络中断句柄仅由远端源持有，stop() 取消后可在 seek 前重置
     cancel_handle: Option<HttpCancelHandle>,
 }
@@ -176,8 +165,7 @@ pub fn start_prepared_decode(
         cancel_handle,
     } = prepared;
     let target_rate = shared.sample_rate();
-    let (player_resampler, fft_resampler) =
-        build_resamplers(&reader, target_rate, shared.channels())?;
+    let player_resampler = build_player_resampler(&reader, target_rate, shared.channels())?;
     metadata.sample_rate = target_rate;
 
     if let Some(db) = replay_gain_db {
@@ -190,7 +178,6 @@ pub fn start_prepared_decode(
     let data = DecoderData {
         reader,
         player_resampler,
-        fft_resampler,
         cancel_handle: cancel_handle.clone(),
     };
 

@@ -10,8 +10,19 @@ const UA = "OpsMusic/1.0";
 /** 预取并发数 */
 const PREFETCH_CONCURRENCY = 2;
 
+/** 冷缓存单次最多预取的歌手数；其余按需拉取 */
+const PREFETCH_BUDGET = 24;
+
+/** 过期未找到标记的存活时间（毫秒） */
+const NOT_FOUND_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 /** 正在获取头像的歌手 */
 const avatarInFlight = new Map<string, Promise<string | null>>();
+/** 进程内头像状态，value 为 URL 或缺省占位；磁盘 notfound 标记仍保留以跨启动生效 */
+const avatarState = new Map<string, string | undefined>();
+const notFoundAt = new Map<string, number>();
+/** 进程内头像状态上限，超出按最近使用淘汰 */
+const AVATAR_STATE_LIMIT = 200;
 
 /**
  * 规范化歌手名
@@ -89,19 +100,27 @@ const downloadImage = async (imageUrl: string, savePath: string): Promise<boolea
  */
 const fetchArtistAvatarCore = async (artistName: string): Promise<string | null> => {
   const name = artistName.trim();
+  const key = normalizeArtistName(name);
   // 确保目录存在
   ensureCacheDir();
   const cacheFileName = getCacheFileName(name);
   const cachePath = path.join(getArtistCacheDir(), cacheFileName);
-  // 已缓存
+  // 首次访问补齐进程内命中集，后续跳过 existsSync/statSync
+  if (avatarState.has(key)) return avatarState.get(key) ?? null;
   if (fs.existsSync(cachePath)) {
-    return toCacheUrl(cachePath) ?? null;
+    const url = toCacheUrl(cachePath) ?? null;
+    if (url) avatarState.set(key, url);
+    return url;
   }
   // 已标记为未找到（7 天过期）
   const notFoundPath = path.join(getArtistCacheDir(), getNotFoundFileName(name));
   if (fs.existsSync(notFoundPath)) {
     const stat = fs.statSync(notFoundPath);
-    if (Date.now() - stat.mtimeMs < 7 * 24 * 60 * 60 * 1000) return null;
+    if (Date.now() - stat.mtimeMs < NOT_FOUND_TTL_MS) {
+      notFoundAt.set(key, stat.mtimeMs);
+      avatarState.set(key, undefined);
+      return null;
+    }
     fs.unlinkSync(notFoundPath);
   }
   try {
@@ -109,21 +128,29 @@ const fetchArtistAvatarCore = async (artistName: string): Promise<string | null>
     const mbid = await searchMusicBrainzId(name);
     if (!mbid) {
       fs.writeFileSync(notFoundPath, "");
+      notFoundAt.set(key, Date.now());
+      avatarState.set(key, undefined);
       return null;
     }
     // TheAudioDB 获取头像 URL
     const thumbUrl = await fetchAudioDbThumb(mbid);
     if (!thumbUrl) {
       fs.writeFileSync(notFoundPath, "");
+      notFoundAt.set(key, Date.now());
+      avatarState.set(key, undefined);
       return null;
     }
     // 下载并缓存
     const ok = await downloadImage(thumbUrl, cachePath);
     if (!ok) {
       fs.writeFileSync(notFoundPath, "");
+      notFoundAt.set(key, Date.now());
+      avatarState.set(key, undefined);
       return null;
     }
-    return toCacheUrl(cachePath) ?? null;
+    const url = toCacheUrl(cachePath) ?? null;
+    if (url) avatarState.set(key, url);
+    return url;
   } catch {
     // 网络异常不写 notfound 标记，下次重试
     return null;
@@ -137,6 +164,12 @@ const fetchArtistAvatarCore = async (artistName: string): Promise<string | null>
 export const fetchArtistAvatar = async (artistName: string): Promise<string | null> => {
   if (!artistName?.trim()) return null;
   const key = normalizeArtistName(artistName);
+  if (avatarState.has(key)) {
+    const known = avatarState.get(key) ?? null;
+    avatarState.delete(key);
+    avatarState.set(key, known ?? undefined);
+    return known;
+  }
   const existing = avatarInFlight.get(key);
   if (existing) return existing;
   // 创建任务
@@ -163,10 +196,14 @@ export const prefetchArtistAvatars = async (
     if (!key || deduped.has(key)) continue;
     deduped.set(key, name.trim());
   }
-  // 队列
-  const queue = [...deduped.values()];
+  // 队列：冷缓存只预算前若干名，其余留给歌手页按可视项懒加载
+  const queue = [...deduped.values()].slice(0, PREFETCH_BUDGET);
   const result: Record<string, string> = {};
   if (!queue.length) return result;
+  for (const name of queue) {
+    const key = normalizeArtistName(name);
+    if (!avatarState.has(key)) avatarState.set(key, undefined);
+  }
   // 工作线程
   let index = 0;
   const worker = async (): Promise<void> => {
@@ -179,5 +216,11 @@ export const prefetchArtistAvatars = async (
   // 启动工作线程
   const workerCount = Math.min(PREFETCH_CONCURRENCY, queue.length);
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  while (avatarState.size > AVATAR_STATE_LIMIT) {
+    const oldest = avatarState.keys().next().value;
+    if (oldest === undefined) break;
+    avatarState.delete(oldest);
+    notFoundAt.delete(oldest);
+  }
   return result;
 };

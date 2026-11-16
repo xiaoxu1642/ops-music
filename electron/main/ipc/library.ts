@@ -26,6 +26,37 @@ import { ErrorCode } from "@shared/types/errors";
 import type { JsTagWriteRequest } from "@splayer/audio-engine";
 import type { TagEditRequest, TagWriteOutcome } from "@shared/types/tagEditor";
 
+/** 批量写标签的封面获取并发数 */
+const TAG_COVER_CONCURRENCY = 3;
+
+/** 并发读取写标签所需封面，按原下标回填且保持写盘顺序 */
+const loadTagCovers = async (edits: TagEditRequest[]): Promise<Array<Buffer | undefined>> => {
+  const covers: Array<Buffer | undefined> = new Array(edits.length);
+  const byUrl = new Map<string, Promise<Buffer | null>>();
+  let index = 0;
+  const worker = async (): Promise<void> => {
+    while (index < edits.length) {
+      const current = index++;
+      const { coverPath, coverUrl } = edits[current];
+      if (coverPath) {
+        covers[current] = await fs.readFile(coverPath);
+      } else if (coverUrl) {
+        let task = byUrl.get(coverUrl);
+        if (!task) {
+          task = fetchBytes(coverUrl, { requireImage: true });
+          byUrl.set(coverUrl, task);
+        }
+        const cover = await task;
+        if (!cover) libraryLog.warn(`封面下载失败，跳过封面只写文本: ${coverUrl}`);
+        covers[current] = cover ?? undefined;
+      }
+    }
+  };
+  const workerCount = Math.min(TAG_COVER_CONCURRENCY, edits.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return covers;
+};
+
 /** 注册音乐库相关 IPC */
 export const registerLibraryIpc = (): void => {
   // 开始扫描（全量或增量）
@@ -228,18 +259,15 @@ export const registerLibraryIpc = (): void => {
   // 批量写入文件标签并写回数据库
   ipcMain.handle("library:writeTags", async (_event, edits: TagEditRequest[]) => {
     try {
+      const covers = await loadTagCovers(edits);
       const requests: JsTagWriteRequest[] = [];
       // 实际带封面写入的路径集合
       const replacedCovers = new Set<string>();
-      for (const edit of edits) {
-        const { coverPath, coverUrl, ...fields } = edit;
-        let cover: Buffer | undefined;
-        if (coverPath) {
-          cover = await fs.readFile(coverPath);
-        } else if (coverUrl) {
-          cover = (await fetchBytes(coverUrl, { requireImage: true })) ?? undefined;
-          if (!cover) libraryLog.warn(`封面下载失败，跳过封面只写文本: ${coverUrl}`);
-        }
+      for (const [editIndex, edit] of edits.entries()) {
+        const fields = { ...edit };
+        delete fields.coverPath;
+        delete fields.coverUrl;
+        const cover = covers[editIndex];
         if (cover) replacedCovers.add(edit.path);
         requests.push({ ...fields, cover });
       }

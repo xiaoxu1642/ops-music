@@ -16,7 +16,6 @@ impl DecoderData {
             return false;
         }
         let _ = self.player_resampler.flush();
-        let _ = self.fft_resampler.flush();
         true
     }
 
@@ -25,7 +24,7 @@ impl DecoderData {
         self.cancel_handle.clone()
     }
 
-    /// 输出设备格式变化后重建播放重采样器；FFT 分支仍保持固定双声道分析格式
+    /// 输出设备格式变化后重建播放重采样器
     pub fn reconfigure_player_output(&mut self, sample_rate: u32, channels: u16) -> Result<()> {
         self.player_resampler = build_player_resampler(&self.reader, sample_rate, channels)?;
         Ok(())
@@ -57,7 +56,7 @@ pub(super) fn open_source(
     Ok((reader, cancel))
 }
 
-fn build_player_resampler(
+pub(super) fn build_player_resampler(
     reader: &AudioReader,
     target_rate: u32,
     target_channels: u16,
@@ -71,25 +70,7 @@ fn build_player_resampler(
         .with_context(|| "构建播放重采样器失败")
 }
 
-pub(super) fn build_resamplers(
-    reader: &AudioReader,
-    target_rate: u32,
-    target_channels: u16,
-) -> Result<(Resampler, Resampler)> {
-    let player_resampler = build_player_resampler(reader, target_rate, target_channels)?;
-
-    let fft_opts = ResampleOptions::new()
-        .sample_rate(FFT_TARGET_SAMPLE_RATE as i32)
-        .channels(i32::from(FFT_CHANNELS))
-        .format::<f32>();
-    let fft_resampler = reader
-        .build_resampler(fft_opts)
-        .with_context(|| "构建 FFT 重采样器失败")?;
-
-    Ok((player_resampler, fft_resampler))
-}
-
-/// 核心解码循环：每帧解码一次，使用复用缓冲分发到播放与 FFT 重采样器
+/// 核心解码循环：每帧解码一次，输出到播放重采样器
 /// @param data - 当前解码器和重采样器
 /// @param shared - 音频缓冲与响度参数
 pub(super) fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
@@ -109,7 +90,6 @@ pub(super) fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
 
         match data.reader.receive_frame() {
             Ok(Some(frame)) => {
-                // 1-to-N: 同一帧顺序喂两个重采样器
                 if data.player_resampler.process::<f32>(Some(&frame)).is_err() {
                     debug!("player resampler 处理失败，结束解码");
                     shared.mark_decode_failed();
@@ -118,19 +98,9 @@ pub(super) fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
                 let mut player_samples = shared.take_player_buffer();
                 player_samples.extend_from_slice(data.player_resampler.output_as::<f32>());
 
-                if data.fft_resampler.process::<f32>(Some(&frame)).is_err() {
-                    debug!("fft resampler 处理失败，结束解码");
-                    shared.recycle_player_buffer(player_samples);
-                    shared.mark_decode_failed();
-                    return;
-                }
-                let mut fft_samples = shared.take_fft_buffer();
-                fft_samples.extend_from_slice(data.fft_resampler.output_as::<f32>());
-
                 // 重采样可能还在攒样本，本轮没出数据就跳过
-                if player_samples.is_empty() && fft_samples.is_empty() {
+                if player_samples.is_empty() {
                     shared.recycle_player_buffer(player_samples);
-                    shared.recycle_fft_buffer(fft_samples);
                     continue;
                 }
                 had_success = true;
@@ -156,28 +126,22 @@ pub(super) fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
                     stem_samples: None,
                     source_sample_count: player_samples.len() as u64,
                     player_samples,
-                    fft_samples,
                 });
             }
             Ok(None) | Err(AudioError::Eof) => {
-                // EOF flush：把两个重采样器内部残留挤出来，否则最后几十毫秒丢
+                // EOF flush：把播放重采样器内部残留挤出来，否则最后几十毫秒丢
                 let _ = data.player_resampler.process::<f32>(None);
-                let _ = data.fft_resampler.process::<f32>(None);
                 let mut player_samples = shared.take_player_buffer();
                 player_samples.extend_from_slice(data.player_resampler.output_as::<f32>());
-                let mut fft_samples = shared.take_fft_buffer();
-                fft_samples.extend_from_slice(data.fft_resampler.output_as::<f32>());
-                if !player_samples.is_empty() || !fft_samples.is_empty() {
+                if !player_samples.is_empty() {
                     shared.push(AudioChunk {
                         normalization_gain: 1.0,
                         stem_samples: None,
                         source_sample_count: player_samples.len() as u64,
                         player_samples,
-                        fft_samples,
                     });
                 } else {
                     shared.recycle_player_buffer(player_samples);
-                    shared.recycle_fft_buffer(fft_samples);
                 }
                 return;
             }

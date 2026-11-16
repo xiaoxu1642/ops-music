@@ -57,37 +57,29 @@ const getScrollTransform = (currentMs: number): string => {
   return `translateX(-${offset.toFixed(3)}px)`;
 };
 
-const wordRefs: HTMLSpanElement[] = [];
-
-const getWordProgress = (
-  word: { startTime: number; endTime: number },
-  currentMs: number,
-): string => {
-  const progress = getWordSweepProgress(word, props.line?.startTime ?? 0, currentMs);
-  const pct = (progress * 100).toFixed(1);
-  const px = progress * 4 - 2;
-  const signed = px >= 0 ? `+ ${px.toFixed(2)}px` : `- ${(-px).toFixed(2)}px`;
-  return `calc(${pct}% ${signed})`;
-};
-
-const setWordRef = (el: Element | { $el?: Element } | null, index: number): void => {
-  const target = el instanceof Element ? el : (el?.$el ?? null);
-  if (target instanceof HTMLSpanElement) {
-    wordRefs[index] = target;
-  } else {
-    delete wordRefs[index];
-  }
-};
-
 let resizeObserver: ResizeObserver | null = null;
 let rafId = 0;
 let lastTransform = "";
-let lastWordProgress: string[] = [];
+let lastSweep = -1;
 
 const resetRenderCache = (): void => {
   lastTransform = "";
-  lastWordProgress = [];
-  wordRefs.length = 0;
+  lastSweep = -1;
+};
+
+const getSweepPercent = (currentMs: number): number => {
+  if (!props.line || !useKaraoke.value) return 0;
+  const { startTime, endTime, words } = props.line;
+  const total = Math.max(1, endTime - startTime);
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const progress = getWordSweepProgress(word, startTime, currentMs);
+    if (progress >= 1) continue;
+    const wordDuration = Math.max(1, word.endTime - word.startTime);
+    const absolute = word.startTime - startTime + progress * wordDuration;
+    return Math.min(100, Math.max(0, (absolute / total) * 100));
+  }
+  return 100;
 };
 
 /** 渲染一帧：按当前进度更新滚动位移与逐字扫光（脏检查，无变化不写 DOM） */
@@ -102,15 +94,11 @@ const renderOnce = (): void => {
     }
   }
 
-  if (useKaraoke.value && props.line) {
-    for (let i = 0; i < props.line.words.length; i++) {
-      const el = wordRefs[i];
-      if (!el) continue;
-      const progress = getWordProgress(props.line.words[i], currentMs);
-      if (lastWordProgress[i] !== progress) {
-        lastWordProgress[i] = progress;
-        el.style.setProperty("--p", progress);
-      }
+  if (wrapperRef.value) {
+    const sweep = useKaraoke.value ? getSweepPercent(currentMs) : 0;
+    if (sweep !== lastSweep) {
+      lastSweep = sweep;
+      wrapperRef.value.style.setProperty("--sweep", `${sweep.toFixed(2)}%`);
     }
   }
 };
@@ -194,16 +182,11 @@ onBeforeUnmount(() => {
     ref="wrapperRef"
     class="scroll-wrapper"
     :data-anchor="anchor"
-    :class="{ 'is-overflow': isOverflow }"
+    :class="{ 'is-overflow': isOverflow, 'is-karaoke': useKaraoke }"
   >
-    <div ref="contentRef" class="scroll-content">
+    <div ref="contentRef" class="scroll-content" :data-lyric-text="plainText">
       <template v-if="useKaraoke">
-        <span
-          v-for="(word, i) in line!.words"
-          :key="i"
-          :ref="(el) => setWordRef(el, i)"
-          class="tb-word"
-        >
+        <span v-for="(word, i) in line!.words" :key="i" class="tb-word">
           {{ word.word }}
         </span>
       </template>
@@ -218,6 +201,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   white-space: nowrap;
   text-align: left;
+  --sweep: 0%;
 }
 /* 未溢出时根据锚定方向对齐短文本；溢出时强制左对齐，让滚动从头开始 */
 .scroll-wrapper[data-anchor="right"]:not(.is-overflow) {
@@ -226,21 +210,24 @@ onBeforeUnmount(() => {
 .scroll-content {
   display: inline-block;
   pointer-events: auto;
-  will-change: transform;
+  position: relative;
 }
 .tb-word {
-  --p: 0%;
   display: inline;
+  color: var(--tbl-unplayed);
+}
+.scroll-wrapper.is-overflow .scroll-content {
+  will-change: transform;
+}
+.scroll-wrapper.is-karaoke .tb-word {
   color: transparent;
-  -webkit-text-fill-color: transparent;
-  background: linear-gradient(
-    90deg,
-    var(--tbl-played) 0%,
-    var(--tbl-played) calc(var(--p) - 2px),
-    var(--tbl-unplayed) calc(var(--p) + 2px),
-    var(--tbl-unplayed) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
+}
+.scroll-wrapper.is-karaoke .scroll-content::after {
+  content: attr(data-lyric-text);
+  position: absolute;
+  inset: 0;
+  white-space: nowrap;
+  color: var(--tbl-played);
+  clip-path: inset(0 calc(100% - var(--sweep)) 0 0);
 }
 </style>

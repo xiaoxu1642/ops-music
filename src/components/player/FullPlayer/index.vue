@@ -63,8 +63,6 @@ let lastLyricTimeMs = -1;
 const { start: startTick, stop: stopTick } = usePlaybackTime((currentMs, _durationMs, playing) => {
   if (status.trackLoading || media.lyricLoading) return;
   const timeMs = currentMs + status.lyricOffsetMs;
-  // 暂停且非 seek 时时间源恒定，逐帧重复推同一个值只是空转（歌词弹簧由引擎自身的 RAF 驱动）；
-  // 播放态、歌词偏移或 seek 任一变化都会重新放行，RAF 不停帧以免恢复时跳变
   if (!playing && !player.isSeeking() && timeMs === lastLyricTimeMs) return;
   lastLyricTimeMs = timeMs;
   lyricRef.value?.setCurrentTime(timeMs, player.isSeeking());
@@ -80,6 +78,7 @@ const onBeforeEnter = () => {
   destroyScheduler.cancel();
   initialLyricTimeMs.value = getCurrentTime() + status.lyricOffsetMs;
   lyricMounted.value = true;
+  lastLyricTimeMs = -1;
   nextTick(() => {
     lyricRef.value?.resume();
     startTick();
@@ -97,8 +96,6 @@ const onAfterLeave = () => {
   if (!status.isPlayerExpanded) destroyScheduler.schedule();
 };
 
-onBeforeUnmount(() => destroyScheduler.cancel());
-
 // 重新挂载时，刷新初始时间
 watch(hasLyric, (value) => {
   if (value && lyricMounted.value) {
@@ -109,7 +106,10 @@ watch(hasLyric, (value) => {
 // 歌词变化时先推送精确时间
 watch(
   () => media.parsedLyric,
-  () => lyricRef.value?.setCurrentTime(getCurrentTime() + status.lyricOffsetMs),
+  () => {
+    lastLyricTimeMs = -1;
+    lyricRef.value?.setCurrentTime(getCurrentTime() + status.lyricOffsetMs);
+  },
 );
 
 // 切换歌词引擎时，重新计算初始并推送时间
@@ -117,12 +117,31 @@ watch(
   () => settings.lyric.engine,
   () => {
     initialLyricTimeMs.value = getCurrentTime() + status.lyricOffsetMs;
+    lastLyricTimeMs = -1;
     nextTick(() => {
       lyricRef.value?.setCurrentTime(getCurrentTime() + status.lyricOffsetMs);
       if (isPlaying.value) lyricRef.value?.resume();
     });
   },
 );
+
+watch(
+  [
+    isPlaying,
+    () => status.lyricOffsetMs,
+    () => player.isSeeking(),
+    () => settings.player.coverLyricRatio,
+    () => settings.lyric.useAMSpring,
+  ],
+  () => {
+    if (lyricMounted.value) startTick();
+  },
+);
+
+onBeforeUnmount(() => {
+  destroyScheduler.cancel();
+  stopTick();
+});
 
 const fullscreenCover = computed(() => settings.player.coverLayout === "fullscreen");
 const coverWidth = computed(() => `${settings.player.coverLyricRatio * 100}%`);

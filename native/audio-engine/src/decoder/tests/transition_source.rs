@@ -23,7 +23,6 @@ fn voice_buffered(level: f32) -> Arc<Shared> {
     shared.push_output(AudioChunk {
         normalization_gain: 1.0,
         player_samples: vec![level; 2000],
-        fft_samples: Vec::new(),
         source_sample_count: 2000,
         stem_samples: Some(Box::new([
             vec![0.0; 2000],
@@ -130,7 +129,6 @@ fn buffered(samples: Vec<f32>) -> Arc<Shared> {
         normalization_gain: 1.0,
         stem_samples: None,
         player_samples: samples,
-        fft_samples: Vec::new(),
         source_sample_count: count,
     });
     shared.mark_output_eof();
@@ -188,7 +186,6 @@ fn stereo_buffered(samples: Vec<f32>) -> Arc<Shared> {
         normalization_gain: 1.0,
         stem_samples: None,
         player_samples: samples,
-        fft_samples: Vec::new(),
         source_sample_count: count,
     });
     shared.mark_output_eof();
@@ -454,7 +451,6 @@ fn underrun_keeps_outgoing_gain_and_resumes_the_envelope() {
         normalization_gain: 1.0,
         stem_samples: None,
         player_samples: vec![0.4; 60],
-        fft_samples: vec![],
         source_sample_count: 60,
     });
     let fft = Arc::new(FftAnalyzer::new());
@@ -476,7 +472,6 @@ fn underrun_keeps_outgoing_gain_and_resumes_the_envelope() {
         normalization_gain: 1.0,
         stem_samples: None,
         player_samples: vec![0.4; 200],
-        fft_samples: vec![],
         source_sample_count: 200,
     });
     second.mark_output_eof();

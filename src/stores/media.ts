@@ -34,7 +34,7 @@ export const useMediaStore = defineStore("media", () => {
   const lyricLoading = ref(false);
 
   /** 当前歌词行索引，-1 表示无匹配 */
-  const lyricIndex = ref(-1);
+  const lyricIndex = shallowRef(-1);
 
   /** 当前歌词格式 */
   const lyricFormat = computed((): LyricFormat | null => activeLyric.value?.format ?? null);
@@ -126,7 +126,7 @@ export const useMediaStore = defineStore("media", () => {
     lyricContent.value = null;
     parsedLyric.value = [];
     lyricAuthors.value = [];
-    lyricIndex.value = -1;
+    if (lyricIndex.value !== -1) lyricIndex.value = -1;
     lyricLoading.value = true;
     syncToMain();
   };
@@ -209,7 +209,8 @@ export const useMediaStore = defineStore("media", () => {
    * @param time - 播放时间
    */
   const updateLyricIndex = (time: number): void => {
-    lyricIndex.value = findLyricIndex(parsedLyric.value, time, lyricIndex.value);
+    const nextIndex = findLyricIndex(parsedLyric.value, time, lyricIndex.value);
+    if (nextIndex !== lyricIndex.value) lyricIndex.value = nextIndex;
   };
 
   /** 清空所有状态 */

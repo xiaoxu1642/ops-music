@@ -4,6 +4,7 @@
 //! 支持的文件名（不区分大小写）按优先级排列：
 //! cover → folder → album → front → <同名> → 目录下唯一图片
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// 按优先级排列的封面文件名列表（不含扩展名）
@@ -21,11 +22,34 @@ const COVER_EXTS: &[&str] = &["jpg", "jpeg", "png", "webp", "bmp"];
 ///
 /// @param audio_path - 音频文件路径
 /// @returns 找到的封面图片路径，未找到返回 None
+#[cfg(test)]
 pub fn find_folder_cover(audio_path: &str) -> Option<PathBuf> {
+    let mut cache = FolderImageCache::new();
+    find_folder_cover_cached(audio_path, &mut cache)
+}
+
+/// 扫描批次内按目录复用图片列表，批次结束即丢弃
+pub struct FolderImageCache {
+    images: HashMap<PathBuf, Vec<PathBuf>>,
+}
+
+impl FolderImageCache {
+    pub fn new() -> Self {
+        Self {
+            images: HashMap::new(),
+        }
+    }
+}
+
+/// 在同一扫描批次内查找封面；缓存只存活于本次调用方
+pub fn find_folder_cover_cached(audio_path: &str, cache: &mut FolderImageCache) -> Option<PathBuf> {
     let audio = Path::new(audio_path);
     let dir = audio.parent()?;
 
-    let entries = list_dir_images(dir)?;
+    let entries = cache
+        .images
+        .entry(dir.to_path_buf())
+        .or_insert_with(|| list_dir_images(dir).unwrap_or_default());
 
     // 按优先名匹配
     for name in COVER_NAMES {
@@ -48,7 +72,7 @@ pub fn find_folder_cover(audio_path: &str) -> Option<PathBuf> {
 
     // 目录下唯一的图片文件
     if entries.len() == 1 {
-        return Some(entries.into_iter().next().unwrap());
+        return entries.first().cloned();
     }
 
     None

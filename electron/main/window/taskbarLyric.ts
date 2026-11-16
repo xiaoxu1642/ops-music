@@ -54,8 +54,9 @@ let uiaWatcher: UiaWatcher | null = null;
 let trayWatcher: TrayWatcher | null = null;
 let taskbarCreatedWatcher: TaskbarCreatedWatcher | null = null;
 
-/** 悬停轮询间隔（毫秒）：对齐参考实现的 100ms 光标热区检查 */
-const HOVER_POLL_MS = 100;
+/** 悬停轮询间隔（毫秒）：显示态 100ms、隐藏态 1s 退避，避免隐藏时 10Hz 空转 */
+const HOVER_POLL_SHOWN_MS = 100;
+const HOVER_POLL_HIDDEN_MS = 1000;
 
 /**
  * 暂停折叠状态机。
@@ -68,6 +69,8 @@ let pauseCollapse: PauseCollapseState = createPauseCollapseState(false);
 let pauseCollapseTimer: NodeJS.Timeout | null = null;
 /** 光标悬停轮询计时器（窗口存在期间运行） */
 let hoverPollTimer: NodeJS.Timeout | null = null;
+let hoverPollHidden = false;
+let appliedContentShape: { x: number; width: number; height: number } | null = null;
 /** nowPlaying 播放态订阅取消函数 */
 let unsubscribeNowPlaying: (() => void) | null = null;
 /** 主窗口缺失期间暂存的自动关闭提示原因 */
@@ -193,13 +196,26 @@ const onPauseCollapseTimer = (): void => {
 /** 启动悬停轮询：窗口在屏期间按光标几何位置驱动悬停/展开与暂停折叠 */
 const startHoverPoll = (): void => {
   if (hoverPollTimer) return;
-  hoverPollTimer = setInterval(() => {
-    const win = getTaskbarLyricWindow();
-    if (!win || !pauseCollapse.displayed) return;
-    const inside = isPointInsideRect(screen.getCursorScreenPoint(), win.getBounds());
-    if (inside === pauseCollapse.hovered) return;
-    dispatchPauseCollapseEvent({ type: inside ? "hover-enter" : "hover-leave" });
-  }, HOVER_POLL_MS);
+  hoverPollHidden = !pauseCollapse.displayed;
+  hoverPollTimer = setInterval(
+    () => {
+      const win = getTaskbarLyricWindow();
+      if (!win || !pauseCollapse.displayed) return;
+      const inside = isPointInsideRect(screen.getCursorScreenPoint(), win.getBounds());
+      if (inside === pauseCollapse.hovered) return;
+      dispatchPauseCollapseEvent({ type: inside ? "hover-enter" : "hover-leave" });
+    },
+    hoverPollHidden ? HOVER_POLL_HIDDEN_MS : HOVER_POLL_SHOWN_MS,
+  );
+};
+
+/** 窗口显隐时切换轮询频率：隐藏只做低频自检，显示立即恢复 100ms 热区检查 */
+const refreshHoverPollRate = (): void => {
+  if (!hoverPollTimer) return;
+  const hidden = !pauseCollapse.displayed;
+  if (hidden === hoverPollHidden) return;
+  stopHoverPoll();
+  startHoverPoll();
 };
 
 /** 停止悬停轮询 */
@@ -237,6 +253,7 @@ const dispatchPauseCollapseEvent = (event: PauseCollapseEvent): void => {
   if (result.armTimer) startPauseCollapseTimer();
 
   if (result.state.hovered !== previous.hovered) sendHover(win, result.state.hovered);
+  refreshHoverPollRate();
 
   if (result.collapse) {
     taskbarLog.info("暂停 30 秒且未悬停，任务栏歌词折叠为仅封面");
@@ -246,7 +263,9 @@ const dispatchPauseCollapseEvent = (event: PauseCollapseEvent): void => {
     taskbarLog.info("播放恢复，任务栏歌词退出仅封面折叠态");
     // 折叠期间高频位置推送被门控丢弃，先补发一帧完整快照让渲染端立即接续扫光
     if (win && !win.isDestroyed()) {
-      win.webContents.send("nowPlaying:lyric-change", nowPlaying.snapshot());
+      win.webContents.send("nowPlaying:lyric-change", {
+        version: nowPlaying.getLyricVersion(),
+      });
     }
     sendCollapse(win, false);
   }
@@ -280,7 +299,18 @@ const applyContentShape = (): void => {
     return;
   }
   const x = region.anchor === "right" ? region.maxWidth - shapeWidth : 0;
-  win.setShape([{ x, y: 0, width: shapeWidth, height: region.height }]);
+  const shape = [{ x, y: 0, width: shapeWidth, height: region.height }];
+  const previous = appliedContentShape;
+  if (
+    previous &&
+    previous.x === x &&
+    previous.width === shapeWidth &&
+    previous.height === region.height
+  ) {
+    return;
+  }
+  appliedContentShape = shape[0];
+  win.setShape(shape);
 };
 
 /**

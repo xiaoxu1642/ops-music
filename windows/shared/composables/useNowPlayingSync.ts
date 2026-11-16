@@ -94,7 +94,8 @@ export const useNowPlayingSync = (options: NowPlayingSyncOptions): NowPlayingSyn
     playing.value = snap.playing;
     speed = snap.speed;
     lyricOffsetMs = snap.lyricOffsetMs;
-    primaryIndex.value = -1;
+    const index = pickIndex(lyric.value, snap.position + lyricOffsetMs);
+    if (index !== primaryIndex.value) primaryIndex.value = index;
     resetAnchor(snap.position, snap.sendTimestamp);
   };
 

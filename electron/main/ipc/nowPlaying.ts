@@ -22,12 +22,17 @@ export const registerNowPlayingIpc = (): void => {
   nowPlaying.onTrackChange((data) => {
     broadcast("nowPlaying:track-change", data);
   });
-  nowPlaying.onLyricChange((snap) => {
-    broadcast("nowPlaying:lyric-change", snap);
+  // 歌词正文可能很大，主窗口不消费 lyric-change，只向任务栏歌词窗口发轻量通知。
+  // 渲染端订阅到通知后再 requestSnapshot 拉取正文，避免主窗口白收完整结构化克隆
+  nowPlaying.onLyricChange(() => {
+    if (!isTaskbarLyricPresented()) return;
+    getTaskbarLyricWindow()?.webContents.send("nowPlaying:lyric-change", {
+      version: nowPlaying.getLyricVersion(),
+    });
   });
   // position-sync 是 5Hz 高频通道，只有任务栏歌词窗口在消费。该窗口嵌在任务栏里，
   // isVisible() 恒为真，必须用真实呈现态作门，否则看不见的歌词窗口会被持续灌位置；
-  // 低频的 track-change / lyric-change 仍无条件下发，窗口重新显示后据此自行接续
+  // 低频的 track-change 仍无条件下发，窗口重新显示后据此自行接续
   nowPlaying.onPositionSync((data) => {
     if (!isTaskbarLyricPresented()) return;
     getTaskbarLyricWindow()?.webContents.send("nowPlaying:position-sync", data);

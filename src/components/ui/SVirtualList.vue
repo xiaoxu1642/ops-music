@@ -52,7 +52,7 @@ const wrapperRef = ref<HTMLElement | null>(null);
 const scrollRef = ref<HTMLElement | null>(null);
 const contentRef = ref<HTMLElement | null>(null);
 
-const scrollTop = ref(0);
+let currentScrollTop = 0;
 
 // 测量滚动容器高度
 const { height: scrollViewportHeight } = useElementSize(scrollRef);
@@ -108,7 +108,7 @@ const processScroll = (): void => {
   if (pendingScrollEvent) emit("scroll", pendingScrollEvent);
   pendingScrollEvent = null;
   const { scrollTop: st, scrollHeight, clientHeight } = target;
-  scrollTop.value = st;
+  currentScrollTop = st;
   calculateVisibleRange(st);
   if (scrollHeight - st - clientHeight < 50) {
     emit("reachBottom");
@@ -153,21 +153,21 @@ const scrollToIndex = (index: number, behavior: ScrollBehavior = "auto"): void =
 };
 
 /** 获取当前滚动位置 */
-const getScrollTop = (): number => scrollTop.value;
+const getScrollTop = (): number => currentScrollTop;
 
 watch([() => props.items, () => props.items.length], () => {
-  calculateVisibleRange(scrollTop.value);
+  calculateVisibleRange(currentScrollTop);
 });
 
 watch(viewportHeight, () => {
-  calculateVisibleRange(scrollTop.value);
+  calculateVisibleRange(currentScrollTop);
 });
 
 onMounted(() => {
   calculateVisibleRange(0);
   if (props.defaultScrollIndex) scrollToIndex(props.defaultScrollIndex);
   nextTick(() => {
-    if (viewportHeight.value > 0) calculateVisibleRange(scrollTop.value);
+    if (viewportHeight.value > 0) calculateVisibleRange(currentScrollTop);
   });
 });
 
@@ -176,14 +176,14 @@ let savedScrollTop = 0;
 
 onDeactivated(() => {
   const domTop = scrollRef.value?.scrollTop;
-  savedScrollTop = domTop && domTop > 0 ? domTop : scrollTop.value;
+  savedScrollTop = domTop && domTop > 0 ? domTop : currentScrollTop;
 });
 
 /** 恢复滚动位置并重算可见范围 */
 onActivated(() => {
-  const targetTop = savedScrollTop > 0 ? savedScrollTop : scrollTop.value;
+  const targetTop = savedScrollTop > 0 ? savedScrollTop : currentScrollTop;
   if (targetTop > 0) {
-    scrollTop.value = targetTop;
+    currentScrollTop = targetTop;
     calculateVisibleRange(targetTop);
     nextTick(() => {
       scrollRef.value?.scrollTo({ top: targetTop });

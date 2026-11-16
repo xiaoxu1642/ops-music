@@ -8,9 +8,14 @@ export type { MediaEvent, MetadataParam, PlayStateParam, TimelineParam };
 
 type MediaCtrlModule = typeof import("@splayer/media-ctrl");
 
+/** 系统媒体面板刷新间隔；系统按 playbackRate 外推期间进度 */
+const TIMELINE_MIN_INTERVAL_MS = 1000;
+
 let mc: MediaCtrlModule | null = null;
 let loaded = false;
 let eventHandler: ((event: MediaEvent) => void) | null = null;
+let lastTimelineAt = 0;
+let lastTimelineParam: TimelineParam | null = null;
 
 /** 安全调用原生方法 */
 const safeCall = (fn: () => void): void => {
@@ -82,6 +87,18 @@ export const setPlayState = (param: PlayStateParam): void => {
 /** 更新播放进度 */
 export const setTimeline = (param: TimelineParam): void => {
   if (!isEnabled()) return;
+  const now = Date.now();
+  const totalChanged = lastTimelineParam?.totalMs !== param.totalMs;
+  if (
+    !param.seeked &&
+    !totalChanged &&
+    lastTimelineParam &&
+    now - lastTimelineAt < TIMELINE_MIN_INTERVAL_MS
+  ) {
+    return;
+  }
+  lastTimelineAt = now;
+  lastTimelineParam = param;
   safeCall(() => ensureLoaded()?.setTimeline(param));
 };
 

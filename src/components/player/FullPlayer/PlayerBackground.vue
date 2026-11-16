@@ -34,18 +34,21 @@ onBeforeUnmount(() => clearTimeout(bgReadyTimer));
 // 模糊背景：双缓冲层，切歌时交叉淡入淡出
 const initialCover = media.track?.cover || media.track?.coverOriginal || DEFAULT_COVER;
 const blurLayers = reactive([
-  { src: initialCover, active: true },
+  { src: initialCover, active: true, transitioning: false },
   { src: "", active: false },
 ]);
 let currentLayerIndex = 0;
 let preloadImg: HTMLImageElement | null = null;
 let switchToken = 0;
+let transitionTimer: ReturnType<typeof setTimeout> | undefined;
 
 watch(
   [() => media.track?.cover || media.track?.coverOriginal, () => status.isPlayerExpanded],
   ([newCover, expanded]) => {
     if (!expanded) return;
     const token = ++switchToken;
+    clearTimeout(transitionTimer);
+    for (const layer of blurLayers) layer.transitioning = false;
 
     if (preloadImg) {
       preloadImg.src = "";
@@ -59,6 +62,8 @@ watch(
       if (token !== switchToken) return;
       preloadImg = null;
       blurLayers[nextIndex].src = src;
+      blurLayers[nextIndex].transitioning = true;
+      blurLayers[currentLayerIndex].transitioning = true;
       nextTick(() => {
         if (token !== switchToken) return;
         requestAnimationFrame(() => {
@@ -66,6 +71,12 @@ watch(
           blurLayers[nextIndex].active = true;
           blurLayers[currentLayerIndex].active = false;
           currentLayerIndex = nextIndex;
+          const previousIndex = nextIndex === 0 ? 1 : 0;
+          transitionTimer = setTimeout(() => {
+            if (token !== switchToken) return;
+            blurLayers[previousIndex].src = "";
+            for (const layer of blurLayers) layer.transitioning = false;
+          }, 520);
         });
       });
     };
@@ -81,6 +92,7 @@ watch(
 
 onBeforeUnmount(() => {
   clearTimeout(bgReadyTimer);
+  clearTimeout(transitionTimer);
   switchToken++;
   if (preloadImg) {
     preloadImg.src = "";
@@ -103,7 +115,7 @@ onBeforeUnmount(() => {
         v-for="(layer, index) in blurLayers"
         :key="index"
         :src="layer.src"
-        :class="['bg-img', { active: layer.active }]"
+        :class="['bg-img', { active: layer.active, transitioning: layer.transitioning }]"
         decoding="async"
         alt=""
       />
@@ -158,6 +170,10 @@ onBeforeUnmount(() => {
 
 .bg-blur-wrap .bg-img.active {
   opacity: 1;
+}
+
+.bg-blur-wrap .bg-img.transitioning {
+  will-change: opacity;
 }
 
 /* 背景渐入 */

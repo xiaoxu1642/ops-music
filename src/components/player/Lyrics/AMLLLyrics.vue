@@ -77,14 +77,33 @@ let pendingLyrics: LyricLine[] | null = null;
 const isPageHidden = ref(false);
 // 之前隐藏的标记，用于检测从隐藏恢复的时刻
 const isPreviousHidden = ref(false);
-
 const nextFrame = (): Promise<void> =>
   new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
 // 处理多语言显隐及音译偏好的本地高效清洗
+const processedLyricsCache = new Map<string, { source: LyricLine[]; lines: LyricLine[] }>();
+
 const processedLyrics = computed(() => {
   if (!props.lyricLines) return [];
-  return props.lyricLines.map((line) => {
+  const cacheKey = [
+    props.showWordRomanization,
+    props.showRuby,
+    props.showTranslation,
+    props.showRomanization,
+  ].join("|");
+  const cached = processedLyricsCache.get(cacheKey);
+  if (cached?.source === props.lyricLines) return cached.lines;
+  if (
+    props.showWordRomanization &&
+    props.showRuby &&
+    props.showTranslation &&
+    props.showRomanization
+  ) {
+    processedLyricsCache.clear();
+    processedLyricsCache.set(cacheKey, { source: props.lyricLines, lines: props.lyricLines });
+    return props.lyricLines;
+  }
+  const result = props.lyricLines.map((line) => {
     const hasWordRoman = line.words.some((w) => Boolean(w.romanWord?.trim()));
     const showWordRomanForLine = props.showWordRomanization && hasWordRoman;
     const showLineRomanForLine = props.showRomanization && !showWordRomanForLine;
@@ -96,17 +115,16 @@ const processedLyrics = computed(() => {
     if (line.words) {
       newLine.words = line.words.map((word) => {
         const newWord = { ...word };
-        if (!props.showWordRomanization) {
-          delete newWord.romanWord;
-        }
-        if (!props.showRuby) {
-          delete newWord.ruby;
-        }
+        if (!props.showWordRomanization) newWord.romanWord = undefined;
+        if (!props.showRuby) newWord.ruby = undefined;
         return newWord;
       });
     }
     return newLine;
   });
+  processedLyricsCache.clear();
+  processedLyricsCache.set(cacheKey, { source: props.lyricLines, lines: result });
+  return result;
 });
 
 // 行点击事件回调
@@ -188,6 +206,7 @@ const handleVisibility = () => {
     playerRef.value.setCurrentTime(currentTime, true);
     isPreviousHidden.value = false;
   }
+  if (!hidden && !isFrozen.value && !props.playing) resumeRaf();
 };
 
 onMounted(async () => {
@@ -273,11 +292,11 @@ watchEffect(() => {
   const hidden = isPageHidden.value; // 使用响应式隐藏状态
 
   if (!frozen && !hidden) {
-    // 只要未冻结且可见，就持续运行 RAF 维持渲染（即使暂停也要保持画面）
-    resumeRaf();
     if (playing) {
+      resumeRaf();
       player.resume();
     } else {
+      resumeRaf();
       player.pause();
     }
   } else {

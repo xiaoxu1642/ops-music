@@ -25,15 +25,13 @@ pub(super) fn fill_buffer(
 ) {
     let bytes_per_sample = usize::from(format.container_bits / 8);
     source.begin_callback();
-    let mut raw = [0u8; 4];
     for chunk in buffer.chunks_exact_mut(bytes_per_sample) {
         let value = if silent {
             0
         } else {
             convert_sample(source.next().unwrap_or(0.0), gain, format.valid_bits)
         };
-        raw[..bytes_per_sample].copy_from_slice(&value.to_le_bytes()[..bytes_per_sample]);
-        chunk.copy_from_slice(&raw[..bytes_per_sample]);
+        chunk.copy_from_slice(&value.to_le_bytes()[..bytes_per_sample]);
     }
 }
 

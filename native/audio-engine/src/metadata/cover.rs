@@ -5,7 +5,7 @@ use std::path::Path;
 
 use ffmpeg_audio::AudioReader;
 
-use super::folder_cover::find_folder_cover;
+use super::folder_cover::{find_folder_cover_cached, FolderImageCache};
 
 /// 缩略图最大边长（px）
 const THUMB_SIZE: u32 = 300;
@@ -29,6 +29,17 @@ pub fn extract_cover_thumbnail(
     source: &str,
     cache_dir: &str,
 ) -> Option<String> {
+    let mut cache = FolderImageCache::new();
+    extract_cover_thumbnail_cached(reader, source, cache_dir, &mut cache)
+}
+
+/// 复用当前扫描批次的目录图片列表提取封面缩略图
+pub fn extract_cover_thumbnail_cached(
+    reader: &AudioReader,
+    source: &str,
+    cache_dir: &str,
+    cache: &mut FolderImageCache,
+) -> Option<String> {
     let thumb_file = cover_thumb_path(source, cache_dir);
 
     if thumb_file.exists() {
@@ -39,7 +50,7 @@ pub fn extract_cover_thumbnail(
     let data = reader
         .cover()
         .map(|cover| cover.data)
-        .or_else(|| find_folder_cover(source).and_then(|p| std::fs::read(p).ok()))?;
+        .or_else(|| find_folder_cover_cached(source, cache).and_then(|p| std::fs::read(p).ok()))?;
     std::fs::create_dir_all(cache_dir).ok()?;
     generate_cover_thumbnail(&data, &thumb_file).ok()?;
 

@@ -29,7 +29,7 @@ const config: Configuration = {
   ],
   // 保留的语言
   electronLanguages: ["zh-CN"],
-  asarUnpack: ["public/**"],
+  asarUnpack: ["public/icons/**", "public/images/song.jpg"],
   extraResources: [
     {
       from: "native/audio-engine",
@@ -65,7 +65,7 @@ const config: Configuration = {
   ],
   win: {
     executableName: "OpsMusic",
-    icon: "public/icons/logo.ico",
+    icon: "public/logo.ico",
     artifactName: "${productName}-${version}-${arch}.${ext}",
     forceCodeSigning: false,
     // 只出 zip 免安装版：解压一次后直接运行，启动免去单文件自解压开销；安装器（NSIS）链路已退役
