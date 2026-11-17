@@ -1,5 +1,7 @@
 # AGENTS.md
 
+改代码前先看 `.birdview/architecture.html` 和 `.birdview/architecture.json`。
+
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Project Overview
@@ -198,6 +200,7 @@ such as `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, `style
 
 ## 收口基线与开工检查
 
+- 改代码前先看 `.birdview/architecture.html` 和 `architecture.json`。
 - baseline 路径：`.agent/baseline.json`；校验脚本路径：`scripts/verify-baseline.sh`。
 - 开工：实质性代码/配置任务开始时先用 Git Bash 运行 `scripts/verify-baseline.sh`；通过则复用收口基线开工，不无脑跑 `cargo check` / 全量编译 / 全量测试，不重算基线。
 - 允许重新验证/重算：校验失败、基线缺失或损坏、任务将修改依赖/构建配置/工具链、用户明确要求。

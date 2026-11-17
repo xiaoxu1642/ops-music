@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "stage": "complete",
+  "outputs": {
+    "html": "C:\\KaiFa\\OpsMusic\\.birdview\\opsMusic.html",
+    "constraints": "C:\\KaiFa\\OpsMusic\\.birdview\\opsMusic.constraints.json"
+  },
+  "written": [
+    "C:\\KaiFa\\OpsMusic\\.birdview\\opsMusic.constraints.json",
+    "C:\\KaiFa\\OpsMusic\\.birdview\\opsMusic.html"
+  ],
+  "visualReview": "not-performed",
+  "implementationVerification": "unverified",
+  "validation": {
+    "ok": true,
+    "modules": 6,
+    "relationships": 8,
+    "events": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "map": {
+    "mapId": "opsmusic-birdview-2026-11-16",
+    "revision": 1
+  },
+  "constraints": {
+    "rules": 9,
+    "snapshot": "cfdefed4d0248758f46947037f890f9bf38664d1",
+    "scope": "本轮审查根 AGENTS.md、CLAUDE.md 与 copilot 指引中的高频可执行工程约束；仅提炼能在源码或流程中核验的核心要求，未覆盖外部全局规则与未跟踪文档。",
+    "historyGaps": []
+  }
+}

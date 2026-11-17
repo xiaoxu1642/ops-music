@@ -25,3 +25,6 @@ package-lock.json
 # Code signing certificates
 *.pfx
 *.p12
+
+# birdview 架构图（本机生成，不入库）
+.birdview/

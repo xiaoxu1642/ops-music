@@ -1,0 +1,26 @@
+{
+  "label": "baseline-idle",
+  "durationMs": 8047,
+  "performance": {
+    "taskDurationMs": 0.01,
+    "scriptDurationMs": 0,
+    "layoutDurationMs": 0,
+    "recalcStyleDurationMs": 0,
+    "layoutCount": 0,
+    "recalcStyleCount": 0,
+    "jsHeapUsedSize": 24330700,
+    "frames": 0
+  },
+  "trace": {
+    "events": 321,
+    "fireAnimationFrameCount": 0,
+    "fireAnimationFrameDurationMs": 0,
+    "updateLayoutTreeMs": 0,
+    "layoutMs": 0,
+    "paintMs": 0,
+    "compositeLayersMs": 0,
+    "runTaskMs": 0,
+    "longTaskCount": 0,
+    "longTaskMaxMs": 0
+  }
+}

@@ -42,20 +42,33 @@ const cacheHandler = (request: Request): Response | Promise<Response> => {
   return net.fetch(`file://${resolved.replace(/\\/g, "/")}`);
 };
 
+/** B 站图片 CDN 域名：搜索封面、视频封面与 UP 主头像都在这些域下发 */
+const BILIBILI_IMAGE_HOSTS = ["i0.hdslb.com", "i1.hdslb.com", "i2.hdslb.com"] as const;
+
+/** 图片域只校验来源站点，指向站点根即可 */
+const BILIBILI_IMAGE_REFERER = "https://www.bilibili.com/";
+
 /**
- * 注册 cache:// 协议处理
- * 在 app.whenReady 之后调用
- * 格式：cache://covers/xxx.jpg、cache://artists/xxx.jpg
+ * 注册 cache:// 协议处理与主窗口分区请求头
+ * 在 app.whenReady 之后调用一次，与主窗口闲置销毁后的重建解耦
  */
 export const handleCacheProtocol = (): void => {
   protocol.handle(SCHEME, cacheHandler);
-};
-
-/**
- * 在指定 partition 的 session 上注册 cache:// 协议处理
- */
-export const handleCacheProtocolOnPartition = (partition: string): void => {
-  session.fromPartition(partition).protocol.handle(SCHEME, cacheHandler);
+  const ses = session.fromPartition(MAIN_PARTITION);
+  ses.protocol.handle(SCHEME, cacheHandler);
+  // B 站封面缺 Referer 会被图片 CDN 拒绝，按分区注入请求头
+  ses.webRequest.onBeforeSendHeaders(
+    { urls: BILIBILI_IMAGE_HOSTS.map((host) => `*://${host}/*`) },
+    (details, callback) => {
+      callback({
+        requestHeaders: {
+          ...details.requestHeaders,
+          Referer: BILIBILI_IMAGE_REFERER,
+          "User-Agent": USER_AGENT,
+        },
+      });
+    },
+  );
 };
 
 /**
@@ -69,34 +82,4 @@ export const toCacheUrl = (filePath: string | undefined | null): string | undefi
   // 路径不在缓存根目录下时拒绝生成 URL，避免产出可逃逸的 cache:// 链接
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return undefined;
   return `${SCHEME}://${relative.replace(/\\/g, "/")}`;
-};
-
-/** B 站图片 CDN 域名：搜索封面、视频封面与 UP 主头像都在这些域下发 */
-const BILIBILI_IMAGE_HOSTS = ["i0.hdslb.com", "i1.hdslb.com", "i2.hdslb.com"] as const;
-
-/** 图片域只校验来源站点，指向站点根即可 */
-const BILIBILI_IMAGE_REFERER = "https://www.bilibili.com/";
-
-/**
- * 为 B 站图片域名注入 Referer 与桌面 Chrome UA
- *
- * 渲染层直接以 <img> 拉封面，图片请求走 webRequest 拦截；
- * 只命中图片 CDN 域名，音频取流走本地代理（streamProxy），不在此列
- * @param partition - 生效的 session 分区
- */
-export const handleBilibiliImageHeaders = (partition: string): void => {
-  session
-    .fromPartition(partition)
-    .webRequest.onBeforeSendHeaders(
-      { urls: BILIBILI_IMAGE_HOSTS.map((host) => `*://${host}/*`) },
-      (details, callback) => {
-        callback({
-          requestHeaders: {
-            ...details.requestHeaders,
-            Referer: BILIBILI_IMAGE_REFERER,
-            "User-Agent": USER_AGENT,
-          },
-        });
-      },
-    );
 };

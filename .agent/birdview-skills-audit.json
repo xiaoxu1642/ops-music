@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "2",
+  "generatedAt": "2026-11-16T15:36:02.181Z",
+  "roots": [
+    "C:\\Users\\Administrator\\.agents\\skills",
+    "C:\\Users\\Administrator\\.claude\\skills",
+    "C:\\Users\\Administrator\\.dsh\\skills"
+  ],
+  "skills": [
+    {
+      "name": "apple-design",
+      "path": "../../Users/Administrator/.dsh/skills/apple-design/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "",
+      "digest": "11840b24a11d7f94f39c6aaab074750ae4e4de4ef54ee4b1dd97e16ebd485e61",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "autoglm-browser-agent",
+      "path": "../../Users/Administrator/.agents/skills/autoglm-browser-agent/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.agents\\skills",
+      "description": ">-",
+      "digest": "07101ba0579856a31fdc5f604e9a9869b13da925b27723ebc63bc3564c07ae75",
+      "issues": [
+        "short-description"
+      ]
+    },
+    {
+      "name": "awesome-design-md",
+      "path": "../../Users/Administrator/.dsh/skills/awesome-design-md/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "Curated DESIGN.md visual references for brand-inspired web and product UI. Use when a user wants to inspect, compare, or apply a visual design language from a known product or brand.",
+      "digest": "bb444d12cc269468a3f06247763e98a4be72811d2c871e5e42274e375b69129a",
+      "issues": []
+    },
+    {
+      "name": "ego-browser",
+      "path": "../../Users/Administrator/.agents/skills/ego-browser/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.agents\\skills",
+      "description": "",
+      "digest": "45784c308641ee6eedd1f853baf8041259f2474481d2ee18c5f8d649fcd7f7d4",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "improve-animations",
+      "path": "../../Users/Administrator/.dsh/skills/improve-animations/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "",
+      "digest": "68f17bbc4671593d2f43dba26a679243e2153ba5f26965fb7d59df52842534ff",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "markitdown-skill",
+      "path": "../../Users/Administrator/.dsh/skills/markitdown-skill/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "",
+      "digest": "754890968eb517b42c7892988e2d21ac8975814bc5214e9ca462a800441606d9",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "motion-lab",
+      "path": "../../Users/Administrator/.dsh/skills/motion-lab/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "",
+      "digest": "84cc274e78560fbe50672c37091cc63b761acaca8d13c40a02630fac6c38c766",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "obsidian-expert",
+      "path": "../../Users/Administrator/.dsh/skills/obsidian-expert/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "Obsidian 知识库专家（路由型总 skill），覆盖 Obsidian Flavored Markdown 语法、Bases 数据库视图（.base）、JSON Canvas 白板（.canvas）、插件与主题开发调试、网页剪藏入库。当用户提到 Obsidian、vault、知识库、笔记，或涉及双链/wikilink、反向链接、嵌入 embed、callout 标注框、frontmatter 属性、properties、标签 tag、别名 aliases、块引用 block id、日记 daily note、任务 task 清单、Bases、.base、表格视图、卡片视图、列表视图、过滤器 filter、公式 formula、汇总 summary、.canvas、画板、白板、思维导图、流程图、节点连线、分组、坐标布局、Obsidian 插件 plugin、主题 theme、插件开发调试、重载插件、抓报错、截图 DOM 检查、eval 跑 JS、移动端模拟、网页剪藏、收藏文章、抓取正文入库、整理笔记、沉淀到知识库、把网页存成笔记 等任何 Obsidian 相关任务时使用。本 skill 是调度入口：先按「落地方式表」决定走 MCP 还是走文件系统，再按路由表读取对应子 skill 文件，然后依据其中的语法与规则执行。注意：vault 的读写默认走 Obsidian MCP，不要退回 obsidian 命令行。",
+      "digest": "17d45739c192c7df91ad318b30e8b744f03977055088cf5726c55b1e4afde4a6",
+      "issues": []
+    },
+    {
+      "name": "offerup-full-resync",
+      "path": "../../Users/Administrator/.dsh/skills/offerup-full-resync/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "Offer Up（C:\\KaiFa\\offer up）岗位库全量重抓标准流程：表格源+注册源全量抓取 → 临时库试写 → 与原库逐身份逐字段对比 → 批准后覆盖填入 → 水位线写完成时刻 → 「更新于/抓取于 X年X月X日」与时间排序核验。当用户要求全量抓取岗位数据、全量重抓、岗位库同步、刷新水位线、resync，或要求「先写临时库对比再覆盖」时使用。",
+      "digest": "7ee13381701e1882dcdcebd3c983ec5c6671fbdbcb389067a237d81dd51f1ced",
+      "issues": []
+    },
+    {
+      "name": "performance-expert",
+      "path": "../../Users/Administrator/.dsh/skills/performance-expert/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "性能优化专家（路由型总 skill），覆盖 Web 前端、React/Next.js、React Native/Expo、SwiftUI/iOS、Python、数据库与后端的性能分析与优化。当用户提出性能优化、性能排查、提速、变慢、卡顿、加载慢、白屏时间长、接口响应慢、超时、内存泄漏、内存占用高、CPU 占用高、包体积/bundle 过大、渲染慢、掉帧、动画卡顿、长列表卡顿、长任务、Core Web Vitals 不达标（LCP/INP/CLS）、布局偏移、Lighthouse 跑分、性能审计、性能预算、TTFB/TTI/FCP、N+1 查询、慢查询、缓存策略、重渲染过多、组件 memo、代码分割、懒加载、图片/字体优化、cProfile/py-spy 性能分析、算法复杂度优化等任何性能相关问题时使用。本 skill 是调度入口：先按下方路由表读取对应子 skill 文件，再依据其中的方法论、规则与清单执行任务。",
+      "digest": "70d9a9f49c8562c03b261462e1a658ed604deb3f1daa163601f32998bb36512f",
+      "issues": []
+    },
+    {
+      "name": "personal-docs-system",
+      "path": "../../Users/Administrator/.agents/skills/personal-docs-system/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.agents\\skills",
+      "description": "",
+      "digest": "16e00d086ab2958bf1f6b54392305a7bba1fb835b93ddf3e0bacb9e7a489fbe9",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "pick-ui-library",
+      "path": "../../Users/Administrator/.dsh/skills/pick-ui-library/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "Pick the right library for a given frontend task from a curated, opinionated list — numbers, OTP inputs, charts, command menus, virtualization, drag and drop, toasts, state, styling, and more. Only runs when explicitly invoked; it does not trigger on its own.",
+      "digest": "4b889bd6c08358499ac4a7202b8af71ffbd3485d2468f7b09d0613bbe7b24bf4",
+      "issues": []
+    },
+    {
+      "name": "ppt-master",
+      "path": "../../Users/Administrator/.dsh/skills/ppt-master/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": ">",
+      "digest": "5b58a5a807407401a8262357558c5d988c575bc3514ee367c22561c88467837f",
+      "issues": [
+        "short-description"
+      ]
+    },
+    {
+      "name": "trim-tauri-debug",
+      "path": "../../Users/Administrator/.agents/skills/trim-tauri-debug/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.agents\\skills",
+      "description": "",
+      "digest": "d5d65e6c4f1b0eccde98b2930d0e500714ffdceab44ea441b804f7be85dc02be",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "path": "../../Users/Administrator/.dsh/skills/ui-ux-pro-max/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "UI/UX design intelligence for web, mobile, and desktop. This skill should be used when designing, building, reviewing, or fixing interfaces, including pages, components, design systems, accessibility, interaction, responsive layout, typography, color, charts, and stack-specific UI implementation. Searchable local data: 79 searchable styles (50 active), 192 product palettes and reasoning profiles, 74 font pairings, 119 UX guidelines, 105 icons, 17 GSAP presets, 25 chart types, and 22 stacks.",
+      "digest": "88aadd21220542083a455e373bd162ffe7843266a71f06f4d837bb3b34f9c9c7",
+      "issues": []
+    },
+    {
+      "name": "vibehub",
+      "path": "../../Users/Administrator/.dsh/skills/vibehub/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.dsh\\skills",
+      "description": "在任何 Vibe Coding 编程任务及其后续补充中持续识别准确术语。用户即使已经让 Agent 完成了一部分代码、正在追加修改，或只用口语描述效果、交互、状态和问题（如“鼠标放上去有个小提示”“点完变一下颜色”“内容太长省略”），也必须使用此 Skill：继续完成当前任务，并在进度或结果中自然告知对应的 UI、网页、软件、Git、AI Agent 或设计术语、通俗解释和 VibeHub 内链。用户要求“说专业一点”、改写需求、询问“这叫什么”或看不懂 Agent 回复时同样使用。表达已经准确且没有值得补充的术语时不要硬加教学。",
+      "digest": "51587bb757227f9653106d6db10e77bd12740f4d22de604759a957f1bc024e86",
+      "issues": []
+    },
+    {
+      "name": "zenstory",
+      "path": "../../Users/Administrator/.claude/skills/zenstory/SKILL.md",
+      "root": "C:\\Users\\Administrator\\.claude\\skills",
+      "description": "",
+      "digest": "e0f1e5f626fcbbab485d1ca97286da5569df660234cc03bc103793b78fc0cf68",
+      "issues": [
+        "missing-description",
+        "short-description"
+      ]
+    }
+  ],
+  "duplicateNames": [],
+  "assessment": {
+    "status": "unreviewed",
+    "conclusions": [],
+    "language": "zh"
+  },
+  "notes": [
+    "The inventory is deterministic; semantic compatibility requires reading the relevant skill bodies.",
+    "An unreviewed report must not be treated as evidence that skills conflict or are safe to combine."
+  ]
+}
