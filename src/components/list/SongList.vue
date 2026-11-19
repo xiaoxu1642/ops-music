@@ -194,26 +194,35 @@ const sortedItems = computed(() => {
   const toArtistText = (track: Track): string => track.artists.map((a) => a.name).join(" / ");
   const toAlbumText = (track: Track): string => track.album?.name ?? "";
   const toPathText = (track: Track): string => track.path ?? "";
+  /** 按当前排序字段预计算字符串键；数值字段留空直接读 track */
+  const keyOf: ((track: Track) => string) | null =
+    field === "artist" || field === "album" || field === "path"
+      ? field === "artist"
+        ? toArtistText
+        : field === "album"
+          ? toAlbumText
+          : toPathText
+      : null;
 
-  const compare = (a: Track, b: Track): number => {
-    let value = 0;
-    if (field === "title") value = textCollator.compare(a.title, b.title);
-    else if (field === "artist") value = textCollator.compare(toArtistText(a), toArtistText(b));
-    else if (field === "album") value = textCollator.compare(toAlbumText(a), toAlbumText(b));
-    else if (field === "path") value = textCollator.compare(toPathText(a), toPathText(b));
-    else if (field === "duration") value = a.duration - b.duration;
-    else if (field === "size") value = (a.fileSize ?? 0) - (b.fileSize ?? 0);
-    else if (field === "mtime") value = (a.mtime ?? 0) - (b.mtime ?? 0);
-    else if (field === "ctime") value = (a.ctime ?? 0) - (b.ctime ?? 0);
-    else /*(field === "track")*/ value = (a.track ?? 0) - (b.track ?? 0);
+  // Schwartzian transform：字符串键只算一次，避免比较器内逐对重建
+  const keyed = result.map((track) => ({ track, key: keyOf ? keyOf(track) : "" }));
+
+  keyed.sort((a, b) => {
+    let value: number;
+    if (keyOf) value = textCollator.compare(a.key, b.key);
+    else if (field === "title") value = textCollator.compare(a.track.title, b.track.title);
+    else if (field === "duration") value = a.track.duration - b.track.duration;
+    else if (field === "size") value = (a.track.fileSize ?? 0) - (b.track.fileSize ?? 0);
+    else if (field === "mtime") value = (a.track.mtime ?? 0) - (b.track.mtime ?? 0);
+    else if (field === "ctime") value = (a.track.ctime ?? 0) - (b.track.ctime ?? 0);
+    else /*(field === "track")*/ value = (a.track.track ?? 0) - (b.track.track ?? 0);
     if (value !== 0) return value * direction;
-    const fallback = textCollator.compare(a.title, b.title);
+    const fallback = textCollator.compare(a.track.title, b.track.title);
     if (fallback !== 0) return fallback;
-    return textCollator.compare(a.id, b.id);
-  };
+    return textCollator.compare(a.track.id, b.track.id);
+  });
 
-  result.sort(compare);
-  return result;
+  return keyed.map((entry) => entry.track);
 });
 
 /** 当前播放歌曲在过滤后列表中的索引 */

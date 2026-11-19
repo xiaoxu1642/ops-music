@@ -90,13 +90,12 @@ export const createMainWindow = (): BrowserWindow => {
   mainWindow.once("ready-to-show", () => {
     coreLog.info(`启动耗时｜主窗口首次显示 ${Math.round(process.uptime() * 1000)}ms`);
     mainWindow?.show();
+    // 显示后再接管任务栏缩略图：此时 HWND 已稳定，DWM 属性能正确设置
+    if (mainWindow) enableTaskbarThumbnail(mainWindow);
   });
 
   // 初始化托盘
   initTray();
-
-  // 自定义任务栏缩略图
-  enableTaskbarThumbnail(mainWindow);
 
   // 缩略图工具栏
   mainWindow.once("show", () => {
