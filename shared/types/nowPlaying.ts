@@ -25,6 +25,17 @@ export interface NowPlayingSnapshot {
   sendTimestamp: number;
 }
 
+/**
+ * 主进程 → 窗口：歌词内容变化通知
+ *
+ * 正文较大，只发版本号；窗口收到后再用 requestSnapshot 拉完整歌词，
+ * 避免主窗口白收一次完整结构化克隆。
+ */
+export interface LyricChangeNotice {
+  /** 歌词版本号，用于合并短时间内多次通知 */
+  version: number;
+}
+
 /** 主进程 → 窗口：播放位置锚点 */
 export interface NowPlayingPositionSync {
   position: number;
@@ -54,8 +65,8 @@ export interface NowPlayingApi {
   setLyricOffset: (trackId: string, offsetMs: number) => void;
   /** 订阅歌曲切换 */
   onTrackChange: (callback: (data: { track: Track | null }) => void) => () => void;
-  /** 订阅歌词内容变化 */
-  onLyricChange: (callback: (snapshot: NowPlayingSnapshot) => void) => () => void;
+  /** 订阅歌词内容变化（轻量通知，收到后需 requestSnapshot 拉正文） */
+  onLyricChange: (callback: (notice: LyricChangeNotice) => void) => () => void;
   /** 订阅播放位置锚点 */
   onPositionSync: (callback: (data: NowPlayingPositionSync) => void) => () => void;
   /** 订阅当前曲目歌词偏移变化 */

@@ -1,42 +1,60 @@
 use rustfft::{num_complex::Complex, Fft, FftPlanner};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 pub const SIZE: usize = 4096;
 pub const HOP: usize = 1024;
 pub const CELLS: usize = super::demucs::FRAMES / HOP;
 const BEGIN: usize = SIZE / 2 + HOP / 2 * 3;
 
+/// 进程内共享的频谱静态数据与正逆变换计划
+struct StaticData {
+    window: Arc<Vec<f32>>,
+    normalizer: Arc<Vec<f32>>,
+    forward: Arc<dyn Fft<f32>>,
+    inverse: Arc<dyn Fft<f32>>,
+}
+
+static STATIC_DATA: OnceLock<StaticData> = OnceLock::new();
+
 pub struct Spectral {
     forward: Arc<dyn Fft<f32>>,
     inverse: Arc<dyn Fft<f32>>,
-    window: Vec<f32>,
-    normalizer: Vec<f32>,
+    window: Arc<Vec<f32>>,
+    normalizer: Arc<Vec<f32>>,
 }
 
 impl Spectral {
     /// 复用有限频谱窗口和官方重叠归一化系数
-    /// @returns 可重复使用的正逆变换计划
+    /// @returns 可重复使用的正逆变换计划与静态数据
     pub fn new() -> Self {
-        let mut planner = FftPlanner::new();
-        let window: Vec<f32> = (0..SIZE)
-            .map(|index| {
-                (0.5 - 0.5 * (std::f64::consts::TAU * index as f64 / SIZE as f64).cos()) as f32
-            })
-            .collect();
-        let mut normalizer = vec![0.0; super::demucs::FRAMES];
-        for cell in 0..CELLS + 4 {
-            for (index, value) in window.iter().enumerate() {
-                let at = cell * HOP + index;
-                if at >= BEGIN && at < BEGIN + normalizer.len() {
-                    normalizer[at - BEGIN] += value * value;
+        let shared = STATIC_DATA.get_or_init(|| {
+            let mut planner = FftPlanner::new();
+            let window: Vec<f32> = (0..SIZE)
+                .map(|index| {
+                    (0.5 - 0.5 * (std::f64::consts::TAU * index as f64 / SIZE as f64).cos()) as f32
+                })
+                .collect();
+            let mut normalizer = vec![0.0; super::demucs::FRAMES];
+            for cell in 0..CELLS + 4 {
+                for (index, value) in window.iter().enumerate() {
+                    let at = cell * HOP + index;
+                    if at >= BEGIN && at < BEGIN + normalizer.len() {
+                        normalizer[at - BEGIN] += value * value;
+                    }
                 }
             }
-        }
+            StaticData {
+                forward: planner.plan_fft_forward(SIZE),
+                inverse: planner.plan_fft_inverse(SIZE),
+                window: Arc::new(window),
+                normalizer: Arc::new(normalizer),
+            }
+        });
         Self {
-            forward: planner.plan_fft_forward(SIZE),
-            inverse: planner.plan_fft_inverse(SIZE),
-            window,
-            normalizer,
+            forward: Arc::clone(&shared.forward),
+            inverse: Arc::clone(&shared.inverse),
+            window: Arc::clone(&shared.window),
+            normalizer: Arc::clone(&shared.normalizer),
         }
     }
 

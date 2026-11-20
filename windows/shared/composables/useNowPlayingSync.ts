@@ -119,6 +119,45 @@ export const useNowPlayingSync = (options: NowPlayingSyncOptions): NowPlayingSyn
   };
 
   const unsubscribers: Array<() => void> = [];
+  /** 歌词正文请求进行中，合并短时间内的多次轻量通知 */
+  let lyricSnapshotInFlight = false;
+  /** 请求进行中又收到新通知，完成后再拉一次，避免连续切歌丢最后一首 */
+  let lyricRefreshPending = false;
+
+  /**
+   * 收到歌词变更通知后拉取完整快照
+   *
+   * 主进程只发版本号，正文需另取；进行中的请求合并为一次，新通知留到完成后补拉。
+   */
+  const refreshLyric = async (): Promise<void> => {
+    if (lyricSnapshotInFlight) {
+      lyricRefreshPending = true;
+      return;
+    }
+    lyricSnapshotInFlight = true;
+    try {
+      do {
+        lyricRefreshPending = false;
+        const snap = await window.api.nowPlaying.requestSnapshot();
+        applySnapshot(snap);
+        kickTick();
+      } while (lyricRefreshPending);
+    } catch (error) {
+      console.error(`[${logTag}] requestSnapshot on lyric-change failed`, error);
+      // 失败期间又收到通知时补拉一次，仍失败则留给下次通知
+      if (lyricRefreshPending) {
+        lyricRefreshPending = false;
+        try {
+          applySnapshot(await window.api.nowPlaying.requestSnapshot());
+          kickTick();
+        } catch (retryError) {
+          console.error(`[${logTag}] requestSnapshot retry failed`, retryError);
+        }
+      }
+    } finally {
+      lyricSnapshotInFlight = false;
+    }
+  };
 
   onMounted(async () => {
     try {
@@ -129,9 +168,8 @@ export const useNowPlayingSync = (options: NowPlayingSyncOptions): NowPlayingSyn
     }
 
     unsubscribers.push(
-      window.api.nowPlaying.onLyricChange((snap) => {
-        applySnapshot(snap);
-        kickTick();
+      window.api.nowPlaying.onLyricChange(() => {
+        void refreshLyric();
       }),
       window.api.nowPlaying.onPositionSync((data) => {
         playing.value = data.playing;

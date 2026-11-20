@@ -17,6 +17,9 @@ let repeatMode: RepeatMode = "list";
 let shuffleMode: ShuffleMode = "off";
 let taskbarLyricOpen = false;
 
+/** 上次构建菜单时的状态签名，null 表示尚未构建 */
+let traySignature: string | null = null;
+
 const repeatLabel = (mode: RepeatMode): string =>
   ({ list: t("repeatList"), one: t("repeatOne") })[mode];
 
@@ -122,11 +125,26 @@ const buildMenu = (): Menu => {
   return Menu.buildFromTemplate(items);
 };
 
+/** 计算菜单状态签名，涵盖所有影响菜单结构与图标的状态（含主题：主题变化需重建图标） */
+const menuSignature = (): string =>
+  [
+    playState,
+    songName,
+    liked ? "1" : "0",
+    repeatMode,
+    shuffleMode,
+    taskbarLyricOpen ? "1" : "0",
+    nativeTheme.shouldUseDarkColors ? "dark" : "light",
+  ].join("|");
+
 /** 刷新菜单和 tooltip */
 export const refreshTray = (): void => {
   if (!tray) return;
+  const signature = menuSignature();
+  if (signature === traySignature) return;
   tray.setContextMenu(buildMenu());
   tray.setToolTip(songName || appName);
+  traySignature = signature;
 };
 
 /** 初始化系统托盘（主窗口被闲置销毁后重建时复用同一个托盘，不重复注册监听） */
@@ -134,8 +152,8 @@ export const initTray = (): void => {
   if (tray) return;
   const icon = loadIcon("tray/tray.ico");
   tray = new Tray(icon);
-  tray.setToolTip(appName);
-  tray.setContextMenu(buildMenu());
+  traySignature = null;
+  refreshTray();
   // 单击托盘图标显示窗口
   tray.on("click", () => focusMainWindow());
   // 系统主题变化时刷新菜单图标
@@ -158,6 +176,7 @@ export const setTraySongName = (name: string): void => {
  * @param state - 播放状态
  */
 export const setTrayPlayState = (state: PlayState): void => {
+  if (playState === state) return;
   playState = state;
   refreshTray();
 };
@@ -168,6 +187,7 @@ export const setTrayPlayState = (state: PlayState): void => {
  * @param shuffle - 随机模式
  */
 export const setTrayPlayMode = (repeat: RepeatMode, shuffle: ShuffleMode): void => {
+  if (repeatMode === repeat && shuffleMode === shuffle) return;
   repeatMode = repeat;
   shuffleMode = shuffle;
   refreshTray();

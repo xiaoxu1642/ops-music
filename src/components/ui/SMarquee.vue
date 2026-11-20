@@ -68,8 +68,8 @@ onUnmounted(() => {
     }"
   >
     <div
-      class="inline-flex whitespace-nowrap min-w-full will-change-transform"
-      :class="isOverflowing && 's-marquee-scrolling'"
+      class="inline-flex whitespace-nowrap min-w-full"
+      :class="isOverflowing && ['s-marquee-scrolling', 'will-change-transform']"
     >
       <span ref="textRef" class="inline-flex items-center whitespace-nowrap shrink-0">
         <slot />
@@ -101,37 +101,17 @@ onUnmounted(() => {
 .s-marquee-mask {
   mask-image: linear-gradient(
     to right,
-    black 0%,
+    transparent 0%,
+    black var(--marquee-mask-width, 8px),
     black calc(100% - var(--marquee-mask-width, 8px)),
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to right,
-    black 0%,
+    transparent 0%,
+    black var(--marquee-mask-width, 8px),
     black calc(100% - var(--marquee-mask-width, 8px)),
     transparent 100%
   );
-  animation: s-marquee-mask-fade var(--marquee-duration, 10s) linear var(--marquee-delay, 2s)
-    infinite;
-}
-
-@keyframes s-marquee-mask-fade {
-  0%,
-  100% {
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black var(--marquee-mask-width, 8px),
-      black calc(100% - var(--marquee-mask-width, 8px)),
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black var(--marquee-mask-width, 8px),
-      black calc(100% - var(--marquee-mask-width, 8px)),
-      transparent 100%
-    );
-  }
 }
 </style>

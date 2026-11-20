@@ -16,22 +16,31 @@ import type {
   TopArtist,
 } from "@shared/types/stats";
 
+// 历史表只保留最近 N 条：播放可回溯更久，收藏变更语义上更短期
+const PLAY_HISTORY_LIMIT = 20000;
+const FAVORITE_HISTORY_LIMIT = 5000;
+
 /** 写入一条播放记录 */
 export const insertPlayEvent = (event: PlayEventInput): void => {
   if (!isDbOpen()) return;
   try {
-    getDb()
-      .prepare(
-        `INSERT INTO play_history (track_id, source, started_at, listened_ms, track_json)
-         VALUES (?, ?, ?, ?, ?)`,
-      )
-      .run(
-        event.track.id,
-        event.track.source,
-        event.startedAt,
-        event.listenedMs,
-        JSON.stringify(event.track),
-      );
+    const db = getDb();
+    db.prepare(
+      `INSERT INTO play_history (track_id, source, started_at, listened_ms, track_json)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).run(
+      event.track.id,
+      event.track.source,
+      event.startedAt,
+      event.listenedMs,
+      JSON.stringify(event.track),
+    );
+    // INSERT 后单次裁剪最旧记录，避免历史无界增长拖慢统计聚合
+    db.prepare(
+      `DELETE FROM play_history WHERE id IN (
+         SELECT id FROM play_history ORDER BY started_at DESC, id DESC LIMIT -1 OFFSET ?
+       )`,
+    ).run(PLAY_HISTORY_LIMIT);
   } catch (error) {
     libraryLog.error("写入播放记录失败:", error);
   }
@@ -41,18 +50,23 @@ export const insertPlayEvent = (event: PlayEventInput): void => {
 export const insertFavoriteEvent = (event: FavoriteEventInput): void => {
   if (!isDbOpen()) return;
   try {
-    getDb()
-      .prepare(
-        `INSERT INTO favorite_history (track_id, source, action, at, track_json)
-         VALUES (?, ?, ?, ?, ?)`,
-      )
-      .run(
-        event.track.id,
-        event.track.source,
-        event.action,
-        Date.now(),
-        JSON.stringify(event.track),
-      );
+    const db = getDb();
+    db.prepare(
+      `INSERT INTO favorite_history (track_id, source, action, at, track_json)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).run(
+      event.track.id,
+      event.track.source,
+      event.action,
+      Date.now(),
+      JSON.stringify(event.track),
+    );
+    // INSERT 后单次裁剪最旧记录，收藏变更记录无需长期保留
+    db.prepare(
+      `DELETE FROM favorite_history WHERE id IN (
+         SELECT id FROM favorite_history ORDER BY at DESC, id DESC LIMIT -1 OFFSET ?
+       )`,
+    ).run(FAVORITE_HISTORY_LIMIT);
   } catch (error) {
     libraryLog.error("写入收藏记录失败:", error);
   }

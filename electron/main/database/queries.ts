@@ -377,12 +377,23 @@ export const getLibraryStats = (): LibraryStats => {
   };
 };
 
-/** 按 ID 批量获取曲目 */
+/** 单条 IN 语句的变量上限约 999，分块留余量 */
+const ID_CHUNK_SIZE = 500;
+
+/** 按 ID 批量获取曲目，保持传入顺序与去重语义 */
 export const getTracksByIds = (ids: string[]): Track[] => {
   if (ids.length === 0) return [];
-  const placeholders = ids.map(() => "?").join(",");
-  const rows = getDb()
-    .prepare(`SELECT * FROM tracks WHERE id IN (${placeholders})`)
-    .all(...ids) as TrackRow[];
-  return rows.map(rowToTrack);
+  const uniqueIds = [...new Set(ids)];
+  const byId = new Map<string, Track>();
+  for (let i = 0; i < uniqueIds.length; i += ID_CHUNK_SIZE) {
+    const chunk = uniqueIds.slice(i, i + ID_CHUNK_SIZE);
+    const rows = getDb()
+      .prepare(`SELECT * FROM tracks WHERE id IN (${chunk.map(() => "?").join(",")})`)
+      .all(...chunk) as TrackRow[];
+    for (const row of rows) byId.set(row.id, rowToTrack(row));
+  }
+  return uniqueIds.flatMap((id) => {
+    const track = byId.get(id);
+    return track ? [track] : [];
+  });
 };

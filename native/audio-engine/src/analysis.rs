@@ -1,10 +1,11 @@
 use std::fs::File;
 use std::io::Write;
+use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
 use anyhow::{ensure, Result};
 use ffmpeg_audio::{sys::AVERROR_INVALIDDATA, AudioError, AudioReader, ResampleOptions, SeekMode};
-use rustfft::{num_complex::Complex, FftPlanner};
+use rustfft::{num_complex::Complex, Fft, FftPlanner};
 
 const SAMPLE_RATE: usize = 22_050;
 const FFT_SIZE: usize = 1024;
@@ -55,40 +56,96 @@ fn mel_to_hz(mel: f64) -> f64 {
     }
 }
 
+/// 梅尔分析复用的静态数据与 FFT plan，进程内只构建一次
+struct SpectralPlan {
+    // corners 只用于构建 weights，作为完整静态数据集合一并缓存
+    #[allow(dead_code)]
+    corners: Vec<f64>,
+    weights: Vec<Vec<(usize, f64)>>,
+    window: Vec<f64>,
+    fft: Arc<dyn Fft<f32>>,
+    scratch_len: usize,
+}
+
+static SPECTRAL_PLAN: OnceLock<SpectralPlan> = OnceLock::new();
+
+/// 音级分析复用的长窗 FFT plan 与窗函数
+struct ChromaPlan {
+    fft: Arc<dyn Fft<f32>>,
+    window: Vec<f32>,
+}
+
+static CHROMA_PLAN: OnceLock<ChromaPlan> = OnceLock::new();
+
+/// 构建并缓存梅尔分析的静态数据与 FFT plan
+/// @returns 进程内复用的梅尔分析 plan
+fn spectral_plan() -> &'static SpectralPlan {
+    SPECTRAL_PLAN.get_or_init(|| {
+        let corners: Vec<f64> = (0..MEL_BANDS + 2)
+            .map(|index| {
+                mel_to_hz(
+                    hz_to_mel(30.0)
+                        + (hz_to_mel(11_000.0) - hz_to_mel(30.0)) * index as f64
+                            / (MEL_BANDS + 1) as f64,
+                )
+            })
+            .collect();
+        let weights: Vec<Vec<(usize, f64)>> = (0..MEL_BANDS)
+            .map(|band| {
+                (0..=FFT_SIZE / 2)
+                    .filter_map(|bin| {
+                        let hz = bin as f64 * SAMPLE_RATE as f64 / FFT_SIZE as f64;
+                        let rising = (hz - corners[band]) / (corners[band + 1] - corners[band]);
+                        let falling =
+                            (corners[band + 2] - hz) / (corners[band + 2] - corners[band + 1]);
+                        let weight = rising.min(falling).max(0.0);
+                        (weight > 0.0).then_some((bin, weight))
+                    })
+                    .collect()
+            })
+            .collect();
+        let window: Vec<f64> = (0..FFT_SIZE)
+            .map(|index| {
+                0.5 * (1.0 - (std::f64::consts::TAU * index as f64 / FFT_SIZE as f64).cos())
+            })
+            .collect();
+        let fft = FftPlanner::<f32>::new().plan_fft_forward(FFT_SIZE);
+        let scratch_len = fft.get_inplace_scratch_len();
+        SpectralPlan {
+            corners,
+            weights,
+            window,
+            fft,
+            scratch_len,
+        }
+    })
+}
+
+/// 返回复用的音级分析 plan 与长窗
+/// @returns 进程内复用的音级分析 plan
+fn chroma_plan() -> &'static ChromaPlan {
+    CHROMA_PLAN.get_or_init(|| {
+        let mut planner = FftPlanner::<f32>::new();
+        let window: Vec<f32> = (0..CHROMA_FFT_SIZE)
+            .map(|index| {
+                0.5 * (1.0 - (std::f32::consts::TAU * index as f32 / CHROMA_FFT_SIZE as f32).cos())
+            })
+            .collect();
+        ChromaPlan {
+            fft: planner.plan_fft_forward(CHROMA_FFT_SIZE),
+            window,
+        }
+    })
+}
+
 /// 计算 Beat This! 的归一化幅度梅尔谱，中心反射填充与官方前处理一致
 /// @param mono - 22050 Hz 单声道采样
 /// @returns 逐帧梅尔谱与每一百毫秒的归一化音级能量
 fn spectral_features(mono: &[f32]) -> (Vec<f32>, Vec<f32>) {
     let frames = mono.len() / HOP + 1;
-    let corners: Vec<f64> = (0..MEL_BANDS + 2)
-        .map(|index| {
-            mel_to_hz(
-                hz_to_mel(30.0)
-                    + (hz_to_mel(11_000.0) - hz_to_mel(30.0)) * index as f64
-                        / (MEL_BANDS + 1) as f64,
-            )
-        })
-        .collect();
-    let weights: Vec<Vec<(usize, f64)>> = (0..MEL_BANDS)
-        .map(|band| {
-            (0..=FFT_SIZE / 2)
-                .filter_map(|bin| {
-                    let hz = bin as f64 * SAMPLE_RATE as f64 / FFT_SIZE as f64;
-                    let rising = (hz - corners[band]) / (corners[band + 1] - corners[band]);
-                    let falling =
-                        (corners[band + 2] - hz) / (corners[band + 2] - corners[band + 1]);
-                    let weight = rising.min(falling).max(0.0);
-                    (weight > 0.0).then_some((bin, weight))
-                })
-                .collect()
-        })
-        .collect();
-    let window: Vec<f64> = (0..FFT_SIZE)
-        .map(|index| 0.5 * (1.0 - (std::f64::consts::TAU * index as f64 / FFT_SIZE as f64).cos()))
-        .collect();
-    let fft = FftPlanner::<f32>::new().plan_fft_forward(FFT_SIZE);
+    let plan = spectral_plan();
     let mut buffer = vec![Complex::new(0.0, 0.0); FFT_SIZE];
-    let mut scratch = vec![Complex::new(0.0, 0.0); fft.get_inplace_scratch_len()];
+    let mut scratch = vec![Complex::new(0.0, 0.0); plan.scratch_len];
     let mut magnitude = vec![0.0; FFT_SIZE / 2 + 1];
     let mut mel = Vec::with_capacity(frames * MEL_BANDS);
     let mut chroma = vec![0.0_f32; mono.len().div_ceil(SAMPLE_RATE / 10) * 12];
@@ -98,13 +155,13 @@ fn spectral_features(mono: &[f32]) -> (Vec<f32>, Vec<f32>) {
             if position >= mono.len() as isize {
                 position = 2 * (mono.len() as isize - 1) - position;
             }
-            *sample = Complex::new(mono[position as usize] * window[index] as f32, 0.0);
+            *sample = Complex::new(mono[position as usize] * plan.window[index] as f32, 0.0);
         }
-        fft.process_with_scratch(&mut buffer, &mut scratch);
+        plan.fft.process_with_scratch(&mut buffer, &mut scratch);
         for (bin, value) in magnitude.iter_mut().enumerate() {
             *value = f64::from(buffer[bin].norm()) / (FFT_SIZE as f64).sqrt();
         }
-        for band in &weights {
+        for band in &plan.weights {
             let energy: f64 = band
                 .iter()
                 .map(|(bin, weight)| magnitude[*bin] * weight)
@@ -113,15 +170,11 @@ fn spectral_features(mono: &[f32]) -> (Vec<f32>, Vec<f32>) {
         }
     }
     // 节拍模型的短窗不能分清低音半音，音级证据单独使用较长窗和谱峰插值
-    let fft = FftPlanner::<f32>::new().plan_fft_forward(CHROMA_FFT_SIZE);
+    let chroma_cfg = chroma_plan();
+    let fft = &chroma_cfg.fft;
     buffer.resize(CHROMA_FFT_SIZE, Complex::new(0.0, 0.0));
     scratch.resize(fft.get_inplace_scratch_len(), Complex::new(0.0, 0.0));
     magnitude.resize(CHROMA_FFT_SIZE / 2 + 1, 0.0);
-    let window: Vec<f32> = (0..CHROMA_FFT_SIZE)
-        .map(|index| {
-            0.5 * (1.0 - (std::f32::consts::TAU * index as f32 / CHROMA_FFT_SIZE as f32).cos())
-        })
-        .collect();
     for (frame, cell) in chroma.as_chunks_mut::<12>().0.iter_mut().enumerate() {
         let center = frame * (SAMPLE_RATE / 10) + SAMPLE_RATE / 20;
         for (index, sample) in buffer.iter_mut().enumerate() {
@@ -129,7 +182,7 @@ fn spectral_features(mono: &[f32]) -> (Vec<f32>, Vec<f32>) {
             if position >= mono.len() as isize {
                 position = 2 * (mono.len() as isize - 1) - position;
             }
-            *sample = Complex::new(mono[position as usize] * window[index], 0.0);
+            *sample = Complex::new(mono[position as usize] * chroma_cfg.window[index], 0.0);
         }
         fft.process_with_scratch(&mut buffer, &mut scratch);
         for (bin, value) in magnitude.iter_mut().enumerate() {

@@ -165,11 +165,24 @@ const idsByKind = (kind: CacheKind): CacheCategory[] =>
     (id) => categoryHandlers[id].kind === kind,
   );
 
+/** 统计遍历成本高，短 TTL 缓存；key 含缓存根路径以覆盖目录切换 */
+const STATS_TTL_MS = 5000;
+let statsCache: { key: string; expireAt: number; data: CacheStat[] } | null = null;
+
+const invalidateStatsCache = (): void => {
+  statsCache = null;
+};
+
 /** 注册缓存相关 IPC */
 export const registerCacheIpc = (): void => {
   ipcMain.handle("cache:getStats", async (): Promise<CacheStat[]> => {
+    const key = getAppCacheDir();
+    const now = Date.now();
+    if (statsCache && statsCache.key === key && statsCache.expireAt > now) {
+      return statsCache.data;
+    }
     const ids = Object.keys(categoryHandlers) as CacheCategory[];
-    return Promise.all(
+    const data = await Promise.all(
       ids.map(async (id) => ({
         id,
         kind: categoryHandlers[id].kind,
@@ -177,6 +190,8 @@ export const registerCacheIpc = (): void => {
         size: await categoryHandlers[id].size(),
       })),
     );
+    statsCache = { key, expireAt: Date.now() + STATS_TTL_MS, data };
+    return data;
   });
 
   ipcMain.handle("cache:clear", async (_event, id: CacheCategory): Promise<void> => {
@@ -184,6 +199,7 @@ export const registerCacheIpc = (): void => {
     if (!handler) return;
     try {
       await handler.clear();
+      invalidateStatsCache();
       systemLog.info(`[cache] cleared ${id}`);
     } catch (err) {
       systemLog.error(`[cache] clear ${id} failed`, err);
@@ -195,6 +211,7 @@ export const registerCacheIpc = (): void => {
   ipcMain.handle("cache:clearAllByKind", async (_event, kind: CacheKind): Promise<void> => {
     const ids = idsByKind(kind);
     await Promise.all(ids.map((id) => categoryHandlers[id].clear()));
+    invalidateStatsCache();
     systemLog.info(`[cache] cleared all (${kind})`);
   });
 
@@ -224,6 +241,7 @@ export const registerCacheIpc = (): void => {
       store.set("cache.dir", next);
       syncCoverCacheDir();
       songCache.reloadDir();
+      invalidateStatsCache();
       systemLog.info(`[cache] dir switched to ${next}`);
       return { ok: true, dir: next };
     },
@@ -235,6 +253,7 @@ export const registerCacheIpc = (): void => {
     store.set("cache.dir", null);
     syncCoverCacheDir();
     songCache.reloadDir();
+    invalidateStatsCache();
     return defaultCacheDir;
   });
 

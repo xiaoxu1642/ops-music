@@ -2,7 +2,7 @@ import { BrowserWindow, shell } from "electron";
 import { join } from "path";
 import { is } from "@electron-toolkit/utils";
 import { createWindow } from "./create";
-import { MAIN_WINDOW_IDLE_DESTROY_MS, shouldDestroyIdleMainWindow } from "./idleDestroy";
+import { shouldDestroyIdleMainWindow } from "./idleDestroy";
 import { initThumbar } from "@main/services/thumbar";
 import { enableTaskbarThumbnail } from "@main/services/thumbnail";
 import { initTray } from "@main/services/tray";
@@ -24,6 +24,9 @@ const isInternalNavigation = (url: string): boolean => {
 
 let mainWindow: BrowserWindow | null = null;
 
+/** 隐藏空闲销毁检查间隔（毫秒）：短于总上限，便于播放停止后尽快回收 */
+const IDLE_DESTROY_CHECK_INTERVAL_MS = 60 * 1000;
+
 /** 隐藏空闲销毁计时器，只在窗口处于隐藏态期间存在 */
 let idleDestroyTimer: NodeJS.Timeout | null = null;
 
@@ -34,21 +37,23 @@ const cancelIdleDestroy = (): void => {
 };
 
 /**
- * 主窗口隐藏后起闲置计时：到点仍隐藏且没在播放就销毁窗口，回收常驻的渲染进程；
- * 条件不成立则重新计时。窗口显示、关闭或销毁时由 cancelIdleDestroy 清除
+ * 主窗口隐藏后起闲置计时：按短间隔复查，满足闲置条件（隐藏且未播放）即销毁窗口回收渲染进程。
+ * 播放态永不销毁——自动切歌与系统媒体按键依赖渲染进程，销毁会中断后台播放。
+ * 窗口显示、关闭或销毁时由 cancelIdleDestroy 清除
  * @param win - 起计时的窗口，回调只操作它自己
  */
 const armIdleDestroy = (win: BrowserWindow): void => {
   cancelIdleDestroy();
-  idleDestroyTimer = setTimeout(() => {
+  const check = (): void => {
     idleDestroyTimer = null;
-    if (!shouldDestroyIdleMainWindow(!win.isVisible(), lightSnapshot().playing)) {
-      armIdleDestroy(win);
+    if (shouldDestroyIdleMainWindow(!win.isVisible(), lightSnapshot().playing)) {
+      coreLog.info("主窗口闲置，销毁窗口以释放常驻内存");
+      win.destroy();
       return;
     }
-    coreLog.info("主窗口隐藏超时且未在播放，销毁窗口以释放常驻内存");
-    win.destroy();
-  }, MAIN_WINDOW_IDLE_DESTROY_MS);
+    idleDestroyTimer = setTimeout(check, IDLE_DESTROY_CHECK_INTERVAL_MS);
+  };
+  idleDestroyTimer = setTimeout(check, IDLE_DESTROY_CHECK_INTERVAL_MS);
 };
 
 /**

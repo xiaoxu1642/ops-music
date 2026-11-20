@@ -21,8 +21,12 @@ export const useLibraryStore = defineStore("library", () => {
   const scanProgress = ref<ScanProgress | null>(null);
   /** 是否已初始化 */
   const initialized = ref(false);
-  /** 歌手头像缓存 */
+  /** 歌手头像缓存（键为归一化名称，值由 prefetch 返回） */
   const artistAvatars = shallowRef<Record<string, string>>({});
+  /** 头像缓存容量，超出后淘汰最早写入项 */
+  const AVATAR_CACHE_LIMIT = 500;
+  /** 缓存写入顺序：命中时移到末尾，实现 LRU 淘汰 */
+  const avatarOrder: string[] = [];
   /** 本地红心 id */
   const likedOrderedIds = shallowRef<string[]>([]);
   /** 本地红心 id 集合 */
@@ -31,6 +35,23 @@ export const useLibraryStore = defineStore("library", () => {
   /** 持久化喜欢列表 */
   const persistLiked = (): void => {
     trackDb.setItem(LIKED_IDS_KEY, [...likedOrderedIds.value]).catch(() => {});
+  };
+
+  /**
+   * 写入一条头像并按 LRU 淘汰超出上限的旧项
+   * @param key - 归一化后的歌手名
+   * @param avatar - 头像地址
+   * @param notify - 是否立即触发响应，批量写入时传 false 由调用方统一触发
+   */
+  const writeAvatar = (key: string, avatar: string, notify = true): void => {
+    const hit = avatarOrder.indexOf(key);
+    if (hit !== -1) avatarOrder.splice(hit, 1);
+    avatarOrder.push(key);
+    artistAvatars.value[key] = avatar;
+    while (avatarOrder.length > AVATAR_CACHE_LIMIT) {
+      delete artistAvatars.value[avatarOrder.shift()!];
+    }
+    if (notify) triggerRef(artistAvatars);
   };
 
   /** 是否已收藏 */
@@ -77,7 +98,7 @@ export const useLibraryStore = defineStore("library", () => {
     const key = normalizeArtistName(artistName);
     if (!key || !avatar) return;
     if (artistAvatars.value[key] === avatar) return;
-    artistAvatars.value = { ...artistAvatars.value, [key]: avatar };
+    writeAvatar(key, avatar);
   };
 
   /** 批量预取头像 */
@@ -94,7 +115,8 @@ export const useLibraryStore = defineStore("library", () => {
       if (avatar) patch[key] = avatar;
     }
     if (Object.keys(patch).length > 0) {
-      artistAvatars.value = { ...artistAvatars.value, ...patch };
+      for (const [key, avatar] of Object.entries(patch)) writeAvatar(key, avatar, false);
+      triggerRef(artistAvatars);
     }
   };
 

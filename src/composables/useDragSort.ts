@@ -61,6 +61,7 @@ export const useDragSort = (options: DragSortOptions) => {
     targetIndex.value = index;
     dragLabelData.value = { name: labelText };
     const wrapper = virtualListRef.value?.wrapperRef;
+    // 列表边框相对视口的位置在拖拽期间稳定；仅激活时采样，避免每帧强制同步布局
     if (wrapper) listRect = wrapper.getBoundingClientRect();
     updateDragLabelPosition(event);
     window.addEventListener("mousemove", handleDragMove);
@@ -74,8 +75,6 @@ export const useDragSort = (options: DragSortOptions) => {
     if (!isDragging.value) return;
     if (event.cancelable) event.preventDefault();
     updateDragLabelPosition(event);
-    const wrapper = virtualListRef.value?.wrapperRef;
-    if (wrapper) listRect = wrapper.getBoundingClientRect();
     if (!listRect) return;
     const { y: clientY } = getPointerPos(event);
     handleAutoScroll(clientY, listRect);
@@ -168,8 +167,6 @@ export const useDragSort = (options: DragSortOptions) => {
       }
       expectedScroll = Math.max(0, expectedScroll + amount);
       virtualListRef.value?.scrollTo(expectedScroll, "auto");
-      const wrapper = virtualListRef.value?.wrapperRef;
-      if (wrapper) listRect = wrapper.getBoundingClientRect();
       calculateTargetIndex(dragLabelPosition.top, expectedScroll);
       autoScrollRafId = requestAnimationFrame(scrollStep);
     };

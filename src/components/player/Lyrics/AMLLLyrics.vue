@@ -185,12 +185,36 @@ const syncPlayerOptions = (player = playerRef.value): void => {
   });
 };
 
+// 暂停态弹簧收尾帧数，约 330ms 后停 RAF 避免空转
+const PAUSED_SETTLE_FRAMES = 20;
+// 暂停态剩余收尾帧数
+let settleRemaining = 0;
+
 const { resume: resumeRaf, pause: pauseRaf } = useRafFn(
   ({ delta }) => {
     playerRef.value?.update(delta);
+    // 暂停态只渲染有限帧供弹簧收敛，随后停止 RAF
+    if (!props.playing && !isFrozen.value && !isPageHidden.value && settleRemaining > 0) {
+      settleRemaining -= 1;
+      // 回调内直接 pause 会遗留一帧，恢复播放时可能形成双循环；入队后若被重新唤醒则跳过
+      if (settleRemaining === 0) {
+        queueMicrotask(() => {
+          if (!props.playing && settleRemaining === 0) pauseRaf();
+        });
+      }
+    }
   },
   { immediate: false },
 );
+
+/**
+ * 唤醒渲染循环；暂停态仅补充有限收尾帧，避免 RAF 空转。
+ */
+const wakeRaf = (): void => {
+  if (isFrozen.value || isPageHidden.value) return;
+  settleRemaining = props.playing ? 0 : PAUSED_SETTLE_FRAMES;
+  resumeRaf();
+};
 
 // 页面隐藏时停止渲染循环，恢复时校准时间线
 const handleVisibility = () => {
@@ -206,7 +230,7 @@ const handleVisibility = () => {
     playerRef.value.setCurrentTime(currentTime, true);
     isPreviousHidden.value = false;
   }
-  if (!hidden && !isFrozen.value && !props.playing) resumeRaf();
+  if (!hidden && !isFrozen.value && !props.playing) wakeRaf();
 };
 
 onMounted(async () => {
@@ -293,10 +317,11 @@ watchEffect(() => {
 
   if (!frozen && !hidden) {
     if (playing) {
+      settleRemaining = 0;
       resumeRaf();
       player.resume();
     } else {
-      resumeRaf();
+      wakeRaf();
       player.pause();
     }
   } else {
@@ -325,6 +350,12 @@ watch(
   () => syncPlayerOptions(),
 );
 
+// 暂停态调整歌词偏移后，重新唤醒有限帧让新位置显示到位
+watch(
+  () => status.lyricOffsetMs,
+  () => wakeRaf(),
+);
+
 // 监听处理完的歌词数据变动
 watch(processedLyrics, (newLyrics) => {
   if (!playerRef.value) return;
@@ -334,6 +365,7 @@ watch(processedLyrics, (newLyrics) => {
     const currentTime = getCurrentTime() + status.lyricOffsetMs;
     playerRef.value.setLyricLines(newLyrics, currentTime);
     processLyricLanguage();
+    wakeRaf();
   }
 });
 
@@ -359,6 +391,8 @@ watch(
 // 主播放器事件驱动的时间同步接口
 const setCurrentTime = (time: number, isSeek?: boolean) => {
   playerRef.value?.setCurrentTime(time, isSeek);
+  // 暂停态 seek 需唤醒有限帧刷新弹簧，普通 tick 不重置以免拖住收尾计数
+  if (isSeek) wakeRaf();
 };
 
 // 隐藏界面或休眠时调用

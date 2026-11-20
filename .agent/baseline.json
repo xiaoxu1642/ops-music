@@ -5,47 +5,37 @@
     "pnpm-lock.yaml": "7fb7598c9966324f5427b96e52701c7eddc363c9cb5c0a99e1f5b3bb2a6cbf58"
   },
   "generated_by": "scripts/verify-baseline.sh compatible generator",
-  "git_head": "c6ecc873e7a7a0ef21de67a79f17b4d79e468726",
+  "git_head": "b02ef82b04009599bbc3ec4cd0d9479d4c89060d",
   "repo": "C:\\KaiFa\\OpsMusic",
   "repo_mode": "git",
   "toolchain": {
     "cargo": {
-      "version": "cargo 1.99.0 (5f94df478 2026-08-27)",
-      "version_args": [
-        "--version"
-      ]
+      "version": "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+      "version_args": ["--version"]
     },
     "git": {
-      "version": "git version 2.56.0.windows.2",
-      "version_args": [
-        "--version"
-      ]
+      "version": "git version 2.56.1.windows.1",
+      "version_args": ["--version"]
     },
     "node": {
-      "version": "v25.2.1",
-      "version_args": [
-        "--version"
-      ]
+      "version": "v24.9.0",
+      "version_args": ["--version"]
     },
     "python": {
-      "version": "Python 3.12.15",
-      "version_args": [
-        "--version"
-      ]
+      "version": "Python 3.15.2",
+      "version_args": ["--version"]
     },
     "rustc": {
-      "version": "rustc 1.99.0 (b940084d7 2026-09-28)",
-      "version_args": [
-        "--version"
-      ]
+      "version": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "version_args": ["--version"]
     }
   },
   "verification": {
     "command": "bash scripts/verify-baseline.sh",
     "exit_code": 0,
-    "notes": "fix 1.2.5 托盘重建重复注册 cache 协议：Node 115 + Web 232 tests passed; typecheck passed; lint passed with 2 pre-existing warnings; Prettier check passed; pnpm build:win passed; runtime 覆盖并真实复现闲置销毁→托盘重建无协议错误",
-    "result": "性能修复方案实施收口：typecheck passed; Node 115 passed; Web 232 passed; audio-engine 125 passed 4 ignored; REA CDP page/console/resource verified; app kept running for visual inspection"
+    "notes": "三项追加收口 1.2.8：splash 1100→300ms；SMarquee 静态 mask 替代逐帧动画（接受 delay 期视觉差异）；Rust 环境打通（cargo fetch 走 rsproxy + ffmpeg_audio 缓存 commit fe78660 + pip libclang 18）；Rust MEL filterbank 静态化（analysis.rs OnceLock 复用 filterbank+FFT plan）、automix FFT planner 复用（spectral.rs OnceLock 复用 window/normalizer+正逆 plan）。stems 缓冲池评估后不做（收益落噪声/改 Box 波及测试与队列内存）。typecheck passed; Node 115 + Web 232 passed; cargo build --release --workspace passed; cargo test audio-engine 125 passed/4 ignored + automix-worker 3 passed; 改动 Rust 文件 fmt check passed; TS prettier/lint passed; build:native + build:unpack passed；独立 review Status pass（非阻断项 chroma 长窗每次重建已补入 CHROMA_PLAN OnceLock，cargo test 125 passed 复核）",
+    "result": "三项追加落地：CDP 真机验证 splash 437ms 消失（原 1100ms）、player.getStatus 正常（新 .node 加载无异常）、无 console exception；runtime 已替换为含新 .node 与 automix-worker.exe 的修复版（asar/.node 哈希与产物一致）；baseline 校验 ok"
   },
-  "worktree_fingerprint": "32b805236a8dadd8b94453a40aa0c139ecd97b69c95ed5e78fce74e9bef4b6c6",
-  "verified_at": "2026-11-15T22:07:27+08:00"
+  "worktree_fingerprint": "9ae220bb137dab61953333997bfa8b61a3a35c90d7ef0d784b145027fdb101db",
+  "verified_at": "2026-11-20T19:56:00+08:00"
 }

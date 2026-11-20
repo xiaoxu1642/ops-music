@@ -200,10 +200,7 @@ export const prefetchArtistAvatars = async (
   const queue = [...deduped.values()].slice(0, PREFETCH_BUDGET);
   const result: Record<string, string> = {};
   if (!queue.length) return result;
-  for (const name of queue) {
-    const key = normalizeArtistName(name);
-    if (!avatarState.has(key)) avatarState.set(key, undefined);
-  }
+  // avatarState 仅缓存已确定结果，预写占位会被当作命中而短路；去重由 deduped/avatarInFlight 负责
   // 工作线程
   let index = 0;
   const worker = async (): Promise<void> => {

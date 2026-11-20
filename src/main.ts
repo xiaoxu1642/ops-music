@@ -25,7 +25,7 @@ app.use(i18n);
 useThemeStore().init();
 
 /** splash 最短展示时长（ms） */
-const SPLASH_MIN_MS = 1100;
+const SPLASH_MIN_MS = 300;
 
 /** splash 淡出时长（ms） */
 const SPLASH_FADE_MS = 300;

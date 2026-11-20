@@ -149,6 +149,9 @@ export const deletePlaylist = (id: string): void => {
   })();
 };
 
+/** 单条 IN 语句的变量上限约 999，分块留余量 */
+const ID_CHUNK_SIZE = 500;
+
 /**
  * 添加本地歌曲到歌单
  * @param id - 歌单 ID
@@ -166,10 +169,21 @@ export const addPlaylistTracks = (id: string, trackIds: string[]): number => {
       .prepare("SELECT track_id FROM playlist_tracks WHERE playlist_id = ?")
       .all(id) as { track_id: string }[];
     const existingIds = new Set(existing.map((item) => item.track_id));
-    const validIds = uniqueIds.filter((trackId) => {
-      if (existingIds.has(trackId)) return false;
-      return Boolean(database.prepare("SELECT 1 FROM tracks WHERE id = ?").get(trackId));
-    });
+    const candidates = uniqueIds.filter((trackId) => !existingIds.has(trackId));
+    // 一次批量查询同时取存在性与封面，避免逐条 prepare 和第二次无上限 IN
+    const found = new Set<string>();
+    let cover: string | undefined;
+    for (let i = 0; i < candidates.length; i += ID_CHUNK_SIZE) {
+      const chunk = candidates.slice(i, i + ID_CHUNK_SIZE);
+      const rows = database
+        .prepare(`SELECT id, cover FROM tracks WHERE id IN (${chunk.map(() => "?").join(",")})`)
+        .all(...chunk) as { id: string; cover: string | null }[];
+      for (const row of rows) {
+        found.add(row.id);
+        if (cover === undefined && row.cover != null) cover = row.cover;
+      }
+    }
+    const validIds = candidates.filter((trackId) => found.has(trackId));
     if (validIds.length === 0) return 0;
     database
       .prepare("UPDATE playlist_tracks SET position = position + ? WHERE playlist_id = ?")
@@ -180,14 +194,9 @@ export const addPlaylistTracks = (id: string, trackIds: string[]): number => {
     );
     const now = Date.now();
     validIds.forEach((trackId, position) => insert.run(id, trackId, position, now));
-    const coverRow = database
-      .prepare(
-        `SELECT cover FROM tracks WHERE id IN (${validIds.map(() => "?").join(",")}) AND cover IS NOT NULL LIMIT 1`,
-      )
-      .get(...validIds) as { cover?: string } | undefined;
     database
       .prepare("UPDATE playlists SET cover = COALESCE(?, cover), updated_at = ? WHERE id = ?")
-      .run(coverRow?.cover ?? null, now, id);
+      .run(cover ?? null, now, id);
     return validIds.length;
   })();
 };

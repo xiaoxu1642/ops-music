@@ -87,7 +87,8 @@ export default defineConfig({
             if (!id.includes("node_modules")) return null;
             if (id.includes("/marked/") || id.includes("\\marked\\")) return "markdown";
             if (id.includes("/localforage/") || id.includes("\\localforage\\")) return "storage";
-            if (id.includes("/reka-ui/") || id.includes("\\reka-ui\\")) return "reka-ui";
+            // reka-ui 仅被懒加载的 Folders 路由使用，不单独成 chunk，
+            // 否则 manualChunks 会让它进入所有入口的 modulepreload，白增首屏下载
             return null;
           },
         },

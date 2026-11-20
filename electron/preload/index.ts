@@ -25,6 +25,7 @@ import type {
 } from "@shared/types/playlist";
 import type { CjkTransformMode } from "@shared/types/opencc";
 import type { MusicCommentQuery } from "@shared/types/comment";
+import type { LyricChangeNotice } from "@shared/types/nowPlaying";
 
 /** 订阅主进程推送的事件 */
 const subscribe = <T>(channel: string, callback: (data: T) => void): (() => void) => {
@@ -200,7 +201,10 @@ const api = {
     // 广播播放控制事件到所有渲染进程
     dispatch: (type: string) => ipcRenderer.send("player:dispatch", type),
     // 订阅主进程推送的播放事件
-    onEvent: (callback: (event: unknown) => void) => subscribe("player:event", callback),
+    onEvent: (callback: (event: unknown) => void) => {
+      ipcRenderer.removeAllListeners("player:event");
+      return subscribe("player:event", callback);
+    },
   },
   system: {
     installType: getInstallType(),
@@ -441,8 +445,8 @@ const api = {
     // 订阅歌曲切换事件
     onTrackChange: (callback: (data: unknown) => void) =>
       subscribe("nowPlaying:track-change", callback),
-    // 订阅歌词内容变化事件
-    onLyricChange: (callback: (snapshot: unknown) => void) =>
+    // 订阅歌词内容变化（轻量通知，正文需 requestSnapshot 拉取）
+    onLyricChange: (callback: (notice: LyricChangeNotice) => void) =>
       subscribe("nowPlaying:lyric-change", callback),
     // 订阅播放位置锚点（跟随 position 事件 5Hz）
     onPositionSync: (callback: (data: unknown) => void) =>
