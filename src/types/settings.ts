@@ -36,7 +36,7 @@ export type LyricSourcePreference = Platform | "auto" | "self";
 export type LayoutMode = "default" | "sidebar-full" | "floating";
 
 /** 路由切换动效 */
-export type RouteTransition = "none" | "fade" | "slide" | "zoom";
+export type RouteTransition = "none" | "fade" | "slide" | "zoom" | "materialize";
 
 /** 弹簧动画预设 */
 export type SpringPreset =
@@ -256,6 +256,8 @@ export interface AppearanceSettings {
   layoutMode: LayoutMode;
   /** 路由切换动效 */
   routeTransition: RouteTransition;
+  /** 氛围光效总强度（0–1，驱动 --s-fx：极光/频谱/呼吸光晕） */
+  ambientFx: number;
   /** 侧边栏折叠 */
   sidebarCollapsed: boolean;
   /** 侧边栏歌单项显示封面 */

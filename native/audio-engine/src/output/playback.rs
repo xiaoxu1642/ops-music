@@ -44,6 +44,9 @@ impl PlaybackHandle {
             })
             .unwrap_or_else(|| Shared::new(output.sample_rate(), output.channels()));
 
+        // 频谱按实际输出采样率解释频率映射
+        fft.set_sample_rate(output.sample_rate());
+
         let source = DecoderSource::new(Arc::clone(&shared), Arc::clone(&fft));
         match Self::attach(&output, source, 1.0, true) {
             Ok(playback) => Ok((output, shared, Arc::new(playback))),

@@ -106,7 +106,7 @@ const openAlbum = (item: CoverItem): void => {
       </header>
       <!-- Hero -->
       <SCard v-if="heroLoading || hero" radius="xl" flush class="min-h-40 -mb-3">
-        <div class="flex items-stretch gap-4 p-4">
+        <div class="hero-glow relative flex items-stretch gap-4 overflow-hidden p-4">
           <!-- 封面 -->
           <div class="size-32 shrink-0 self-center overflow-hidden rounded-lg">
             <SImg :src="hero?.cover" :alt="hero?.title" class="size-full" />
@@ -279,3 +279,33 @@ const openAlbum = (item: CoverItem): void => {
     <LoginDialog v-model:open="loginOpen" />
   </div>
 </template>
+
+<style scoped>
+/* 墨极光：hero 呼吸光斑，色相跟随 --s-hue；只动 transform 不加 will-change */
+.hero-glow::after {
+  content: "";
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  right: -90px;
+  top: -160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsla(var(--s-hue), 90%, 62%, 0.3), transparent 70%);
+  filter: blur(8px);
+  animation: hero-breathe 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hero-breathe {
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow::after {
+    animation: none;
+  }
+}
+</style>

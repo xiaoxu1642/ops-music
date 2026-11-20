@@ -166,14 +166,51 @@ impl InnerPlayer {
             }
         });
         self.position_timer_handle = Some(handle);
+
+        // 频谱推送与位置推送同生命周期：仅在播放期间分析推送
+        self.start_spectrum_timer();
     }
 
     /// 停止位置推送定时器，等待线程退出
     pub(super) fn stop_position_timer(&mut self) {
+        self.stop_spectrum_timer();
         if let Some(flag) = self.position_timer_stop.take() {
             flag.store(true, Ordering::Relaxed);
         }
         if let Some(handle) = self.position_timer_handle.take() {
+            let _ = handle.join();
+        }
+    }
+
+    /// 启动频谱推送定时器（独立线程，每 50ms 聚合一次频谱柱）
+    pub(super) fn start_spectrum_timer(&mut self) {
+        self.stop_spectrum_timer();
+
+        let stop_flag = Arc::new(AtomicBool::new(false));
+        self.spectrum_timer_stop = Some(Arc::clone(&stop_flag));
+
+        let fft = Arc::clone(&self.fft);
+        let cb = match &self.event_callback {
+            Some(cb) => Arc::clone(cb),
+            None => return,
+        };
+
+        let handle = thread::spawn(move || {
+            while !stop_flag.load(Ordering::Relaxed) {
+                let data = fft.analyze();
+                cb(PlayerEvent::FftData { data });
+                sleep_unless_stopped(&stop_flag, Duration::from_millis(50));
+            }
+        });
+        self.spectrum_timer_handle = Some(handle);
+    }
+
+    /// 停止频谱推送定时器，等待线程退出
+    pub(super) fn stop_spectrum_timer(&mut self) {
+        if let Some(flag) = self.spectrum_timer_stop.take() {
+            flag.store(true, Ordering::Relaxed);
+        }
+        if let Some(handle) = self.spectrum_timer_handle.take() {
             let _ = handle.join();
         }
     }

@@ -148,17 +148,17 @@ const song_url: MiguModule = async (query, http) => {
   }
 
   const tones = QUALITY_TO_TONES[toneKey] ?? [MIGU_TONES.PQ];
-  let chosen: { url: string; tone: MiguToneSpec } | null = null;
-  for (const spec of tones) {
-    // PQ 原链最后兜底，不走改档
-    if (spec.tone === "PQ") continue;
-    const rewritten = rewriteToneUrl(pqUrl, spec);
-    if (!rewritten) continue;
-    if (await probeMiguUrl(rewritten)) {
-      chosen = { url: rewritten, tone: spec };
-      break;
-    }
-  }
+  // 改档候选并行探测：串行 HEAD 会把多个档位的网络等待叠加，并行后按降级链取第一个可用
+  const candidates = tones
+    .filter((spec) => spec.tone !== "PQ")
+    .map((spec) => ({ spec, rewritten: rewriteToneUrl(pqUrl, spec) }))
+    .filter(
+      (entry): entry is { spec: MiguToneSpec; rewritten: string } => entry.rewritten !== null,
+    );
+  const probes = await Promise.all(candidates.map((entry) => probeMiguUrl(entry.rewritten)));
+  const hitIndex = probes.findIndex((ok) => ok);
+  const chosen: { url: string; tone: MiguToneSpec } | null =
+    hitIndex >= 0 ? { url: candidates[hitIndex].rewritten, tone: candidates[hitIndex].spec } : null;
 
   const target = chosen ?? { url: pqUrl, tone: MIGU_TONES.PQ };
   // 实测（2026-11）：freetyst 直链无 Referer/UA 校验、去 query 后可长期复用，

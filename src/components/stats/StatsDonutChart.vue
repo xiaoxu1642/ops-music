@@ -117,7 +117,7 @@ const visuals = computed<DonutVisual[]>(() => {
 </script>
 
 <template>
-  <div class="relative size-32 shrink-0">
+  <div class="donut-reveal relative size-32 shrink-0">
     <svg class="size-full -rotate-90" viewBox="0 0 128 128" aria-hidden="true">
       <path
         v-for="segment in visuals"
@@ -132,3 +132,24 @@ const visuals = computed<DonutVisual[]>(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 入场浮现：数据就绪挂载时播放一次 */
+.donut-reveal {
+  animation: donut-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes donut-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: blur(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donut-reveal {
+    animation: none;
+  }
+}
+</style>

@@ -251,7 +251,7 @@ onBeforeUnmount(() => {
         <SImg
           :src="collection.cover"
           :alt="collection.title"
-          class="rounded-xl shrink-0 transition-[width,height] duration-300"
+          class="cover-halo rounded-xl shrink-0 transition-[width,height] duration-300"
           :class="collapsed ? 'size-20' : 'size-40'"
         />
         <!-- 信息 -->
@@ -504,3 +504,10 @@ onBeforeUnmount(() => {
     </SDialog>
   </div>
 </template>
+
+<style scoped>
+/* 墨极光：歌单封面静态光晕，色相跟随 --s-hue */
+.cover-halo {
+  box-shadow: 0 0 60px hsla(var(--s-hue), 90%, 58%, 0.28);
+}
+</style>

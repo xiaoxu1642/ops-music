@@ -697,7 +697,7 @@ defineExpose({
                   @click="fav.toggle(item)"
                 >
                   <template #icon>
-                    <SIconSwap :active="fav.isLiked(item)">
+                    <SIconSwap burst :active="fav.isLiked(item)">
                       <template #on><IconFavorite /></template>
                       <template #off><IconFavoriteOutline /></template>
                     </SIconSwap>

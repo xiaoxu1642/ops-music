@@ -574,6 +574,10 @@
     "removeFolderConfirm": "移除该目录后，其中的歌曲将从音乐库中删除！",
     "nestedHint": "该目录与已添加目录嵌套，已自动跳过"
   },
+  "theme": {
+    "toDark": "切换到暗色模式",
+    "toLight": "切换到亮色模式"
+  },
   "settings": {
     "title": "设置",
     "subtitle": "调整您的专属配置",
@@ -1168,7 +1172,12 @@
       "none": "无",
       "fade": "淡入淡出",
       "slide": "滑动",
-      "zoom": "缩放"
+      "zoom": "缩放",
+      "materialize": "物质化（墨极光）"
+    },
+    "ambientFx": {
+      "label": "氛围光效强度",
+      "description": "极光、频谱与呼吸光晕的整体强度（墨极光）"
     },
     "sidebarCollapsed": {
       "label": "折叠侧边栏",

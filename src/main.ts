@@ -33,9 +33,16 @@ const SPLASH_FADE_MS = 300;
 /** 最短展示计时 */
 const splashMinElapsed = new Promise<void>((resolve) => setTimeout(resolve, SPLASH_MIN_MS));
 
-/** 等待首帧绘制完成 */
-const nextPaintedFrame = (): Promise<void> =>
-  new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+/** 等待首帧绘制完成；窗口被遮挡/最小化时 rAF 不会触发，用 timer 兜底保证 splash 必然淡出 */
+const nextPaintedFrame = (): Promise<void> => {
+  const painted = new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+  return Promise.race([
+    painted,
+    new Promise<void>((resolve) => setTimeout(resolve, SPLASH_FADE_MS)),
+  ]);
+};
 
 /** 淡出并移除 splash 层 */
 const removeSplash = (): void => {

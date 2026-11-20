@@ -40,7 +40,7 @@ const isDisabled = computed(() => props.disabled || props.loading);
 
 const enableRipple = computed(() => props.ripple && !props.disabled && !props.loading);
 
-const pressScale = computed(() => (props.static ? undefined : "not-disabled:active:scale-96"));
+const pressScale = computed(() => (props.static ? undefined : "not-disabled:active:scale-93"));
 
 /** 预设尺寸名称 */
 type SizePreset = "tiny" | "small" | "medium" | "large";

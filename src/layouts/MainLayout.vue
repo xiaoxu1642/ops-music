@@ -2,12 +2,14 @@
 import { useStatusStore } from "@/stores/status";
 import { useMediaStore } from "@/stores/media";
 import { useSettingsStore } from "@/stores/settings";
+import { useThemeStore } from "@/stores/theme";
 import { useExternalFileHandler } from "@/composables/useExternalFileHandler";
 import { toast, type ToastInstance } from "@/composables/useToast";
 
 const route = useRoute();
 const status = useStatusStore();
 const settings = useSettingsStore();
+const { isDark } = storeToRefs(useThemeStore());
 
 // 接入外部音频文件拖拽播放
 useExternalFileHandler();
@@ -148,9 +150,11 @@ const playerBarInnerClass = computed(() => {
 <template>
   <!-- 主界面 -->
   <div
-    class="h-screen flex overflow-hidden bg-app text-on-surface transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.7,0,0.3,1)] origin-center"
+    class="h-screen flex overflow-hidden isolate bg-app text-on-surface transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.7,0,0.3,1)] origin-center"
     :class="isPlayerExpanded ? 'scale-95 opacity-0 pointer-events-none' : ''"
   >
+    <!-- 极光氛围层（仅暗色） -->
+    <AuroraBackground v-if="isDark" />
     <!-- 侧边栏 -->
     <aside
       class="shrink-0 bg-surface-panel overflow-y-auto z-10 transition-[width,margin] duration-300"

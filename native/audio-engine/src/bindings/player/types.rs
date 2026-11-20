@@ -82,7 +82,7 @@ pub struct JsAudioDevice {
 #[napi(object)]
 #[derive(Default)]
 pub struct JsPlayerEvent {
-    /// 事件类型："stateChanged" | "ended" | "sourceError" | "position" | "transitionChanged" | "outputStalled" | "outputFailed" | "outputFallback"
+    /// 事件类型："stateChanged" | "ended" | "sourceError" | "position" | "transitionChanged" | "fftData" | "outputStalled" | "outputFailed" | "outputFallback"
     #[napi(js_name = "type")]
     pub event_type: String,
     /// 状态（仅 stateChanged 时有值）
@@ -101,6 +101,8 @@ pub struct JsPlayerEvent {
     pub transition_fade_seconds: Option<f64>,
     /// 回退原因分类键（仅 outputFallback 时有值：deviceBusy / formatUnsupported / unavailable）
     pub reason: Option<String>,
+    /// 频谱柱数据（仅 fftData 时有值，与渲染端柱数对齐的归一化 [0,1] 值）
+    pub fft_data: Option<Vec<f64>>,
 }
 
 /// 播放器状态快照

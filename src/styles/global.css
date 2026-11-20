@@ -17,6 +17,12 @@ select {
   color: inherit;
 }
 
+/* 键盘焦点可见性：墨极光发光描边（仅 :focus-visible，鼠标点击不显示） */
+:focus-visible {
+  outline: 2px solid hsla(var(--s-hue), 90%, 65%, 0.7);
+  outline-offset: 2px;
+}
+
 a,
 img {
   -webkit-user-drag: none;
@@ -33,6 +39,17 @@ img {
 /* 应用主背景 */
 :root {
   --s-app-bg: rgb(var(--s-surface));
+}
+
+@property --s-hue {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 343;
+}
+@property --s-fx {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.8;
 }
 
 html,
@@ -182,4 +199,40 @@ body {
 .route-zoom-leave-to {
   opacity: 0;
   transform: scale(1.02);
+}
+
+/* 墨极光：视图物质化（opacity + blur + scale 浮现），出场更快 */
+.route-materialize-enter-active {
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.route-materialize-leave-active {
+  transition:
+    opacity 0.25s ease-in,
+    transform 0.25s ease-in,
+    filter 0.25s ease-in;
+}
+.route-materialize-enter-from {
+  opacity: 0;
+  filter: blur(14px);
+  transform: scale(0.988);
+}
+.route-materialize-leave-to {
+  opacity: 0;
+  filter: blur(6px);
+  transform: scale(0.994);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-materialize-enter-active,
+  .route-materialize-leave-active {
+    transition: opacity 0.25s ease;
+  }
+  .route-materialize-enter-from,
+  .route-materialize-leave-to {
+    filter: none;
+    transform: none;
+  }
 }

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useThemeStore } from "@/stores/theme";
+
 defineProps<{
   collapsed: boolean;
 }>();
 
 const router = useRouter();
+const theme = useThemeStore();
 
 const goHome = (): void => {
   router.push("/");
@@ -11,7 +14,7 @@ const goHome = (): void => {
 </script>
 
 <template>
-  <div class="flex items-center justify-center h-16 shrink-0 px-4">
+  <div class="flex items-center justify-between h-16 shrink-0 pl-3 pr-4">
     <div
       role="link"
       tabindex="0"
@@ -26,5 +29,20 @@ const goHome = (): void => {
         Ops Music
       </span>
     </div>
+    <!-- 暗黑模式快捷切换：亮色显示月亮（进暗色），暗色显示太阳（回亮色） -->
+    <SButton
+      v-if="!collapsed"
+      variant="tertiary"
+      circle
+      :size="28"
+      :icon-size="16"
+      :title="theme.isDark ? $t('theme.toLight') : $t('theme.toDark')"
+      @click="theme.toggleThemeMode()"
+    >
+      <template #icon>
+        <IconLucideSun v-if="theme.isDark" />
+        <IconLucideMoon v-else />
+      </template>
+    </SButton>
   </div>
 </template>

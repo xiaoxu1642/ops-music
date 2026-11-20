@@ -256,7 +256,7 @@ const codecLabel = (codec: string): string => {
               align="center"
             >
               <div
-                class="h-full min-h-0 w-full rounded-[3px]"
+                class="relative h-full min-h-0 w-full rounded-[3px] transition-[transform] duration-200 ease-out hover:scale-135 hover:z-10 motion-reduce:transition-none motion-reduce:hover:scale-100"
                 :class="week[dow - 1] ? 'cursor-default' : 'opacity-0'"
                 :style="cellStyle(cellPlayCount(week, dow))"
               />

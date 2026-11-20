@@ -224,7 +224,7 @@ defineExpose({ playAll });
             <div v-if="item.status === 'downloading'" class="flex flex-col gap-1.5">
               <div class="h-1.5 w-full rounded-full bg-on-surface/10 overflow-hidden">
                 <div
-                  class="h-full rounded-full bg-primary transition-[width] duration-200"
+                  class="dl-fill h-full rounded-full transition-[width] duration-200"
                   :style="{ width: `${percent(item)}%` }"
                 />
               </div>
@@ -305,3 +305,15 @@ defineExpose({ playAll });
     </template>
   </SVirtualList>
 </template>
+
+<style scoped>
+/* 墨极光：下载进度发光填充，色相跟随 --s-hue */
+.dl-fill {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--s-hue) 85% 58%),
+    hsl(calc(var(--s-hue) + 60) 80% 62%)
+  );
+  box-shadow: 0 0 8px hsla(var(--s-hue), 90%, 60%, 0.7);
+}
+</style>

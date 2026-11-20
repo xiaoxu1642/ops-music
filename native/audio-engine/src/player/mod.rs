@@ -60,6 +60,9 @@ pub struct InnerPlayer {
     /// 位置推送定时器的停止信号和线程句柄
     position_timer_stop: Option<Arc<AtomicBool>>,
     position_timer_handle: Option<JoinHandle<()>>,
+    /// 频谱推送定时器的停止信号和线程句柄（与位置推送同生命周期）
+    spectrum_timer_stop: Option<Arc<AtomicBool>>,
+    spectrum_timer_handle: Option<JoinHandle<()>>,
     /// 渐变取消信号和线程句柄
     fade_cancel: Option<Arc<AtomicBool>>,
     fade_handle: Option<JoinHandle<()>>,
@@ -161,6 +164,8 @@ impl InnerPlayer {
             event_callback: None,
             position_timer_stop: None,
             position_timer_handle: None,
+            spectrum_timer_stop: None,
+            spectrum_timer_handle: None,
             fade_cancel: None,
             fade_handle: None,
             selected_device: None,

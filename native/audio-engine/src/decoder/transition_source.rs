@@ -172,7 +172,6 @@ impl TransitionControl {
 pub struct TransitionSource {
     speed_ratio: f64,
     fft: Arc<FftAnalyzer>,
-    fft_enabled: bool,
     fft_buffer: [f32; 256],
     fft_len: usize,
     output_channel: u64,
@@ -198,7 +197,6 @@ impl TransitionSource {
         let cancel_samples = (u64::from(shared.sample_rate()) / 20).max(1) * channels;
         Self {
             speed_ratio: 1.0,
-            fft_enabled: fft.is_enabled(),
             fft,
             fft_buffer: [0.0; 256],
             fft_len: 0,
@@ -232,7 +230,6 @@ impl TransitionSource {
                 .push_interleaved_samples(&self.fft_buffer[..self.fft_len]);
             self.fft_len = 0;
         }
-        self.fft_enabled = self.fft.is_enabled();
         self.active.begin_callback();
         if let Some(transition) = &mut self.transition {
             transition.command.next.begin_callback();
@@ -489,7 +486,7 @@ impl Iterator for TransitionSource {
 
     fn next(&mut self) -> Option<f32> {
         let sample = self.next_sample()?;
-        if self.fft_enabled {
+        {
             if self.output_channel < 2 {
                 self.output_frame[self.output_channel as usize] = sample;
             }

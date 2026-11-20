@@ -5,7 +5,7 @@
     "pnpm-lock.yaml": "7fb7598c9966324f5427b96e52701c7eddc363c9cb5c0a99e1f5b3bb2a6cbf58"
   },
   "generated_by": "scripts/verify-baseline.sh compatible generator",
-  "git_head": "b02ef82b04009599bbc3ec4cd0d9479d4c89060d",
+  "git_head": "bd556a1769c4bdf4234209d81fd3d8340d9e11c7",
   "repo": "C:\\KaiFa\\OpsMusic",
   "repo_mode": "git",
   "toolchain": {
@@ -33,9 +33,9 @@
   "verification": {
     "command": "bash scripts/verify-baseline.sh",
     "exit_code": 0,
-    "notes": "三项追加收口 1.2.8：splash 1100→300ms；SMarquee 静态 mask 替代逐帧动画（接受 delay 期视觉差异）；Rust 环境打通（cargo fetch 走 rsproxy + ffmpeg_audio 缓存 commit fe78660 + pip libclang 18）；Rust MEL filterbank 静态化（analysis.rs OnceLock 复用 filterbank+FFT plan）、automix FFT planner 复用（spectral.rs OnceLock 复用 window/normalizer+正逆 plan）。stems 缓冲池评估后不做（收益落噪声/改 Box 波及测试与队列内存）。typecheck passed; Node 115 + Web 232 passed; cargo build --release --workspace passed; cargo test audio-engine 125 passed/4 ignored + automix-worker 3 passed; 改动 Rust 文件 fmt check passed; TS prettier/lint passed; build:native + build:unpack passed；独立 review Status pass（非阻断项 chroma 长窗每次重建已补入 CHROMA_PLAN OnceLock，cargo test 125 passed 复核）",
-    "result": "三项追加落地：CDP 真机验证 splash 437ms 消失（原 1100ms）、player.getStatus 正常（新 .node 加载无异常）、无 console exception；runtime 已替换为含新 .node 与 automix-worker.exe 的修复版（asar/.node 哈希与产物一致）；baseline 校验 ok"
+    "notes": "P1 性能批次 C 部分收口：C5 migu 改档探测串行 for-await 改 Promise.all 并行（按降级链优先级取第一个可达，语义等价，消除多档 HEAD 网络等待叠加）；C4 playlist_detail n:100000→1000（对齐服务端 ~1000 条截断，消费端已有 trackIds 全量+song_detail 分页补尾，超大歌单防 MB 级响应）。批次现状核实：C2/C6/C7 已由 1.2.8/1.2.9 修复（Schwartzian 排序/拖拽 rect 激活时采样/library:getTracks SQL 过滤）；歌词扫光核实为主窗口 lyric-dom 引擎 enableWordHighlight+wordFadeWidth 已具备逐字掩码扫光（AMLL 自带），无需重做；C1 stems DSP 与 C3 三平台 inflight 按 v2 方案纪律先测后修（需 DSP 计时 span 与 apis:call 打点基建），本轮不做。验证：pnpm typecheck passed；prettier/lint passed；dev 真机 smoke（n:1000 后收藏歌单 346 首正常加载、虚拟列表渲染、0 异常）；C5 收益需真 migu 音源环境测量（代码语义等价已保证）。基线过期原因：P0 FFT 收口后继续 P1 改动，本次按项目规则重算。",
+    "result": "P1 性能批次 C 部分落地（C5 并行探测/C4 裁剪）并经 dev 真机 smoke 验收；C1/C3 测量先行待做、歌词扫光核实已有；曾疑似路由切换回归，实证为最小化窗口 Chromium 节流（rAF=0 时所有过渡模式 9/9 卡，恢复可见后全绿）非代码回归；pr-review 审查修复 2 项（resize 补帧、fp 展开期间停播放条频谱 RAF）后 Status: pass；baseline verify ok"
   },
-  "worktree_fingerprint": "9ae220bb137dab61953333997bfa8b61a3a35c90d7ef0d784b145027fdb101db",
-  "verified_at": "2026-11-20T19:56:00+08:00"
+  "verified_at": "2026-11-21T04:04:04+08:00",
+  "worktree_fingerprint": "699647124f1d8093316b2a1bf9a856f9d5ba6831ddf1fe41151e99bcf9cc8e4a"
 }

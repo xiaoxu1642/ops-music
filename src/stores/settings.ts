@@ -104,6 +104,7 @@ export const useSettingsStore = defineStore(
     const appearance = reactive<AppearanceSettings>({
       layoutMode: "default",
       routeTransition: "fade",
+      ambientFx: 0.8,
       sidebarCollapsed: false,
       sidebarPlaylistCover: false,
       sidebarNavGroups: DEFAULT_SIDEBAR_NAV_GROUPS.map((group) => ({

@@ -21,8 +21,18 @@ import { coreLog, initLogger } from "@main/utils/logger";
  * 配置 Chromium 启动参数以优化内存占用
  */
 const configureMemoryOptimizations = (): void => {
-  // 禁止预热备用渲染进程
-  app.commandLine.appendSwitch("disable-features", "SpareRendererForSitePerProcess");
+  // CDP 自动化验证用：禁用 Windows 原生窗口遮挡计算并放开后台节流，
+  // 遮挡/最小化窗口不停 rAF 与定时器，验证脚本无需把窗口置顶抢前台。
+  // disable-features 同名 switch 后次调用会覆盖前次，必须合并进同一次 append。
+  const cdpMode = !!process.env.OPSMUSIC_CDP;
+  const disabledFeatures = ["SpareRendererForSitePerProcess"];
+  if (cdpMode) disabledFeatures.push("CalculateNativeWinOcclusion");
+  app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
+  if (cdpMode) {
+    app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+    app.commandLine.appendSwitch("disable-background-timer-throttling");
+    app.commandLine.appendSwitch("disable-renderer-backgrounding");
+  }
 };
 
 /** 内存指标采样间隔 */

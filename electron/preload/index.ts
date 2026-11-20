@@ -205,6 +205,11 @@ const api = {
       ipcRenderer.removeAllListeners("player:event");
       return subscribe("player:event", callback);
     },
+    // 订阅频谱柱数据（主进程仅在主窗口可见时转发）
+    onSpectrum: (callback: (data: { bars: number[] }) => void) => {
+      ipcRenderer.removeAllListeners("player:spectrum");
+      return subscribe("player:spectrum", callback);
+    },
   },
   system: {
     installType: getInstallType(),

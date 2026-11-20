@@ -17,7 +17,9 @@ import type { NeteaseModule } from "../core/types";
 const playlistDetail: NeteaseModule = (query, request) => {
   const data = {
     id: query.id,
-    n: 100000,
+    // 服务端对 tracks 自带 ~1000 条截断，消费端已有 trackIds 全量 + song_detail 分页补尾；
+    // n 拉到 10 万只会在超大歌单上白拉数 MB 的完整 song
+    n: 1000,
     s: query.s ?? 8,
   };
   return request("/api/v6/playlist/detail", data, createOption(query));

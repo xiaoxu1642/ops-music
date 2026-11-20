@@ -11,6 +11,7 @@ import { usePlaybackTime } from "@/composables/usePlaybackTime";
 import { getCurrentTime } from "@/services/playback";
 import { createGraceDestroyScheduler } from "@/utils/graceDestroy";
 import type { QualityLevel } from "@/utils/quality";
+import type { CSSProperties } from "vue";
 import { useFavorite } from "@/composables/useFavorite";
 import { useDownload, buildDownloadQualityItems } from "@/composables/useDownload";
 import { usePlaylistPicker } from "@/composables/usePlaylistPicker";
@@ -146,6 +147,33 @@ onBeforeUnmount(() => {
 const fullscreenCover = computed(() => settings.player.coverLayout === "fullscreen");
 const coverWidth = computed(() => `${settings.player.coverLyricRatio * 100}%`);
 
+/** 封面 3D 指尖倾斜（±10–12°）与眩光跟随；降低动效时停用 */
+const prefersReducedMotion = usePreferredReducedMotion();
+const tiltStyle = ref<CSSProperties>({});
+const glareStyle = ref<CSSProperties>({});
+
+const onCoverMove = (e: PointerEvent): void => {
+  if (prefersReducedMotion.value === "reduce") return;
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+  tiltStyle.value = {
+    transition: "transform 0.1s linear",
+    transform: `rotateX(${((0.5 - y) * 10).toFixed(1)}deg) rotateY(${((x - 0.5) * 12).toFixed(1)}deg) scale(1.02)`,
+  };
+  glareStyle.value = {
+    "--gx": `${(x * 100).toFixed(1)}%`,
+    "--gy": `${(y * 100).toFixed(1)}%`,
+  } as CSSProperties;
+};
+
+const onCoverLeave = (): void => {
+  tiltStyle.value = {
+    transition: "transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+    transform: "",
+  };
+};
+
 const coverCentered = computed(() => {
   if (fullscreenCover.value || status.fullQueueOpen) return false;
   return !showLyric.value || (settings.player.autoCenterCover && !hasLyric.value);
@@ -233,6 +261,11 @@ const showComments = (): void => {
       >
         <!-- 背景 -->
         <PlayerBackground />
+        <!-- 底部频谱铺底 -->
+        <SpectrumCanvas
+          class="spectrum-veil-full absolute bottom-0 inset-x-0 h-[130px] pointer-events-none"
+          :active="isPlayerExpanded"
+        />
         <!-- 全屏封面 -->
         <div v-if="fullscreenCover" class="absolute inset-y-0 left-0 w-[60%]">
           <PlayerCover fullscreen />
@@ -295,7 +328,17 @@ const showComments = (): void => {
             <div class="relative w-[clamp(200px,85%,50vh)] -translate-y-[11vh]">
               <Transition name="scale-switch" mode="out-in">
                 <div :key="displayTrack?.id">
-                  <PlayerCover />
+                  <div
+                    class="fp-cover-zone"
+                    @pointermove="onCoverMove"
+                    @pointerleave="onCoverLeave"
+                  >
+                    <div class="fp-halo" />
+                    <div class="fp-tilt relative z-1" :style="tiltStyle">
+                      <PlayerCover />
+                      <div class="fp-glare rounded-[32px]" :style="glareStyle" />
+                    </div>
+                  </div>
                   <div class="absolute top-full left-0 w-full pt-6">
                     <PlayerData align="left" />
                   </div>
@@ -384,7 +427,7 @@ const showComments = (): void => {
               @click="fav.toggle(displayTrack)"
             >
               <template #icon>
-                <SIconSwap :active="fav.isLiked(displayTrack)">
+                <SIconSwap burst :active="fav.isLiked(displayTrack)">
                   <template #on><IconFavorite /></template>
                   <template #off><IconFavoriteOutline /></template>
                 </SIconSwap>
@@ -531,6 +574,63 @@ const showComments = (): void => {
 </template>
 
 <style scoped>
+/* 墨极光：频谱透明度随氛围光效强度（--s-fx 默认 0.8 时等效原型 0.30） */
+.spectrum-veil-full {
+  opacity: calc(0.375 * var(--s-fx));
+}
+
+/* 墨极光：进度条发光填充，色相跟随 --s-hue */
+:deep(.s-slider-fill) {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--s-hue) 85% 58%),
+    hsl(calc(var(--s-hue) + 55) 82% 64%)
+  );
+  box-shadow: 0 0 10px hsla(var(--s-hue), 90%, 60%, 0.55);
+}
+
+/* 封面 3D 倾斜区：透视与呼吸光晕，色相/强度跟随 --s-hue / --s-fx */
+.fp-cover-zone {
+  position: relative;
+  perspective: 900px;
+}
+
+.fp-halo {
+  position: absolute;
+  inset: -46px;
+  border-radius: 50%;
+  z-index: 0;
+  background: radial-gradient(circle, hsla(var(--s-hue), 90%, 60%, 0.4), transparent 66%);
+  filter: blur(26px);
+  animation: fp-halo-breathe 4.2s ease-in-out infinite;
+  opacity: calc(0.75 * var(--s-fx));
+}
+
+@keyframes fp-halo-breathe {
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+.fp-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    420px circle at var(--gx, 30%) var(--gy, 20%),
+    rgba(255, 255, 255, 0.16),
+    transparent 55%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-halo {
+    animation: none;
+    opacity: calc(0.75 * var(--s-fx));
+  }
+}
+
 .lyric-area {
   filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.2));
   mask: linear-gradient(

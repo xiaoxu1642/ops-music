@@ -16,7 +16,7 @@ const status = useStatusStore();
 const settings = useSettingsStore();
 const media = useMediaStore();
 const fav = useFavorite();
-const { position, duration } = storeToRefs(status);
+const { position, duration, isPlayerExpanded } = storeToRefs(status);
 const { formatTooltip, snapToNearestLyric } = useProgressLyric();
 
 /** 是否是浮动模式 */
@@ -49,6 +49,10 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
 <template>
   <!-- 浮动模式 -->
   <div v-if="isFloating" class="relative flex items-center px-4 gap-4 min-w-0">
+    <SpectrumCanvas
+      class="spectrum-veil absolute inset-0 rounded-full pointer-events-none"
+      :active="!isPlayerExpanded"
+    />
     <PlayerControls compact />
     <div class="flex flex-col flex-1 min-w-0 gap-1 pt-2 pb-1">
       <div class="flex items-center gap-2 min-w-0">
@@ -65,7 +69,7 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
                 @click="fav.toggle(media.track)"
               >
                 <template #icon>
-                  <SIconSwap :active="fav.isLiked(media.track)">
+                  <SIconSwap burst :active="fav.isLiked(media.track)">
                     <template #on><IconFavorite /></template>
                     <template #off><IconFavoriteOutline /></template>
                   </SIconSwap>
@@ -116,6 +120,10 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
   </div>
   <!-- 默认模式 -->
   <div v-else class="relative h-full">
+    <SpectrumCanvas
+      class="spectrum-veil absolute inset-0 pointer-events-none"
+      :active="!isPlayerExpanded"
+    />
     <div class="absolute left-0 right-0 top-0 -translate-y-1/2 z-10">
       <SSlider
         :model-value="position"
@@ -145,7 +153,7 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
               @click="fav.toggle(media.track)"
             >
               <template #icon>
-                <SIconSwap :active="fav.isLiked(media.track)">
+                <SIconSwap burst :active="fav.isLiked(media.track)">
                   <template #on><IconFavorite /></template>
                   <template #off><IconFavoriteOutline /></template>
                 </SIconSwap>
@@ -183,3 +191,20 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
   </div>
   <PlaylistPickerDialog v-model:open="pickerOpen" :mode="pickerMode" :tracks="pickerTracks" />
 </template>
+
+<style scoped>
+/* 墨极光：频谱透明度随氛围光效强度（--s-fx 默认 0.8 时等效原型 0.16） */
+.spectrum-veil {
+  opacity: calc(0.2 * var(--s-fx));
+}
+
+/* 墨极光：进度条发光填充，色相跟随 --s-hue */
+:deep(.s-slider-fill) {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--s-hue) 85% 58%),
+    hsl(calc(var(--s-hue) + 55) 82% 64%)
+  );
+  box-shadow: 0 0 10px hsla(var(--s-hue), 90%, 60%, 0.55);
+}
+</style>

@@ -42,6 +42,11 @@ impl AudioPlayer {
                     transition_fade_seconds: fade_seconds,
                     ..Default::default()
                 },
+                PlayerEvent::FftData { data } => JsPlayerEvent {
+                    event_type: "fftData".into(),
+                    fft_data: Some(data.into_iter().map(|v| v as f64).collect()),
+                    ..Default::default()
+                },
                 PlayerEvent::OutputStalled => JsPlayerEvent {
                     event_type: "outputStalled".into(),
                     ..Default::default()

@@ -372,4 +372,6 @@ export interface PlayerApi {
   dispatch: (type: string) => void;
   /** 订阅播放事件 */
   onEvent: (callback: (event: PlayerEvent) => void) => () => void;
+  /** 订阅频谱柱数据（仅主窗口可见时由主进程转发，播放中约 20Hz） */
+  onSpectrum: (callback: (data: { bars: number[] }) => void) => () => void;
 }

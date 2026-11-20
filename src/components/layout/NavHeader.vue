@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { useSettingsDialog } from "@/settings/useSettingsDialog";
 import { useWindowControls } from "@/composables/useWindowControls";
+import { useMagnetic } from "@/composables/useMagnetic";
 
 const router = useRouter();
 const { show: showSettings } = useSettingsDialog();
 const { isBorderless } = useWindowControls();
+
+// 墨极光磁吸悬停：仅顶栏前进/后退按钮（原型 mag 范围）；SButton ref 归一化出根 button 元素
+const backBtnRef = ref<{ $el: HTMLElement } | null>(null);
+const fwdBtnRef = ref<{ $el: HTMLElement } | null>(null);
+const backBtnEl = computed(() => backBtnRef.value?.$el ?? null);
+const fwdBtnEl = computed(() => fwdBtnRef.value?.$el ?? null);
+useMagnetic(backBtnEl);
+useMagnetic(fwdBtnEl);
 </script>
 
 <template>
@@ -12,6 +21,7 @@ const { isBorderless } = useWindowControls();
     <!-- 左侧 -->
     <div class="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
       <SButton
+        ref="backBtnRef"
         class="app-no-drag shrink-0"
         variant="tertiary"
         circle
@@ -22,6 +32,7 @@ const { isBorderless } = useWindowControls();
         <template #icon><IconLucideChevronLeft /></template>
       </SButton>
       <SButton
+        ref="fwdBtnRef"
         class="app-no-drag shrink-0"
         variant="tertiary"
         circle

@@ -263,6 +263,13 @@ const registerNativeEvents = (inst: InstanceType<AudioEngineModule["AudioPlayer"
         if (store.get("system.taskbarProgress") && durMs > 0) setTaskbarProgress(posMs / durMs);
         break;
       }
+      case "fftData": {
+        // 高频可视化数据：仅主窗口可见时转发（hidden=silent）
+        const mainWindow = getMainWindow();
+        if (mainWindow && isWindowPresentable(mainWindow))
+          sendToMain("player:spectrum", { bars: event.fftData ?? [] });
+        break;
+      }
       case "transitionChanged": {
         if (event.transitionActive) {
           playerLog.info("曲尾交接点识别", {

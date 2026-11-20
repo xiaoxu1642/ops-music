@@ -310,7 +310,7 @@ export interface JsMusicMetadata {
 
 /** 播放器事件，推送给 JS 侧 */
 export interface JsPlayerEvent {
-  /** 事件类型："stateChanged" | "ended" | "sourceError" | "position" | "transitionChanged" | "outputStalled" | "outputFailed" | "outputFallback" */
+  /** 事件类型："stateChanged" | "ended" | "sourceError" | "position" | "transitionChanged" | "fftData" | "outputStalled" | "outputFailed" | "outputFallback" */
   type: string
   /** 状态（仅 stateChanged 时有值） */
   state?: string
@@ -328,6 +328,8 @@ export interface JsPlayerEvent {
   transitionFadeSeconds?: number
   /** 回退原因分类键（仅 outputFallback 时有值：deviceBusy / formatUnsupported / unavailable） */
   reason?: string
+  /** 频谱柱数据（仅 fftData 时有值，与渲染端柱数对齐的归一化 [0,1] 值） */
+  fftData?: Array<number>
 }
 
 /** 播放器状态快照 */

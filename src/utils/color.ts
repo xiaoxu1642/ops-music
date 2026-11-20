@@ -283,11 +283,13 @@ const extractColorFromImageElement = (img: HTMLImageElement): string | null => {
 
 /**
  * 将色板和封面主色写入 CSS 自定义属性，并切换明暗 class
+ * @param ambientFx - 氛围光效总强度（0–1），驱动 --s-fx
  */
 export const applyThemeToDOM = (
   palette: ThemePalette,
   coverColorHex: string | null,
   isDark: boolean,
+  ambientFx = 0.8,
 ): void => {
   const root = document.documentElement;
   for (const [key, value] of Object.entries(palette)) {
@@ -299,5 +301,11 @@ export const applyThemeToDOM = (
     coverColorHex ? hexToRgb(toCoverUiColor(coverColorHex)) : "239 239 239",
   );
   root.style.setProperty("--s-cover-base", coverColorHex ? hexToRgb(coverColorHex) : "20 20 28");
+  // 氛围光效色相：跟随封面代表色，无封面回退珊瑚默认色相（见 global.css @property --s-hue）
+  root.style.setProperty(
+    "--s-hue",
+    coverColorHex ? String(Math.round(Hct.fromInt(argbFromHex(coverColorHex)).hue)) : "343",
+  );
   root.classList.toggle("dark", isDark);
+  root.style.setProperty("--s-fx", String(ambientFx));
 };
