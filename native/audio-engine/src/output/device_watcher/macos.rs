@@ -1,29 +1,30 @@
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem;
-use std::ptr::{null, NonNull};
+use std::ptr::{NonNull, null};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, SyncSender};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use objc2_core_audio::{
-    kAudioDevicePropertyDataSource, kAudioDevicePropertyDataSources,
-    kAudioDevicePropertyDeviceIsAlive, kAudioDevicePropertyJackIsConnected,
-    kAudioDevicePropertyNominalSampleRate, kAudioDevicePropertyPreferredChannelLayout,
-    kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput,
-    kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyStreams, kAudioHardwareNoError,
-    kAudioHardwarePropertyDefaultOutputDevice, kAudioHardwarePropertyDevices,
-    kAudioObjectPropertyElementMain, kAudioObjectPropertyScopeGlobal, kAudioObjectSystemObject,
     AudioDeviceID, AudioObjectAddPropertyListener, AudioObjectGetPropertyData,
     AudioObjectGetPropertyDataSize, AudioObjectID, AudioObjectPropertyAddress,
-    AudioObjectRemovePropertyListener,
+    AudioObjectRemovePropertyListener, kAudioDevicePropertyDataSource,
+    kAudioDevicePropertyDataSources, kAudioDevicePropertyDeviceIsAlive,
+    kAudioDevicePropertyJackIsConnected, kAudioDevicePropertyNominalSampleRate,
+    kAudioDevicePropertyPreferredChannelLayout, kAudioDevicePropertyPreferredChannelsForStereo,
+    kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreamConfiguration,
+    kAudioDevicePropertyStreams, kAudioHardwareNoError, kAudioHardwarePropertyDefaultOutputDevice,
+    kAudioHardwarePropertyDevices, kAudioObjectPropertyElementMain,
+    kAudioObjectPropertyScopeGlobal, kAudioObjectSystemObject,
 };
 
 use super::{DeviceChangedCallback, PlatformBackend};
 
 enum WatchCommand {
-    Changed(bool),
+    Changed,
     Stop,
 }
 
@@ -33,9 +34,15 @@ struct PropertyRegistration {
     address: AudioObjectPropertyAddress,
 }
 
-static CALLBACKS: OnceLock<Mutex<HashMap<usize, SyncSender<WatchCommand>>>> = OnceLock::new();
+struct PendingFlags {
+    default_changed: AtomicBool,
+    list_changed: AtomicBool,
+}
 
-fn callbacks() -> &'static Mutex<HashMap<usize, SyncSender<WatchCommand>>> {
+static CALLBACKS: OnceLock<Mutex<HashMap<usize, (SyncSender<WatchCommand>, Arc<PendingFlags>)>>> =
+    OnceLock::new();
+
+fn callbacks() -> &'static Mutex<HashMap<usize, (SyncSender<WatchCommand>, Arc<PendingFlags>)>> {
     CALLBACKS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -52,7 +59,7 @@ unsafe extern "C-unwind" fn property_changed(
     context: *mut c_void,
 ) -> i32 {
     let context_id = context as usize;
-    let sender = callbacks()
+    let (sender, pending) = callbacks()
         .lock()
         .ok()
         .and_then(|callbacks| callbacks.get(&context_id).cloned());
@@ -62,7 +69,15 @@ unsafe extern "C-unwind" fn property_changed(
         let default_changed = addresses
             .iter()
             .any(|address| address.mSelector == kAudioHardwarePropertyDefaultOutputDevice);
-        let _ = sender.try_send(WatchCommand::Changed(default_changed));
+        // 队列容量 1，先记待处理标志，由消费端合并，避免默认切换信号被后续列表变化顶掉
+        if let Some(pending) = pending {
+            if default_changed {
+                pending.default_changed.store(true, Ordering::Release);
+            } else {
+                pending.list_changed.store(true, Ordering::Release);
+            }
+        }
+        let _ = sender.try_send(WatchCommand::Changed);
     }
     kAudioHardwareNoError
 }
@@ -240,10 +255,15 @@ impl PlatformBackend for Backend {
         let (ready_tx, ready_rx) = mpsc::sync_channel(1);
         let context = Box::new(0_u8);
         let context_id = std::ptr::from_ref(context.as_ref()) as usize;
+        let pending = Arc::new(PendingFlags {
+            default_changed: AtomicBool::new(false),
+            list_changed: AtomicBool::new(false),
+        });
+        let pending_for_thread = Arc::clone(&pending);
         callbacks()
             .lock()
             .map_err(|_| anyhow!("CoreAudio 回调注册表已损坏"))?
-            .insert(context_id, command_tx.clone());
+            .insert(context_id, (command_tx.clone(), pending));
 
         let thread = thread::Builder::new()
             .name("coreaudio-device-watcher".into())
@@ -293,9 +313,20 @@ impl PlatformBackend for Backend {
 
                 while let Ok(command) = command_rx.recv() {
                     match command {
-                        WatchCommand::Changed(default_changed) => {
+                        WatchCommand::Changed => {
                             refresh_device_properties(&mut device_registrations, context_id);
-                            callback(default_changed);
+                            if pending_for_thread
+                                .default_changed
+                                .swap(false, Ordering::AcqRel)
+                            {
+                                callback(true);
+                            }
+                            if pending_for_thread
+                                .list_changed
+                                .swap(false, Ordering::AcqRel)
+                            {
+                                callback(false);
+                            }
                         }
                         WatchCommand::Stop => break,
                     }

@@ -13,13 +13,21 @@ pub struct ExternalLyric {
     pub path: String,
 }
 
-/// 从容器 metadata 提取内嵌歌词
+/// 从容器 metadata 提取内嵌歌词：同优先级按归一化 key 排序，避免 HashMap 迭代序导致结果不确定
 pub fn extract_embedded_lyric(dict: &HashMap<String, String>) -> Option<String> {
     dict.iter()
         .filter(|(key, value)| {
             !value.is_empty() && tag_fields::is_lyric_field_key(&tag_fields::normalize_tag_key(key))
         })
-        .max_by_key(|(key, _)| tag_fields::get_lyric_priority(&tag_fields::normalize_tag_key(key)))
+        .max_by(|(key_a, _), (key_b, _)| {
+            let norm_a = tag_fields::normalize_tag_key(key_a);
+            let norm_b = tag_fields::normalize_tag_key(key_b);
+            let priority_a = tag_fields::get_lyric_priority(&norm_a);
+            let priority_b = tag_fields::get_lyric_priority(&norm_b);
+            priority_a
+                .cmp(&priority_b)
+                .then_with(|| norm_b.cmp(&norm_a))
+        })
         .map(|(_, value)| value.to_string())
 }
 

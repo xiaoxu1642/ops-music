@@ -1,4 +1,6 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, SyncSender};
+use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 
 use anyhow::{anyhow, Result};
@@ -19,21 +21,28 @@ use windows::{
 use super::{DeviceChangedCallback, PlatformBackend};
 
 enum WatchCommand {
-    /// true 表示默认输出设备切换，false 表示设备列表变化
-    Changed(bool),
+    /// 设备事件到达；具体类型由待处理标志合并后回调
+    Changed,
     Stop,
 }
 
 #[implement(IMMNotificationClient)]
 struct DeviceNotificationClient {
     commands: SyncSender<WatchCommand>,
+    default_pending: Arc<AtomicBool>,
+    list_pending: Arc<AtomicBool>,
 }
 
 impl DeviceNotificationClient {
     fn notify(&self, default_changed: bool) {
-        let _ = self
-            .commands
-            .try_send(WatchCommand::Changed(default_changed));
+        // 队列容量 1，Changed(true) 可能被后续 Changed(false) 顶掉；先记待处理标志，
+        // 由消费端统一合并回调，保证默认设备切换信号不丢失
+        if default_changed {
+            self.default_pending.store(true, Ordering::Release);
+        } else {
+            self.list_pending.store(true, Ordering::Release);
+        }
+        let _ = self.commands.try_send(WatchCommand::Changed);
     }
 }
 
@@ -109,6 +118,12 @@ impl PlatformBackend for Backend {
     fn new(callback: DeviceChangedCallback) -> Result<Self> {
         let (command_tx, command_rx) = mpsc::sync_channel(1);
         let notification_tx = command_tx.clone();
+        let default_pending = Arc::new(AtomicBool::new(false));
+        let list_pending = Arc::new(AtomicBool::new(false));
+        let default_for_thread = Arc::clone(&default_pending);
+        let list_for_thread = Arc::clone(&list_pending);
+        let default_consumer = Arc::clone(&default_pending);
+        let list_consumer = Arc::clone(&list_pending);
         let (ready_tx, ready_rx) = mpsc::sync_channel(1);
 
         let thread = thread::Builder::new()
@@ -132,6 +147,8 @@ impl PlatformBackend for Backend {
                     };
                 let client: IMMNotificationClient = DeviceNotificationClient {
                     commands: notification_tx,
+                    default_pending: Arc::clone(&default_for_thread),
+                    list_pending: Arc::clone(&list_for_thread),
                 }
                 .into();
 
@@ -146,7 +163,15 @@ impl PlatformBackend for Backend {
 
                 while let Ok(command) = command_rx.recv() {
                     match command {
-                        WatchCommand::Changed(default_changed) => callback(default_changed),
+                        WatchCommand::Changed => {
+                            // 合并队列里积压的信号：默认切换优先，两类事件各回调一次
+                            if default_consumer.swap(false, Ordering::AcqRel) {
+                                callback(true);
+                            }
+                            if list_consumer.swap(false, Ordering::AcqRel) {
+                                callback(false);
+                            }
+                        }
                         WatchCommand::Stop => break,
                     }
                 }

@@ -219,6 +219,13 @@ pub fn scan_directories(
     for dir in dirs {
         if cancel.load(Ordering::Relaxed) {
             info!("扫描已取消（文件收集阶段）");
+            callback(ScanEvent::Done {
+                scanned: 0,
+                total: 0,
+                removed_paths: Vec::new(),
+                cue_files: std::mem::take(&mut cue_files),
+                unavailable_dirs,
+            });
             return;
         }
         let dir_path = Path::new(dir);

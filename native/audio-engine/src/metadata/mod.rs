@@ -80,7 +80,10 @@ pub fn extract_tags(dict: &HashMap<String, String>) -> Tags {
         .or_else(|| dict_get(dict, "album_artist"))
         .map(ToString::to_string);
     let album = dict_get(dict, "album").map(ToString::to_string);
-    let track = dict_get(dict, "track").and_then(|s| s.parse().ok());
+    // ID3v2 TRCK 常见 "3/12" 形式，只取 "/" 前的当前曲目号
+    let track = dict_get(dict, "track")
+        .and_then(|s| s.split('/').next())
+        .and_then(|s| s.trim().parse().ok());
     let comment = dict_get(dict, "comment").map(ToString::to_string);
     Tags {
         title,

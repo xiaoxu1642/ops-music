@@ -416,6 +416,11 @@ impl InnerPlayer {
 
     /// 设置音量（0.0 ~ 1.0）
     pub fn set_volume(&mut self, volume: f32) {
+        // 播放态的在途 fade 是恢复渐入，其旧目标会覆盖本次设置，需取消
+        // 暂停态的在途 fade 是渐出，完成回调负责 sink.pause，取消会导致已暂停仍出声
+        if self.state == PlayerState::Playing {
+            self.cancel_fade();
+        }
         self.target_volume = volume;
         if let Some(ref playback) = self.playback {
             playback.set_volume(volume);
