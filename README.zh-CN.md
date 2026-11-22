@@ -77,19 +77,17 @@ pnpm dev
 pnpm build         # 完整构建：清理 → 原生模块 → 类型检查 → electron-vite
 
 pnpm build:win     # 打包 Windows
-pnpm build:mac     # 打包 macOS
-pnpm build:linux   # 打包 Linux（AppImage / deb / rpm / tar.gz / pacman）
+pnpm typecheck     # tsc + vue-tsc（node + web 双目标）
+pnpm lint          # ESLint
+pnpm format        # Prettier
 ```
 
 > 默认仅构建当前架构，暂不支持交叉编译。
-> Ops Music 只发布 Windows 安装包；`build:mac` 与 `build:linux` 沿用自上游，不属于本项目的发布流程。
+> build:mac/build:linux 为上游脚本，本项目发布流程不使用
 
 ### 其他脚本
 
 ```bash
-pnpm typecheck        # tsc + vue-tsc（node + web 双目标）
-pnpm lint             # ESLint
-pnpm format           # Prettier
 pnpm build:native     # 仅构建 Rust 原生模块（加 `--dev` 为 debug 构建）
 ```
 
@@ -112,4 +110,4 @@ pnpm build:native     # 仅构建 Rust 原生模块（加 `--dev` 为 debug 构�
 
 ## 免责声明
 
-本项目仅供个人学习与研究使用，禁止用于商业及非法用途。部分功能依赖第三方 API，使用者须自行确保其使用符合相关法律法规及服务协议。对于因使用本项目而产生的任何直接或间接后果，作者不承担任何责任。
+个人学习与研究使用；商业分发须履行 AGPL-3.0 源码与署名义务；第三方服务需自行确保合规。对于因使用本项目而产生的任何直接或间接后果，作者不承担任何责任。
