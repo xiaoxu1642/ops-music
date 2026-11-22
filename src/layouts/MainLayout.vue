@@ -85,13 +85,24 @@ const cachedViews = [
 
 const mainContainerRef = shallowRef<HTMLElement | null>(null);
 const mainScrollMap = new Map<string, number>();
+const MAIN_SCROLL_CACHE_LIMIT = 20;
+
+/** 记录滚动位置，超出上限时淘汰最早条目 */
+const rememberScroll = (path: string, top: number): void => {
+  mainScrollMap.delete(path);
+  mainScrollMap.set(path, top);
+  if (mainScrollMap.size > MAIN_SCROLL_CACHE_LIMIT) {
+    const oldest = mainScrollMap.keys().next().value;
+    if (oldest !== undefined) mainScrollMap.delete(oldest);
+  }
+};
 
 // 路由离开前记录滚动位置
 watch(
   () => route.fullPath,
   (_newPath, oldPath) => {
     if (oldPath && mainContainerRef.value) {
-      mainScrollMap.set(oldPath, mainContainerRef.value.scrollTop);
+      rememberScroll(oldPath, mainContainerRef.value.scrollTop);
     }
   },
 );

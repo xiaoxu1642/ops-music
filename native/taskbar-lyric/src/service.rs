@@ -145,14 +145,16 @@ fn worker_loop(rx: &Receiver<TaskbarCommand>, tsfn: &LayoutTsfn) {
                     do_reinit(&mut strategy, last_hwnd);
                 }
 
-                if !run_update_with_retry(&mut strategy, final_width, tsfn, rx) {
+                if !run_update_with_retry(&mut strategy, final_width, last_hwnd, tsfn, rx) {
                     break;
                 }
             }
 
             TaskbarCommand::Reinit => {
                 do_reinit(&mut strategy, last_hwnd);
-                if last_width > 0 && !run_update_with_retry(&mut strategy, last_width, tsfn, rx) {
+                if last_width > 0
+                    && !run_update_with_retry(&mut strategy, last_width, last_hwnd, tsfn, rx)
+                {
                     break;
                 }
             }
@@ -190,6 +192,7 @@ fn do_reinit(strategy: &mut Option<Box<dyn TaskbarStrategy>>, last_hwnd: Option<
 fn run_update_with_retry(
     strategy: &mut Option<Box<dyn TaskbarStrategy>>,
     initial_width: i32,
+    last_hwnd: Option<usize>,
     tsfn: &LayoutTsfn,
     rx: &Receiver<TaskbarCommand>,
 ) -> bool {
@@ -208,8 +211,8 @@ fn run_update_with_retry(
                     }
                 }
                 Ok(TaskbarCommand::Reinit) => {
-                    // 重试期间 explorer 重启，策略彻底重建，退出本轮重试由外层走新一轮
-                    return true;
+                    // 重试窗口内直接重建策略，否则命令被消费后外层不再执行 do_reinit，布局滞留旧任务栏
+                    do_reinit(strategy, last_hwnd);
                 }
                 Ok(TaskbarCommand::Stop) => return false,
                 Err(RecvTimeoutError::Timeout) => {}

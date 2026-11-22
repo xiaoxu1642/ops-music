@@ -55,6 +55,8 @@ impl PlaybackHandle {
                     return Err(error);
                 };
                 let shared = Shared::new(output.sample_rate(), output.channels());
+                // 回退后输出采样率可能变化（如 44.1k→共享 48k），需同步 FFT 频率轴
+                fft.set_sample_rate(output.sample_rate());
                 let source = DecoderSource::new(Arc::clone(&shared), fft);
                 let playback = Self::attach(&output, source, 1.0, true)?;
                 on_fallback(reason);

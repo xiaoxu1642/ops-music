@@ -12,6 +12,7 @@ const CACHE_TTL = 30 * 60 * 1000;
 
 /** 首页推荐内容缓存 */
 interface DiscoverCache {
+  userId: number;
   at: number;
   recommend: CoverItem[];
   radar: CoverItem[];
@@ -63,8 +64,9 @@ export const useHomeDiscover = () => {
 
   /** 拉取首页推荐内容（仅登录后） */
   const load = async (): Promise<void> => {
-    if (!user.isLoggedIn) return;
-    if (cache && Date.now() - cache.at < CACHE_TTL) {
+    const userId = user.profile?.userId;
+    if (!user.isLoggedIn || !userId) return;
+    if (cache && cache.userId === userId && Date.now() - cache.at < CACHE_TTL) {
       apply(cache);
       return;
     }
@@ -74,14 +76,16 @@ export const useHomeDiscover = () => {
       safe("artists", fetchArtists()),
       safe("new albums", fetchNewAlbums()),
     ]);
-    cache = { at: Date.now(), recommend, radar, artists: artistList, albums };
+    if (user.profile?.userId !== userId) return;
+    cache = { userId, at: Date.now(), recommend, radar, artists: artistList, albums };
     apply(cache);
   };
 
-  // 登录态变化
+  // 用户身份变化（含登出）
   watch(
-    () => user.isLoggedIn,
-    () => {
+    () => user.profile?.userId,
+    (userId) => {
+      if (cache && cache.userId !== userId) cache = null;
       void load();
     },
   );

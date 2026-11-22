@@ -76,15 +76,22 @@ const resetForm = (tags: TrackTags | null): void => {
   candidatesVisible.value = false;
 };
 
+/** 读取序号，响应返回时若序号或曲目已变化说明在读取期间切换了曲目，过期结果一律丢弃 */
+let readSeq = 0;
+
 /** 打开时读取文件标签回填 */
 watch(
   () => props.open,
   async (open) => {
     if (!open || !props.track?.path || props.track.cuePath) return;
+    const seq = ++readSeq;
+    const path = props.track.path;
     loading.value = true;
     original.value = null;
     resetForm(null);
-    const result = await window.api.library.readTags(props.track.path);
+    const result = await window.api.library.readTags(path);
+    // 过期响应不得回填，否则保存 diff 会基于上一首的标签基线
+    if (seq !== readSeq || props.track?.path !== path) return;
     loading.value = false;
     if (!result.success || !result.data) {
       if (result.error) handleError(result.error);

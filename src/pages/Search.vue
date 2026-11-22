@@ -77,6 +77,9 @@ const fetchers = {
   playlists: searchPlaylists,
 } as const;
 
+/** 每个 tab 独立请求序号：跨 tab 不互相干扰，同 tab 重发作废旧响应 */
+const fetchSeq: Record<TabKey, number> = { songs: 0, albums: 0, artists: 0, playlists: 0 };
+
 /**
  * 拉取指定 tab
  * @param tab - 要拉取的 tab
@@ -93,6 +96,14 @@ const fetchTab = async (tab: TabKey, append: boolean): Promise<void> => {
     state.loading = true;
   }
   error.value = "";
+  const seq = ++fetchSeq[tab];
+  const snapKeyword = keyword.value;
+  const snapPlatform = status.searchPlatform;
+  /** 响应返回时仍是当前请求：未换词、未切平台、同 tab 未被更新请求取代 */
+  const isCurrent = (): boolean =>
+    seq === fetchSeq[tab] &&
+    keyword.value === snapKeyword &&
+    status.searchPlatform === snapPlatform;
   try {
     const offset = append ? state.items.length : 0;
     const result = await (fetchers[tab] as typeof searchSongs)(
@@ -101,6 +112,7 @@ const fetchTab = async (tab: TabKey, append: boolean): Promise<void> => {
       offset,
       PAGE_SIZE,
     );
+    if (!isCurrent()) return;
     const items = result.items.map((item) => markRaw(item));
     if (append) {
       (state.items as Track[]).push(...(items as Track[]));
@@ -111,10 +123,13 @@ const fetchTab = async (tab: TabKey, append: boolean): Promise<void> => {
     state.hasMore = result.hasMore;
     state.loaded = true;
   } catch (err) {
+    if (!isCurrent()) return;
     error.value = err instanceof Error ? err.message : String(err);
   } finally {
-    state.loading = false;
-    state.loadingMore = false;
+    if (isCurrent()) {
+      state.loading = false;
+      state.loadingMore = false;
+    }
   }
 };
 
