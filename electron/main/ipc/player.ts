@@ -990,7 +990,9 @@ export const registerPlayerIpc = (): void => {
       const inst = getPlayer();
       switch (event.type) {
         case "Play":
-          void inst.play().catch(() => {});
+          void inst.play().catch((error) => {
+            playerLog.warn("SMTC 播放事件执行失败:", error);
+          });
           break;
         case "Pause":
           inst.pause();
@@ -1066,7 +1068,9 @@ export const registerPlayerIpc = (): void => {
           sendToMain("player:event", { type: "prev" });
           break;
       }
-    } catch {}
+    } catch (error) {
+      playerLog.warn("系统媒体事件处理失败:", error);
+    }
   });
   // 系统进入睡眠时暂停播放
   powerMonitor.on("suspend", () => {

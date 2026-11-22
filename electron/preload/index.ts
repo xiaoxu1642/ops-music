@@ -27,8 +27,16 @@ import type { CjkTransformMode } from "@shared/types/opencc";
 import type { MusicCommentQuery } from "@shared/types/comment";
 import type { LyricChangeNotice } from "@shared/types/nowPlaying";
 
-/** 订阅主进程推送的事件 */
+/** 订阅主进程推送的事件；先清理遗留监听，避免 HMR 重载叠加 */
 const subscribe = <T>(channel: string, callback: (data: T) => void): (() => void) => {
+  const handler = (_event: Electron.IpcRendererEvent, data: T): void => callback(data);
+  ipcRenderer.removeAllListeners(channel);
+  ipcRenderer.on(channel, handler);
+  return () => ipcRenderer.removeListener(channel, handler);
+};
+
+/** 多消费者订阅：同一通道有多个组件并存监听，依赖渲染端自行退订 */
+const subscribeShared = <T>(channel: string, callback: (data: T) => void): (() => void) => {
   const handler = (_event: Electron.IpcRendererEvent, data: T): void => callback(data);
   ipcRenderer.on(channel, handler);
   return () => ipcRenderer.removeListener(channel, handler);
@@ -314,9 +322,9 @@ const api = {
     isTaskbarLyricOpen: () => ipcRenderer.invoke("window:isTaskbarLyricOpen"),
     // 取回自动关闭提示（主窗口缺失期间暂存，取后即清）
     consumeTaskbarLyricAutoClose: () => ipcRenderer.invoke("window:consumeTaskbarLyricAutoClose"),
-    // 订阅任务栏歌词窗口开关状态
+    // 订阅任务栏歌词窗口开关状态（settings store 与 MainLayout 并存订阅）
     onTaskbarLyricVisibilityChange: (callback: (open: boolean) => void) =>
-      subscribe<boolean>("taskbarLyric:visibilityChange", callback),
+      subscribeShared<boolean>("taskbarLyric:visibilityChange", callback),
     // 订阅任务栏歌词自动关闭推送
     onTaskbarLyricAutoClosed: (callback: (payload: TaskbarLyricAutoClosePayload) => void) =>
       subscribe<TaskbarLyricAutoClosePayload>("taskbarLyric:autoClosed", callback),
@@ -325,11 +333,11 @@ const api = {
     toggleMaximize: () => ipcRenderer.send("window:toggleMaximize"),
     isMaximized: () => ipcRenderer.invoke("window:isMaximized"),
     onMaximizeChange: (callback: (maximized: boolean) => void) =>
-      subscribe<boolean>("window:maximizeChange", callback),
+      subscribeShared<boolean>("window:maximizeChange", callback),
     toggleFullscreen: () => ipcRenderer.send("window:toggleFullscreen"),
     isFullscreen: () => ipcRenderer.invoke("window:isFullscreen"),
     onFullscreenChange: (callback: (fullscreen: boolean) => void) =>
-      subscribe<boolean>("window:fullscreenChange", callback),
+      subscribeShared<boolean>("window:fullscreenChange", callback),
     hide: () => ipcRenderer.send("window:hide"),
     quit: () => ipcRenderer.send("window:quit"),
   },
@@ -423,12 +431,6 @@ const api = {
     clearFinished: () => ipcRenderer.invoke("download:clearFinished"),
     // 拉取全部任务
     list: () => ipcRenderer.invoke("download:list"),
-    // 选择下载目录
-    pickDir: () => ipcRenderer.invoke("download:pickDir"),
-    // 当前下载目录
-    getDir: () => ipcRenderer.invoke("download:getDir"),
-    // 重置为默认下载目录
-    resetDir: () => ipcRenderer.invoke("download:resetDir"),
     // 订阅进度
     onProgress: (callback: (data: unknown) => void) => subscribe("download:progress", callback),
     // 订阅状态变更

@@ -42,6 +42,10 @@ export const registerSystemIpc = (): void => {
       return { success: false, error: "无效的 URL" };
     }
     const buf = await fetchBytes(url, { requireImage: true });
+    if (!buf) {
+      systemLog.warn(`fetchRemoteBytes 拉取失败: ${url}`);
+      return { success: false, error: "拉取远端图片失败" };
+    }
     return { success: true, data: buf };
   });
 };

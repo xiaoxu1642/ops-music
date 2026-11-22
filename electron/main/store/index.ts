@@ -8,6 +8,7 @@ import type { ConfigPath, PathValue } from "./types";
 import { deepMerge, getByPath, setByPath } from "./utils";
 import { runPendingMigrations } from "./migrations";
 import { configDir } from "@main/utils/paths";
+import { coreLog } from "@main/utils/logger";
 
 /** 配置文件路径 */
 const configPath = path.join(configDir, "settings.json");
@@ -16,7 +17,16 @@ const configPath = path.join(configDir, "settings.json");
 const readFile = (): Record<string, unknown> => {
   try {
     return JSON.parse(fs.readFileSync(configPath, "utf-8"));
-  } catch {
+  } catch (error) {
+    // 首次启动没有配置文件，直接回落默认值
+    if (!fs.existsSync(configPath)) return {};
+    // 解析失败说明配置损坏：保留原件为 .bak 供人工恢复，再回落默认值，避免覆盖用户设置
+    try {
+      fs.renameSync(configPath, `${configPath}.bak`);
+      coreLog.error("配置文件损坏，已保留为 settings.json.bak，本次启动回落默认配置", error);
+    } catch (backupError) {
+      coreLog.error("配置文件损坏且备份失败，回落默认配置", backupError);
+    }
     return {};
   }
 };
@@ -31,7 +41,9 @@ const writeNow = (config: SystemConfig): void => {
     const dir = path.dirname(configPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     atomicWriteSync(configPath, JSON.stringify(config, null, 2));
-  } catch {}
+  } catch (error) {
+    coreLog.warn("配置写盘失败", error);
+  }
 };
 
 /** 立即写盘 */

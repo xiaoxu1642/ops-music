@@ -65,6 +65,24 @@ const applyConfigChange = (keyPath: string, value: unknown): void => {
   }
 };
 
+/** 重置后需要按默认值重新应用运行态副作用的配置路径（与 applyConfigChange 覆盖面一致） */
+const RESET_EFFECT_PATHS: ConfigPath[] = [
+  "media.systemMediaControls",
+  "player.loudnessNormalization",
+  "player.equalizer.enabled",
+  "player.equalizer.bands",
+  "player.equalizer.preamp",
+  "player.audioOutputMode",
+  "system.taskbarProgress",
+  "system.taskbarThumbnailCover",
+  "taskbarLyric.position",
+  "taskbarLyric.autoMaxWidth",
+  "taskbarLyric.autoAdjustOccupiedSpace",
+  "taskbarLyric.maxWidth",
+  "taskbarLyric.leftMargin",
+  "taskbarLyric.rightMargin",
+];
+
 /** 注册配置相关 IPC */
 export const registerConfigIpc = (): void => {
   ipcMain.handle("config:get", (_event, keyPath: string) => store.get(keyPath as ConfigPath));
@@ -75,6 +93,11 @@ export const registerConfigIpc = (): void => {
   ipcMain.handle("config:getAll", () => store.store);
   ipcMain.handle("config:reset", () => {
     store.clear();
+    // 与导入路径（replaceAll + relaunch）对齐：重置后按默认值重新应用运行态副作用，
+    // 避免 SMTC/均衡器/独占模式/任务栏布局与 UI 脱节
+    for (const keyPath of RESET_EFFECT_PATHS) {
+      applyConfigChange(keyPath, store.get(keyPath));
+    }
   });
 
   /** 替换整盘配置 */

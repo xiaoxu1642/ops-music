@@ -8,6 +8,15 @@ const mocks = vi.hoisted(() => ({
   replaceAll: vi.fn(),
   broadcast: vi.fn(),
   applyTaskbarLyricLayout: vi.fn(),
+  setTaskbarProgress: vi.fn(),
+  enableMedia: vi.fn(),
+  disableMedia: vi.fn(),
+  setNormalizationEnabled: vi.fn(),
+  setEqualizerEnabled: vi.fn(),
+  setEqualizerBands: vi.fn(),
+  setPreampGain: vi.fn(),
+  setExclusiveMode: vi.fn(),
+  setTaskbarThumbnailEnabled: vi.fn(),
 }));
 vi.mock("electron", () => ({
   dialog: {},
@@ -27,10 +36,21 @@ vi.mock("@main/store", () => ({
 vi.mock("@main/utils/logger", () => ({ systemLog: {} }));
 vi.mock("@main/utils/config", () => ({ isWin: true }));
 vi.mock("@main/utils/broadcast", () => ({ broadcast: mocks.broadcast }));
-vi.mock("@main/services/media", () => ({}));
-vi.mock("@main/services/engine", () => ({}));
-vi.mock("@main/window", () => ({ applyTaskbarLyricLayout: mocks.applyTaskbarLyricLayout }));
-vi.mock("@main/services/thumbnail", () => ({}));
+vi.mock("@main/services/media", () => ({ enable: mocks.enableMedia, disable: mocks.disableMedia }));
+vi.mock("@main/services/engine", () => ({
+  setNormalizationEnabled: mocks.setNormalizationEnabled,
+  setEqualizerEnabled: mocks.setEqualizerEnabled,
+  setEqualizerBands: mocks.setEqualizerBands,
+  setPreampGain: mocks.setPreampGain,
+  setExclusiveMode: mocks.setExclusiveMode,
+}));
+vi.mock("@main/window", () => ({
+  applyTaskbarLyricLayout: mocks.applyTaskbarLyricLayout,
+  setTaskbarProgress: mocks.setTaskbarProgress,
+}));
+vi.mock("@main/services/thumbnail", () => ({
+  setTaskbarThumbnailEnabled: mocks.setTaskbarThumbnailEnabled,
+}));
 
 import { registerConfigIpc } from "./config";
 
@@ -49,9 +69,16 @@ describe("配置 IPC 入口", () => {
     expect(mocks.handlers.get("config:get")!(null, "player.volume")).toBe(0.5);
   });
 
-  it("重置与替换配置写入 store", () => {
+  it("重置配置写入 store 并按默认值重新应用运行态副作用", () => {
+    // 模拟 store.clear() 后各路径取到默认值（默认值均为真值/非独占）
+    mocks.get.mockReturnValue(true);
     mocks.handlers.get("config:reset")!();
     expect(mocks.clear).toHaveBeenCalledOnce();
+    expect(mocks.enableMedia).toHaveBeenCalled();
+    expect(mocks.setNormalizationEnabled).toHaveBeenCalledWith(true);
+    expect(mocks.setExclusiveMode).toHaveBeenCalledWith(false);
+    expect(mocks.setTaskbarThumbnailEnabled).toHaveBeenCalledWith(true);
+    expect(mocks.applyTaskbarLyricLayout).toHaveBeenCalled();
 
     const payload = { player: { volume: 0.8 } };
     mocks.handlers.get("config:replaceAll")!(null, payload);

@@ -91,9 +91,6 @@ export interface DownloadApi {
   remove: (taskId: string) => Promise<void>;
   clearFinished: () => Promise<void>;
   list: () => Promise<DownloadTask[]>;
-  pickDir: () => Promise<{ ok: boolean; dir: string; reason?: "canceled" }>;
-  getDir: () => Promise<string>;
-  resetDir: () => Promise<string>;
   /** 回传即时解析结果（主进程 download:resolve 的应答） */
   submitResolution: (taskId: string, res: DownloadResolution) => Promise<void>;
   /** 上报即时解析失败，任务标记为 failed */

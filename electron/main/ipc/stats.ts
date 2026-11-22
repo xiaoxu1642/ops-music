@@ -11,11 +11,16 @@ import {
 } from "@main/database/playStats";
 import { getLibraryStats } from "@main/database";
 import type { PlayEventInput, FavoriteEventInput } from "@shared/types/stats";
+import { systemLog } from "@main/utils/logger";
 
 /** 播放统计 IPC */
 export const registerStatsIpc = (): void => {
   ipcMain.on("stats:recordPlay", (_event, payload: PlayEventInput) => {
-    insertPlayEvent(payload);
+    try {
+      insertPlayEvent(payload);
+    } catch (error) {
+      systemLog.warn("记录播放统计失败:", error);
+    }
   });
   ipcMain.on("stats:recordFavorite", (_event, payload: FavoriteEventInput) => {
     insertFavoriteEvent(payload);

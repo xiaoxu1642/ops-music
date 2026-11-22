@@ -558,6 +558,7 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
     taskbarLyricWindow = null;
     activeWindowRegion = null;
     contentWidth = null;
+    appliedContentShape = null;
     // 生命周期随窗口终了：停止轮询/计时与新播放订阅，清空状态机
     stopHoverPoll();
     stopNowPlayingWatch();

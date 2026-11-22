@@ -117,7 +117,7 @@ export const initApp = (): void => {
   // 注册缓存协议方案
   registerCacheScheme();
   // 其他初始化
-  app.whenReady().then(() => {
+  const initPromise = app.whenReady().then(() => {
     electronApp.setAppUserModelId("com.ops.music");
     // 注册 cache:// 协议处理
     handleCacheProtocol();
@@ -155,6 +155,7 @@ export const initApp = (): void => {
     const { displayFrequency } = screen.getPrimaryDisplay();
     coreLog.info(`显示器刷新率 ${displayFrequency}Hz，主界面按此刷新率渲染`);
   });
+  initPromise.catch((error) => coreLog.error("应用初始化失败", error));
   // 退出前清理
   app.on("before-quit", () => {
     coreLog.info("应用即将退出，清理资源");
