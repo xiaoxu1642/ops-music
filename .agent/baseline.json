@@ -5,7 +5,7 @@
     "pnpm-lock.yaml": "7fb7598c9966324f5427b96e52701c7eddc363c9cb5c0a99e1f5b3bb2a6cbf58"
   },
   "generated_by": "scripts/verify-baseline.sh compatible generator",
-  "git_head": "bd556a1769c4bdf4234209d81fd3d8340d9e11c7",
+  "git_head": "83befdc69ebb1735a52f17f7e6093d6631db63a0",
   "repo": "C:\\KaiFa\\OpsMusic",
   "repo_mode": "git",
   "toolchain": {
@@ -33,9 +33,9 @@
   "verification": {
     "command": "bash scripts/verify-baseline.sh",
     "exit_code": 0,
-    "notes": "P1 性能批次 C 部分收口：C5 migu 改档探测串行 for-await 改 Promise.all 并行（按降级链优先级取第一个可达，语义等价，消除多档 HEAD 网络等待叠加）；C4 playlist_detail n:100000→1000（对齐服务端 ~1000 条截断，消费端已有 trackIds 全量+song_detail 分页补尾，超大歌单防 MB 级响应）。批次现状核实：C2/C6/C7 已由 1.2.8/1.2.9 修复（Schwartzian 排序/拖拽 rect 激活时采样/library:getTracks SQL 过滤）；歌词扫光核实为主窗口 lyric-dom 引擎 enableWordHighlight+wordFadeWidth 已具备逐字掩码扫光（AMLL 自带），无需重做；C1 stems DSP 与 C3 三平台 inflight 按 v2 方案纪律先测后修（需 DSP 计时 span 与 apis:call 打点基建），本轮不做。验证：pnpm typecheck passed；prettier/lint passed；dev 真机 smoke（n:1000 后收藏歌单 346 首正常加载、虚拟列表渲染、0 异常）；C5 收益需真 migu 音源环境测量（代码语义等价已保证）。基线过期原因：P0 FFT 收口后继续 P1 改动，本次按项目规则重算。",
-    "result": "P1 性能批次 C 部分落地（C5 并行探测/C4 裁剪）并经 dev 真机 smoke 验收；C1/C3 测量先行待做、歌词扫光核实已有；曾疑似路由切换回归，实证为最小化窗口 Chromium 节流（rAF=0 时所有过渡模式 9/9 卡，恢复可见后全绿）非代码回归；pr-review 审查修复 2 项（resize 补帧、fp 展开期间停播放条频谱 RAF）后 Status: pass；baseline verify ok"
+    "notes": "2026-11-22 批次 D 性能测量收口（后台 CDP 实证，dev 实例已关闭）。四项测量全部低于修复阈值，未改任何热路径代码；墨极光常驻动画空闲主线程占用约 10%（合成属性）留档供决策。测量记录：wenjian/本仓库审查结果/全量扫描-2026-11-22/性能测量记录-批次D-2026-11-22.md。A/B/C 三批提交 b1e7a4d/2931766/83befdc 未变。",
+    "result": "修复方案 v1 全批次收口：A/B/C 代码修复已提交验证，D 测量完成（均低于阈值不修）。"
   },
-  "verified_at": "2026-11-21T04:04:04+08:00",
-  "worktree_fingerprint": "699647124f1d8093316b2a1bf9a856f9d5ba6831ddf1fe41151e99bcf9cc8e4a"
+  "verified_at": "2026-11-22T23:07:02+08:00",
+  "worktree_fingerprint": "7ed4b6f83787f0f1711887a24d16636522de24a05e0b037233b8ab6545d234af"
 }
