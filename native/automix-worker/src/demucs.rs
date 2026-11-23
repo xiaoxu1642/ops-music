@@ -1,5 +1,5 @@
-use super::spectral::{Spectral, CELLS, SIZE};
-use anyhow::{ensure, Result};
+use super::spectral::{CELLS, SIZE, Spectral};
+use anyhow::{Result, ensure};
 use ort::{session::Session, value::Tensor};
 
 pub const FRAMES: usize = 172032;

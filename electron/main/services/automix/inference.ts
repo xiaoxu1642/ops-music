@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
@@ -12,6 +13,7 @@ type InferenceOutcome =
 
 let pending: Promise<unknown> = Promise.resolve();
 const shutdown = new AbortController();
+const queueEnteredAt = new AsyncLocalStorage<number>();
 app.once("before-quit", () => shutdown.abort());
 
 /**
@@ -21,10 +23,11 @@ app.once("before-quit", () => shutdown.abort());
  * @returns 当前任务的结果，排队期间取消时直接拒绝
  */
 export const runAutoMixTask = <T>(signal: AbortSignal, task: () => Promise<T>): Promise<T> => {
+  const enqueuedAtMs = Date.now();
   const result = pending.then(() => {
     shutdown.signal.throwIfAborted();
     signal.throwIfAborted();
-    return task();
+    return queueEnteredAt.run(enqueuedAtMs, task);
   });
   pending = result.then(
     () => undefined,
@@ -58,6 +61,13 @@ export const runAutoMixModel = <T>(
     const analysisStart = new Date(startedAtMs).toISOString();
     const cpuOnly = false;
     const requestedBackend: "auto" | "cpu" = cpuOnly ? "cpu" : "auto";
+    const spawnAtMs = Date.now();
+    const queueWaitMs = Math.max(0, spawnAtMs - (queueEnteredAt.getStore() ?? spawnAtMs));
+    const child = spawn(path.join(automixDirs.runtime, AUTOMIX_WORKER), [], {
+      windowsHide: true,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    const pid = child.pid ?? null;
     const baseLog = {
       analysisId,
       analysisStart,
@@ -68,12 +78,10 @@ export const runAutoMixModel = <T>(
       fullscreen: context?.fullscreen ?? "unknown",
       generation: context?.generation,
       remainingMs: context?.remainingMs,
+      queueWaitMs,
+      pid,
     };
     playerLog.info("AutoMix 推理开始", { ...baseLog, outcome: "spawned" as InferenceOutcome });
-    const child = spawn(path.join(automixDirs.runtime, AUTOMIX_WORKER), [], {
-      windowsHide: true,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
     let stdout = "";
     let stderr = "";
     let failure: Error | undefined;
@@ -99,6 +107,10 @@ export const runAutoMixModel = <T>(
             analysisId?: string | null;
             memoryMb: number;
             seconds: number;
+            initMs?: number;
+            validateMs?: number;
+            inferMs?: number;
+            vramMb?: number | null;
             backend: "DirectML" | "CPU";
           }
         | undefined;
@@ -118,9 +130,16 @@ export const runAutoMixModel = <T>(
           if (parsed.windows.length !== windows.length) throw new Error("分析窗口数量不匹配");
           result = parsed;
           playerLog.info(kind === "beat" ? "AutoMix 节拍分析完成" : "AutoMix 声部分离完成", {
+            analysisId,
             memoryMb: result.memoryMb,
             seconds: Math.round(result.seconds * 1000) / 1000,
+            initMs: result.initMs,
+            validateMs: result.validateMs,
+            inferMs: result.inferMs,
+            vramMb: result.vramMb,
             backend: result.backend,
+            pid,
+            queueWaitMs,
           });
         } catch (reason) {
           error = reason instanceof Error ? reason : new Error(String(reason));
@@ -132,10 +151,15 @@ export const runAutoMixModel = <T>(
         ...baseLog,
         analysisEnd: new Date(endedAtMs).toISOString(),
         durationMs: endedAtMs - startedAtMs,
+        stageMs: { worker: endedAtMs - spawnAtMs },
         outcome,
         backend: result?.backend,
         seconds: result?.seconds,
         memoryMb: result?.memoryMb,
+        initMs: result?.initMs,
+        validateMs: result?.validateMs,
+        inferMs: result?.inferMs,
+        vramMb: result?.vramMb,
         ...(error ? { error: error.message } : {}),
       });
       if (error) reject(error);

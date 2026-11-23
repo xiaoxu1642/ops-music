@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { flushPromises } from "@vue/test-utils";
 import { reactive } from "vue";
 import type { Track } from "@shared/types/player";
+import { NEXT_TRACK_WATCH_DEBOUNCE_MS } from "@shared/constants/playback";
 
 const mocks = vi.hoisted(() => ({
   settings: {
@@ -54,6 +55,14 @@ vi.mock("@/services/lyric/preload", () => ({
 }));
 
 describe("下一曲真实预载", () => {
+  /**
+   * 等待 watcher 的短防抖窗口并冲刷在途任务
+   */
+  const settle = async (): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, NEXT_TRACK_WATCH_DEBOUNCE_MS + 20));
+    await flushPromises();
+  };
+
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
@@ -95,7 +104,7 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     const prepared = preloader.beginPreparedTransition(mocks.candidate.track as Track);
     expect(prepared?.preparedId).toBeTruthy();
     expect(prepared?.autoMixStartMs).toBeUndefined();
@@ -103,7 +112,7 @@ describe("下一曲真实预载", () => {
     for (let i = 0; i < 3; i++) {
       expect(preloader.beginPreparedTransition(mocks.candidate.track as Track)).toBeNull();
       preloader.scheduleNextTrackPreload();
-      await flushPromises();
+      await settle();
     }
     expect(mocks.prepare).toHaveBeenCalledOnce();
     expect(mocks.cancel).not.toHaveBeenCalled();
@@ -116,7 +125,7 @@ describe("下一曲真实预载", () => {
     mocks.resolve.mockResolvedValue({ source: "next.flac", provider: "local", fromCache: false });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.prepare.mock.calls[0]![4]).toEqual({
       mode: "automix",
       endMs: undefined,
@@ -134,13 +143,13 @@ describe("下一曲真实预载", () => {
     mocks.resolve.mockResolvedValue({ source: "next.flac", provider: "local", fromCache: false });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     const prepared = preloader.beginPreparedTransition(mocks.candidate.track as Track)!;
     preloader.finishPreparedTransition(prepared.preparedId!, prepared);
     for (let i = 0; i < 3; i++) {
       preloader.scheduleNextTrackPreload();
       expect(preloader.beginPreparedTransition(mocks.candidate.track as Track)).toBeNull();
-      await flushPromises();
+      await settle();
     }
     expect(mocks.prepare).toHaveBeenCalledOnce();
     expect(mocks.cancel).toHaveBeenCalledExactlyOnceWith(prepared.preparedId);
@@ -162,7 +171,7 @@ describe("下一曲真实预载", () => {
     };
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     for (const received of [0, 50, 99]) {
       service.autoMixComponentStatus.value = {
         state: received === 99 ? "ready" : "downloading",
@@ -178,7 +187,7 @@ describe("下一曲真实预载", () => {
         ],
       };
       preloader.scheduleNextTrackPreload();
-      await flushPromises();
+      await settle();
     }
     expect(mocks.prepare).toHaveBeenCalledTimes(2);
     expect(mocks.cancel).toHaveBeenCalledOnce();
@@ -192,9 +201,9 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.resolve).toHaveBeenCalledTimes(2);
     expect(mocks.prepare).toHaveBeenCalledOnce();
     expect(
@@ -212,10 +221,10 @@ describe("下一曲真实预载", () => {
     const preloader = await import("./nextTrackPreloader");
     preloader.installNextTrackPreloadWatchers();
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.resolve).not.toHaveBeenCalled();
     mocks.status.state = "playing";
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).toHaveBeenCalledOnce();
   });
 
@@ -236,14 +245,14 @@ describe("下一曲真实预载", () => {
     const preloader = await import("./nextTrackPreloader");
     preloader.installNextTrackPreloadWatchers();
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     mocks.status.state = "stopped";
-    await flushPromises();
+    await settle();
     const [id, signal] = cacheRequest.mock.calls[0]!;
     expect(signal.aborted).toBe(true);
     expect(mocks.cancel).toHaveBeenCalledWith(id);
     finish("C:/cache/next.bin");
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).not.toHaveBeenCalled();
     mocks.resolve.mockResolvedValue({
       source: "C:/cache/next.bin",
@@ -251,7 +260,7 @@ describe("下一曲真实预载", () => {
       fromCache: true,
     });
     mocks.status.state = "playing";
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).toHaveBeenCalledOnce();
   });
 
@@ -267,9 +276,9 @@ describe("下一曲真实预载", () => {
     preloader.installNextTrackPreloadWatchers();
     preloader.scheduleNextTrackPreload();
     mocks.status.state = "stopped";
-    await flushPromises();
+    await settle();
     finish({ source: "C:/cache/next.bin", provider: "cache", fromCache: true });
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).not.toHaveBeenCalled();
     expect(preloader.consumePreloadedTrack(mocks.candidate.track as Track)).toBeNull();
   });
@@ -286,11 +295,11 @@ describe("下一曲真实预载", () => {
     preloader.installNextTrackPreloadWatchers();
     preloader.scheduleNextTrackPreload();
     mocks.status.state = "paused";
-    await flushPromises();
+    await settle();
     expect(mocks.resolve).toHaveBeenCalledOnce();
     expect(mocks.cancel).not.toHaveBeenCalled();
     finish({ source: "C:/cache/next.bin", provider: "cache", fromCache: true });
-    await flushPromises();
+    await settle();
     expect(
       preloader.consumePreloadedTrack(mocks.candidate.track as Track)?.preparedId,
     ).toBeTruthy();
@@ -313,10 +322,10 @@ describe("下一曲真实预载", () => {
       fromCache: true,
     });
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     const id = mocks.prepare.mock.calls[0]![0];
     finish(null);
-    await flushPromises();
+    await settle();
     expect(mocks.cancel).not.toHaveBeenCalledWith(id);
     expect(preloader.consumePreloadedTrack(mocks.candidate.track as Track)?.preparedId).toBe(id);
   });
@@ -332,13 +341,13 @@ describe("下一曲真实预载", () => {
 
     mocks.status.trackLoading = true;
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.resolve).not.toHaveBeenCalled();
     expect(mocks.prepare).not.toHaveBeenCalled();
 
     mocks.status.trackLoading = false;
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).toHaveBeenCalledOnce();
     expect(preloader.peekPreparedTrack(mocks.candidate.track as Track)?.preparedId).toBeDefined();
   });
@@ -355,7 +364,7 @@ describe("下一曲真实预载", () => {
       });
       const preloader = await import("./nextTrackPreloader");
       preloader.scheduleNextTrackPreload();
-      await flushPromises();
+      await settle();
       expect(mocks.prepare).toHaveBeenCalledWith(
         expect.any(String),
         "C:/music/next.flac",
@@ -382,7 +391,7 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).toHaveBeenCalledWith(
       expect.any(String),
       "C:/music/album.flac",
@@ -409,10 +418,10 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).not.toHaveBeenCalled();
     finish("C:/cache/next.bin");
-    await flushPromises();
+    await settle();
     const id = mocks.prepare.mock.calls[0]![0];
     expect(mocks.prepare).toHaveBeenCalledWith(
       id,
@@ -443,13 +452,13 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     preloader.invalidateNextTrackPreload();
     const [id, signal] = cacheRequest.mock.calls[0] as unknown as [string, AbortSignal];
     expect(signal.aborted).toBe(true);
     expect(mocks.cancel).toHaveBeenCalledWith(id);
     finish("C:/cache/next.bin");
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).not.toHaveBeenCalled();
     expect(preloader.consumePreloadedTrack(mocks.candidate.track as Track)).toBeNull();
   });
@@ -469,11 +478,11 @@ describe("下一曲真实预载", () => {
     );
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(preloader.consumePreloadedTrack(mocks.candidate.track as Track)).toBeNull();
     expect(mocks.cancel).toHaveBeenCalledWith(mocks.prepare.mock.calls[0]![0]);
     finish(true);
-    await flushPromises();
+    await settle();
     expect(preloader.consumePreloadedTrack(mocks.candidate.track as Track)).toBeNull();
   });
 
@@ -481,7 +490,7 @@ describe("下一曲真实预载", () => {
     mocks.settings.system.cache.songCache.enabled = false;
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.resolve).not.toHaveBeenCalled();
     expect(mocks.prepare).not.toHaveBeenCalled();
   });
@@ -494,7 +503,7 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(mocks.prepare).not.toHaveBeenCalled();
     expect(
       preloader.consumePreloadedTrack(mocks.candidate.track as Track)?.preparedId,
@@ -510,19 +519,19 @@ describe("下一曲真实预载", () => {
     const preloader = await import("./nextTrackPreloader");
     preloader.installNextTrackPreloadWatchers();
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     const prepared = preloader.beginPreparedTransition(mocks.candidate.track as Track)!;
     expect(prepared.preparedId).toBeTruthy();
     if (change === "关闭过渡") mocks.settings.player.transitionMode = "none";
     if (change === "修改倾向") mocks.settings.player.transitionPreference = "eager";
     if (change === "关闭预载") mocks.settings.player.preloadNextTrack = false;
-    await flushPromises();
+    await settle();
     expect(mocks.cancel).not.toHaveBeenCalled();
     expect(mocks.prepare).toHaveBeenCalledOnce();
     expect(preloader.consumePreloadedTrack(mocks.candidate.track as Track)).toBeNull();
     expect(mocks.cancel).not.toHaveBeenCalled();
     preloader.finishPreparedTransition(prepared.preparedId!);
-    await flushPromises();
+    await settle();
     expect(mocks.cancel).toHaveBeenCalledWith(prepared.preparedId);
     expect(mocks.prepare).toHaveBeenCalledTimes(change === "关闭预载" ? 1 : 2);
   });
@@ -535,7 +544,7 @@ describe("下一曲真实预载", () => {
     });
     const preloader = await import("./nextTrackPreloader");
     preloader.scheduleNextTrackPreload();
-    await flushPromises();
+    await settle();
     expect(
       preloader.beginPreparedTransition(mocks.candidate.track as Track, "old-slot"),
     ).toBeNull();

@@ -1,4 +1,4 @@
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 use ort::{session::Session, value::Tensor};
 
 /// 使用官方三十秒上下文与六帧边界拼接节拍预测

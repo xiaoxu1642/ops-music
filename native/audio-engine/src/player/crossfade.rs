@@ -28,6 +28,8 @@ pub struct AutoMixSettings {
     pub rate: f32,
     pub level_ratio: f32,
     pub envelopes: Vec<MixEnvelope>,
+    /// 下一曲高频提前进入的窗口，归一化到过渡长度
+    pub pre_roll: Option<MixEnvelope>,
 }
 
 /// 已交给输出回调、等待音频边界完成的备用槽位
@@ -153,6 +155,12 @@ impl InnerPlayer {
                         .all(|span| span.start >= 0.0 && span.end <= 1.0 && span.end > span.start),
                 "无效的混音声部包络"
             );
+            if let Some(pre_roll) = &plan.pre_roll {
+                ensure!(
+                    pre_roll.start >= 0.0 && pre_roll.end > pre_roll.start && pre_roll.end <= 1.0,
+                    "无效的高频预入窗口"
+                );
+            }
             if plan.out_start < self.position() + 0.25
                 || plan.out_start + plan.duration * f64::from(plan.rate) > current_end + 0.001
                 || (plan.in_start - ready.start_position).abs() > 0.001
@@ -187,6 +195,7 @@ impl InnerPlayer {
                 envelopes: automix
                     .as_ref()
                     .map(|plan| plan.envelopes.as_slice().try_into().unwrap()),
+                pre_roll: automix.as_ref().and_then(|plan| plan.pre_roll),
             },
         );
         let signals = match signals {

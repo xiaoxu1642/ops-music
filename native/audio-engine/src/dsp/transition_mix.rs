@@ -36,6 +36,23 @@ pub(crate) struct KickSplit {
     history: Vec<[f32; 4]>,
 }
 
+/// 下一曲高频预入的一阶高通状态，每个声道独立保存历史
+/// 在预入状态数组上按声道应用高通
+/// @param state - 四个声道的滤波历史
+/// @param sample - 下一曲采样
+/// @param channel - 声道
+/// @returns 高频分量
+pub(crate) fn high_pass(state: &mut [f32], sample: f32, channel: usize) -> f32 {
+    let offset = channel * 2;
+    let previous_input = state[offset];
+    let previous_output = state[offset + 1];
+    let alpha = 0.31;
+    let output = alpha * (previous_output + sample - previous_input);
+    state[offset] = sample;
+    state[offset + 1] = output;
+    output
+}
+
 impl KickSplit {
     /// 在控制线程按输出格式分配滤波状态
     /// @param sample_rate - 输出采样率

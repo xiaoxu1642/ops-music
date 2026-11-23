@@ -260,6 +260,13 @@ export interface JsAutoMixPlan {
   outgoingRate: number
   levelRatio: number
   envelopes: Array<JsAutoMixEnvelope>
+  preRoll?: JsAutoMixPreRoll
+}
+
+/** AutoMix 高频预入窗口，时间单位与交接计划一致 */
+export interface JsAutoMixPreRoll {
+  startSeconds: number
+  endSeconds: number
 }
 
 /** 分析进程生成的有限声部窗口，路径不暴露给渲染进程 */

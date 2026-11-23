@@ -11,6 +11,9 @@ export const defaultSystemConfig: SystemConfig = {
     outputDevice: null,
     volume: 1,
     loudnessNormalization: false,
+    automixPreRollMs: 1200,
+    automixFullscreenPolicy: "auto",
+    automixLowRemainingGuardMs: 0,
     audioOutputMode: "shared",
     equalizer: {
       enabled: false,

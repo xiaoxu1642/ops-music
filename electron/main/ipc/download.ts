@@ -6,8 +6,10 @@
  * 进度/状态由服务通过 broadcast 推送。
  */
 
-import { ipcMain } from "electron";
+import { dialog, ipcMain } from "electron";
 import * as downloadManager from "@main/services/downloadManager";
+import { getDownloadDir } from "@main/utils/config";
+import { store } from "@main/store";
 import type { DownloadRequest, DownloadResolution } from "@shared/types/download";
 
 export const registerDownloadIpc = (): void => {
@@ -26,4 +28,21 @@ export const registerDownloadIpc = (): void => {
   ipcMain.handle("download:remove", (_evt, taskId: string) => downloadManager.remove(taskId));
   ipcMain.handle("download:clearFinished", () => downloadManager.clearFinished());
   ipcMain.handle("download:list", () => downloadManager.list());
+  ipcMain.handle("download:getDir", () => getDownloadDir());
+  ipcMain.handle("download:resetDir", () => {
+    store.set("download.dir", null);
+    return getDownloadDir();
+  });
+  ipcMain.handle("download:pickDir", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "选择下载目录",
+      properties: ["openDirectory", "createDirectory"],
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+      return { ok: false, dir: getDownloadDir(), reason: "canceled" as const };
+    }
+    const dir = result.filePaths[0];
+    store.set("download.dir", dir);
+    return { ok: true, dir };
+  });
 };

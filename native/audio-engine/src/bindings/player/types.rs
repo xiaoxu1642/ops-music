@@ -9,11 +9,19 @@ pub struct JsAutoMixPlan {
     pub outgoing_rate: f64,
     pub level_ratio: f64,
     pub envelopes: Vec<JsAutoMixEnvelope>,
+    pub pre_roll: Option<JsAutoMixPreRoll>,
 }
 
 /// 相对于混音起点的单个声部交接区间
 #[napi(object)]
 pub struct JsAutoMixEnvelope {
+    pub start_seconds: f64,
+    pub end_seconds: f64,
+}
+
+/// AutoMix 高频预入窗口，时间单位与交接计划一致
+#[napi(object)]
+pub struct JsAutoMixPreRoll {
     pub start_seconds: f64,
     pub end_seconds: f64,
 }

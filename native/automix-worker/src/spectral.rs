@@ -1,4 +1,4 @@
-use rustfft::{num_complex::Complex, Fft, FftPlanner};
+use rustfft::{Fft, FftPlanner, num_complex::Complex};
 use std::sync::{Arc, OnceLock};
 
 pub const SIZE: usize = 4096;
@@ -190,9 +190,11 @@ mod tests {
             .collect();
         let output = Spectral::new().reconstruct(&vec![0.0; 16 * (SIZE / 2) * CELLS], &temporal);
         for (lane, expected) in [0.0, 1.0, 2.0, 3.0, 6.0, 7.0].into_iter().enumerate() {
-            assert!(output[lane * FRAMES..(lane + 1) * FRAMES]
-                .iter()
-                .all(|value| *value == expected));
+            assert!(
+                output[lane * FRAMES..(lane + 1) * FRAMES]
+                    .iter()
+                    .all(|value| *value == expected)
+            );
         }
     }
 }

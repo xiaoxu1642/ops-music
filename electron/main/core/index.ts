@@ -14,6 +14,7 @@ import { initDatabase, closeDatabase } from "@main/database";
 import { stopStreamProxy } from "@main/services/streamProxy";
 import { init as initSongCache } from "@main/services/songCache";
 import { init as initDownload } from "@main/services/downloadManager";
+import { captureAudioFiles, extractAudioFiles } from "@main/services/externalFile";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
 import { coreLog, initLogger } from "@main/utils/logger";
 
@@ -110,9 +111,15 @@ export const initApp = (): void => {
   }
   // 拦截已退役快捷键
   guardRetiredShortcuts();
-  // 已有实例运行时再次启动：聚焦主窗口
-  app.on("second-instance", () => {
+  captureAudioFiles(extractAudioFiles(process.argv));
+  // 已有实例运行时再次启动：聚焦主窗口并接收外部音频文件
+  app.on("second-instance", (_event, commandLine) => {
     focusMainWindow();
+    captureAudioFiles(extractAudioFiles(commandLine));
+  });
+  app.on("open-file", (event, filePath) => {
+    event.preventDefault();
+    captureAudioFiles([filePath]);
   });
   // 注册缓存协议方案
   registerCacheScheme();

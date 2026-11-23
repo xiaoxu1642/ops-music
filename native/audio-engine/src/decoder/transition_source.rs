@@ -1,14 +1,14 @@
 use std::f32::consts::FRAC_PI_2;
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU32, Ordering};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use crossbeam_queue::ArrayQueue;
 
 use super::buffer::Shared;
 use super::source::DecoderSampleReader;
 use crate::dsp::fft::FftAnalyzer;
-use crate::dsp::transition_mix::{level_curve, stem_gains, KickSplit};
+use crate::dsp::transition_mix::{KickSplit, high_pass, level_curve, stem_gains};
 
 pub const TRANSITION_DECISION_QUIET: u8 = 1;
 const TRANSITION_DECISION_DEADLINE: u8 = 2;
@@ -42,6 +42,8 @@ struct TransitionCommand {
     cancelled: Arc<AtomicBool>,
     level_ratio: f32,
     envelopes: Option<[MixEnvelope; 8]>,
+    pre_roll: Option<MixEnvelope>,
+    pre_roll_state: Vec<f32>,
     kick: KickSplit,
 }
 
@@ -79,6 +81,7 @@ pub struct TransitionPlan {
     pub auto_start_sample: Option<u64>,
     pub level_ratio: Option<f32>,
     pub envelopes: Option<[MixEnvelope; 8]>,
+    pub pre_roll: Option<MixEnvelope>,
 }
 
 struct ActiveTransition {
@@ -98,11 +101,13 @@ struct ActiveTransition {
     cancelling: u64,
     cancel_gains: [[f32; 5]; 2],
     cancel_levels: [f32; 2],
+    pre_roll: Vec<f32>,
 }
 
 struct RetiredSource {
     _reader: Box<DecoderSampleReader>,
     _intro_frame: Vec<f32>,
+    _pre_roll: Vec<f32>,
 }
 
 /// 控制线程向同一条输出流提交下一曲，并回收退役的读取器
@@ -134,9 +139,10 @@ impl TransitionControl {
         let cancelled = Arc::new(AtomicBool::new(false));
         self.cancel_requested.store(false, Ordering::Release);
         self.set_speed_ratio(1.0);
+        let channels = shared.channels() as usize;
         let command = TransitionCommand {
-            intro_frame: vec![0.0; shared.channels() as usize],
-            kick: KickSplit::new(shared.sample_rate(), shared.channels() as usize),
+            intro_frame: vec![0.0; channels],
+            kick: KickSplit::new(shared.sample_rate(), channels),
             next: Box::new(DecoderSampleReader::new(shared)),
             earliest_sample: plan.earliest_sample,
             latest_sample: plan.latest_sample,
@@ -150,6 +156,8 @@ impl TransitionControl {
             cancelled: Arc::clone(&cancelled),
             level_ratio: plan.level_ratio.unwrap_or(1.0),
             envelopes: plan.envelopes,
+            pre_roll: plan.pre_roll,
+            pre_roll_state: vec![0.0; channels * 2],
         };
         self.commands
             .push(command)
@@ -246,6 +254,7 @@ impl TransitionSource {
         let _ = self.control.retired.push(RetiredSource {
             _reader: old,
             _intro_frame: transition.command.intro_frame,
+            _pre_roll: transition.pre_roll,
         });
         transition.command.completed.store(true, Ordering::Release);
     }
@@ -258,6 +267,7 @@ impl TransitionSource {
         let _ = self.control.retired.push(RetiredSource {
             _reader: transition.command.next,
             _intro_frame: transition.command.intro_frame,
+            _pre_roll: transition.pre_roll,
         });
         transition.command.cancelled.store(true, Ordering::Release);
     }
@@ -269,7 +279,9 @@ impl TransitionSource {
     fn next_sample(&mut self) -> Option<f32> {
         if self.transition.is_none() {
             if let Some(command) = self.control.commands.pop() {
+                let mut command = command;
                 let automix = command.auto_start_sample.is_some();
+                let pre_roll_state = std::mem::take(&mut command.pre_roll_state);
                 let head_index = if automix {
                     command.intro_frame.len()
                 } else {
@@ -295,6 +307,7 @@ impl TransitionSource {
                     cancelling: 0,
                     cancel_gains: [[1.0; 5], [0.0; 5]],
                     cancel_levels: [1.0; 2],
+                    pre_roll: pre_roll_state,
                 };
                 next.command.next.begin_callback();
                 self.transition = Some(next);
@@ -448,6 +461,15 @@ impl TransitionSource {
         }
         let mut mixed = sample * transition.gains[0][3] * transition.levels[0]
             + b * transition.gains[1][3] * transition.levels[1];
+        if let Some(span) = transition.command.pre_roll {
+            let progress =
+                (transition.fade_progress / transition.command.fade_samples as f64).min(1.0) as f32;
+            let phase = span.phase(progress);
+            let gain = (phase * FRAC_PI_2).sin().powi(2) * (1.0 - transition.gains[1][3]);
+            let channel = ((transition.elapsed - 1) % self.channels) as usize;
+            let high = high_pass(&mut transition.pre_roll, b, channel);
+            mixed += high * gain;
+        }
         if transition.command.envelopes.is_some() {
             for index in 0..3 {
                 mixed += stems_a[index]

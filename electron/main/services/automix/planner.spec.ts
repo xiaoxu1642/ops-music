@@ -1,9 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AutoMixProfile } from "@shared/types/automix";
 import { planAutoMix as createPlan, planAutoMixBridge } from "./planner";
 import { arrangeAutoMix, arrangeAutoMixBridge } from "./arrangement";
 import { measureBeatPeriod, pickBeatPeaks } from "./beats";
 import { createAutoMixProfile } from "./features";
+
+const mocks = vi.hoisted(() => ({
+  policy: "auto",
+  guardMs: 0,
+}));
+vi.mock("@main/store", () => ({
+  store: {
+    get: (key: string) =>
+      key === "player.automixFullscreenPolicy"
+        ? mocks.policy
+        : key === "player.automixLowRemainingGuardMs"
+          ? mocks.guardMs
+          : undefined,
+  },
+}));
 
 /**
  * 为有效音乐证据断言规划成功，便于逐项检查返回的执行参数
@@ -241,5 +256,52 @@ describe("AutoMix 原速桥接", () => {
     const unstable = profile(420);
     unstable.stability = 0.5;
     expect(planAutoMixBridge(profile(500), unstable, 20_000)).toBeNull();
+  });
+});
+
+describe("AutoMix 环境感知调度", () => {
+  beforeEach(() => {
+    mocks.policy = "auto";
+    mocks.guardMs = 0;
+  });
+
+  it("全屏时按策略决定编排范围，跳过 Demucs 时不出候选", () => {
+    const context = { generation: 1, fullscreen: true as const };
+    const plan = planAutoMix(profile(), profile(), 20_000, context);
+    expect(plan.strategy).toBe("phrase");
+    mocks.policy = "skipDemucs";
+    expect(createPlan(profile(), profile(), 20_000, context)).toBeNull();
+    expect(planAutoMixBridge(profile(500), profile(420), 20_000, context)).toBeNull();
+  });
+
+  it("仅节拍时只用节拍证据选点，取保守的短交接", () => {
+    mocks.policy = "beatOnly";
+    const plan = planAutoMix(profile(), profile(), 20_000, { generation: 1, fullscreen: true });
+    expect(plan.strategy).toBe("handoff");
+    expect(plan.durationMs).toBe(8_000);
+  });
+
+  it("全屏态无法判定或策略不限制时保持既有编排", () => {
+    expect(planAutoMix(profile(), profile(), 20_000).durationMs).toBe(16_000);
+    mocks.policy = "unlimited";
+    const plan = planAutoMix(profile(), profile(), 20_000, { generation: 1, fullscreen: true });
+    expect(plan.durationMs).toBe(16_000);
+    expect(plan.strategy).toBe("phrase");
+  });
+
+  it("剩余时间低于保护阈值时不再编排", () => {
+    mocks.guardMs = 30_000;
+    expect(
+      createPlan(profile(), profile(), 20_000, { generation: 1, remainingMs: 20_000 }),
+    ).toBeNull();
+    expect(
+      planAutoMix(profile(), profile(), 20_000, { generation: 1, remainingMs: 40_000 }),
+    ).not.toBeNull();
+  });
+
+  it("非法策略存档按自动处理", () => {
+    mocks.policy = "bogus";
+    const plan = planAutoMix(profile(), profile(), 20_000, { generation: 1, fullscreen: true });
+    expect(plan.durationMs).toBe(16_000);
   });
 });

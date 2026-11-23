@@ -589,6 +589,7 @@
       "externalLyric": "外部歌词",
       "appearance": "外观设置",
       "hotkeys": "快捷键配置",
+      "download": "下载设置",
       "localCache": "本地与缓存",
       "other": "其他设置",
       "about": "关于软件"
@@ -613,6 +614,8 @@
       "playerBar": "播放栏",
       "nowPlaying": "播放页",
       "media": "媒体控制",
+      "downloadLocation": "下载目录",
+      "downloadGeneral": "下载选项",
       "device": "输出设备",
       "hotkeys": "快捷键",
       "systemConfig": "系统配置",
@@ -914,7 +917,7 @@
       "exclusiveModeContent": "独占模式绕过系统混音器，优先使用音源采样率与位深，适合外接 DAC / Hi-Fi 设备。播放器的音量、均衡器等处理仍然生效，不保证逐位无损输出。独占期间其他应用可能无法播放声音；独占不可用时会尝试共享模式，若设备被其他应用独占，共享模式也可能无法播放。确定切换吗？",
       "preloadCacheTitle": "开启预载所需的缓存？",
       "preloadCacheContent": "歌曲预载需要缓存下一首音频。继续将开启歌曲缓存，可能增加网络流量和磁盘占用",
-      "transitionHighResourceContent": "播放过渡为高占用功能，请设备性能较高的用户使用\n该功能仍处于测试阶段，部分歌曲的衔接效果目前可能比直接切歌更差\n开启后将同时开启歌曲预载、歌曲缓存和流媒体缓存，会增加内存、CPU、网络流量和磁盘占用。确定开启吗？"
+      "automixHighResourceContent": "AutoMix 为高占用功能，请设备性能较高的用户使用\n该功能仍处于测试阶段，部分歌曲的衔接效果目前可能比直接切歌更差\n开启后将同时开启歌曲预载、歌曲缓存和流媒体缓存，会增加内存、CPU、网络流量和磁盘占用。确定开启吗？"
     },
     "useAMSpring": {
       "label": "弹簧动画调试开关",
@@ -1425,6 +1428,22 @@
     "automixCrossfadeFallback": {
       "label": "无法混音时交叉过渡",
       "description": "无法混音时改用交叉过渡"
+    },
+    "automixPreRollMs": {
+      "label": "AutoMix 高频先入量",
+      "description": "在已确定的交接窗口开头，让下一曲高频渐入；不改变切歌点和过渡总长度，0 表示关闭"
+    },
+    "automixFullscreenPolicy": {
+      "label": "AutoMix 全屏策略",
+      "description": "检测到全屏应用（全屏游戏、全屏视频、演示模式）时的编排方式",
+      "auto": "自动",
+      "skipDemucs": "跳过 Demucs",
+      "beatOnly": "仅节拍",
+      "unlimited": "不限制"
+    },
+    "automixLowRemainingGuardMs": {
+      "label": "AutoMix 低剩余时间保护",
+      "description": "当前曲目剩余时间低于该阈值时不再安排 AutoMix 编排，改用交叉过渡或直接切歌；单位毫秒，0 表示不保护"
     },
     "automixComponents": {
       "label": "AutoMix 模型管理",

@@ -1,8 +1,13 @@
-import type { AutoMixPlan, AutoMixProfile } from "@shared/types/automix";
+import { store } from "@main/store";
+import type { AutoMixAnalysisContext, AutoMixPlan, AutoMixProfile } from "@shared/types/automix";
+import type { AutoMixFullscreenPolicy } from "@shared/types/settings";
 import { measureMixWindow } from "./features";
 
 /** 分轨复核前的选点与速度候选，尚未生成可提交给引擎的声部包络 */
 export type AutoMixCandidate = Omit<AutoMixPlan, "envelopes" | "stems">;
+
+/** 编排范围：full=完整编排，beat=只用节拍证据选点，none=不编排 */
+export type AutoMixScope = "full" | "beat" | "none";
 
 /**
  * 仅在用户使用正常速度和音调时允许 AutoMix
@@ -19,6 +24,8 @@ const MAX_MIX_MS = 18_000;
 const CONSONANT_AFFINITY = 0.7;
 /** 无音级信息时的中性相似度 */
 const NEUTRAL_AFFINITY = 0.75;
+/** 仅节拍证据时按调性冲突处理，只取短交接 */
+const BEAT_ONLY_AFFINITY = 0;
 
 /** 打分中的一个候选交接窗口与两曲整体电平 */
 interface CandidateWindow {
@@ -33,33 +40,93 @@ interface CandidateWindow {
 }
 
 /**
+ * 读取用户设置的全屏策略，非法存档值按 auto 处理
+ * @returns 全屏态策略
+ */
+const readFullscreenPolicy = (): AutoMixFullscreenPolicy => {
+  const policy = store.get("player.automixFullscreenPolicy");
+  return policy === "skipDemucs" || policy === "beatOnly" || policy === "unlimited"
+    ? policy
+    : "auto";
+};
+
+/**
+ * 读取低剩余时间保护阈值，非正数视为不保护
+ * @returns 阈值毫秒数
+ */
+const readLowRemainingGuardMs = (): number => {
+  const guardMs = store.get("player.automixLowRemainingGuardMs");
+  return typeof guardMs === "number" && Number.isFinite(guardMs) && guardMs > 0 ? guardMs : 0;
+};
+
+/**
+ * 按用户策略与环境判定本次编排范围
+ * @param policy - 用户设置的全屏策略
+ * @param fullscreen - 是否运行着全屏应用，unknown 表示无法判定
+ * @returns 编排范围
+ */
+export const resolveAutoMixScope = (
+  policy: AutoMixFullscreenPolicy,
+  fullscreen: boolean | "unknown",
+): AutoMixScope => {
+  if (fullscreen !== true) return "full";
+  if (policy === "skipDemucs") return "none";
+  if (policy === "beatOnly") return "beat";
+  return "full";
+};
+
+/**
+ * 判定当前环境是否允许安排编排
+ * @param context - 本次预载的分析观测上下文
+ * @returns 允许时的编排范围，不允许时为空
+ */
+const resolveScope = (context?: AutoMixAnalysisContext): AutoMixScope | null => {
+  const scope = resolveAutoMixScope(readFullscreenPolicy(), context?.fullscreen ?? "unknown");
+  if (scope === "none") return null;
+  const guardMs = readLowRemainingGuardMs();
+  const remainingMs = context?.remainingMs;
+  if (guardMs > 0 && remainingMs != null && remainingMs < guardMs) return null;
+  return scope;
+};
+
+/**
  * 综合长度、收尾位置、能量、乐段边界与调性给候选打分，越低越好
  * @param outgoing - 当前曲尾部证据
  * @param incoming - 下一曲首部证据
  * @param window - 候选窗口
+ * @param scope - 本次编排范围，仅节拍时忽略电平与音级证据
  * @returns 分数与两段的音级相似度
  */
 const scoreCandidate = (
   outgoing: AutoMixProfile,
   incoming: AutoMixProfile,
   window: CandidateWindow,
+  scope: AutoMixScope,
 ): { score: number; affinity: number } => {
   const { start, finish, cue, length, bar, bodyEnd } = window;
   const outgoingWindow = measureMixWindow(outgoing, start, finish);
   const incomingWindow = measureMixWindow(incoming, cue, cue + length);
   const hasTone =
-    Math.hypot(...outgoingWindow.chroma) > 0 && Math.hypot(...incomingWindow.chroma) > 0;
+    scope === "full" &&
+    Math.hypot(...outgoingWindow.chroma) > 0 &&
+    Math.hypot(...incomingWindow.chroma) > 0;
   const affinity = hasTone
     ? outgoingWindow.chroma.reduce(
         (sum, value, pitch) => sum + value * incomingWindow.chroma[pitch],
         0,
       )
-    : NEUTRAL_AFFINITY;
+    : scope === "beat"
+      ? BEAT_ONLY_AFFINITY
+      : NEUTRAL_AFFINITY;
   // 调性相容时偏好整句长融合，冲突时偏好短交接
   const preferred = affinity >= CONSONANT_AFFINITY ? 16_000 : 8000;
   const energyCost =
-    Math.max(0, Math.log(window.outgoingLevel / outgoingWindow.level)) +
-    Math.max(0, Math.log(window.incomingLevel / incomingWindow.level));
+    scope === "full"
+      ? Math.max(0, Math.log(window.outgoingLevel / outgoingWindow.level)) +
+        Math.max(0, Math.log(window.incomingLevel / incomingWindow.level))
+      : 0;
+  const levelCost =
+    scope === "full" ? Math.abs(Math.log(outgoingWindow.level / incomingWindow.level)) : 0;
   const middle = (start + finish) / 2;
   const boundaryCost = outgoing.boundaries.length
     ? Math.min(...outgoing.boundaries.map((time) => Math.abs(time - middle))) / bar
@@ -68,7 +135,7 @@ const scoreCandidate = (
     Math.abs(length - preferred) / preferred +
     (Math.abs(finish - bodyEnd) / bar) * 0.2 +
     energyCost * 0.4 +
-    Math.abs(Math.log(outgoingWindow.level / incomingWindow.level)) * 0.1 +
+    levelCost * 0.1 +
     Math.min(2, boundaryCost) * 0.1 +
     ((1 - affinity) * length) / 8000;
   return { score, affinity };
@@ -79,13 +146,17 @@ const scoreCandidate = (
  * @param outgoing - 当前曲尾部证据
  * @param incoming - 下一曲首部证据
  * @param currentEndMs - 当前曲目或 CUE 的有效终点
+ * @param context - 本次预载的分析观测上下文，决定编排范围
  * @returns 待分轨复核的对拍候选，无法对拍时为空
  */
 export const planAutoMix = (
   outgoing: AutoMixProfile,
   incoming: AutoMixProfile,
   currentEndMs: number,
+  context?: AutoMixAnalysisContext,
 ): AutoMixCandidate | null => {
+  const scope = resolveScope(context);
+  if (!scope) return null;
   const endMs = Math.min(currentEndMs, outgoing.lastAudibleMs + 200, outgoing.endMs);
   const entry = Math.max(incoming.startMs, incoming.firstAudibleMs - 100);
   const bodyEnd = Math.min(endMs, outgoing.bodyEndMs + 300);
@@ -153,16 +224,21 @@ export const planAutoMix = (
             if (gridRequired > outgoing.gridEndMs + outgoing.periodMs) continue;
             if (finish < bodyEnd - outgoing.periodMs * 2 || finish < currentEndMs - 16_000)
               continue;
-            const { score, affinity } = scoreCandidate(outgoing, incoming, {
-              start,
-              finish,
-              cue,
-              length,
-              bar,
-              bodyEnd,
-              outgoingLevel,
-              incomingLevel,
-            });
+            const { score, affinity } = scoreCandidate(
+              outgoing,
+              incoming,
+              {
+                start,
+                finish,
+                cue,
+                length,
+                bar,
+                bodyEnd,
+                outgoingLevel,
+                incomingLevel,
+              },
+              scope,
+            );
             if (score >= bestScore) continue;
             bestScore = score;
             selected = {
@@ -190,13 +266,16 @@ const BRIDGE_BEATS = 20;
  * @param outgoing - 当前曲尾部证据
  * @param incoming - 下一曲首部证据
  * @param currentEndMs - 当前曲目或 CUE 的有效终点
+ * @param context - 本次预载的分析观测上下文，决定编排范围
  * @returns 待分轨复核的原速候选，速度不可信、相差过大或尾部前奏不足时为空
  */
 export const planAutoMixBridge = (
   outgoing: AutoMixProfile,
   incoming: AutoMixProfile,
   currentEndMs: number,
+  context?: AutoMixAnalysisContext,
 ): AutoMixCandidate | null => {
+  if (!resolveScope(context)) return null;
   if (
     !outgoing.periodMs ||
     !incoming.periodMs ||

@@ -31,7 +31,8 @@ mod utils;
 #[napi]
 pub fn is_fullscreen_app_running() -> bool {
     use windows::Win32::UI::Shell::{
-        SHQueryUserNotificationState, QUNS_BUSY, QUNS_PRESENTATION_MODE, QUNS_RUNNING_D3D_FULL_SCREEN,
+        QUNS_BUSY, QUNS_PRESENTATION_MODE, QUNS_RUNNING_D3D_FULL_SCREEN,
+        SHQueryUserNotificationState,
     };
     match unsafe { SHQueryUserNotificationState() } {
         Ok(state) => {

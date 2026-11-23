@@ -29,6 +29,15 @@ export interface EqualizerSettings {
 /** 音频输出模式 */
 export type AudioOutputMode = "shared" | "exclusive";
 
+/**
+ * AutoMix 全屏态策略
+ * - auto：交由环境感知调度按当前环境判定
+ * - skipDemucs：跳过声部分离，没有分轨包络可执行时不安排编排
+ * - beatOnly：只用节拍证据选点，取保守的短交接
+ * - unlimited：全屏时也不降级，照常完整编排
+ */
+export type AutoMixFullscreenPolicy = "auto" | "skipDemucs" | "beatOnly" | "unlimited";
+
 /** 播放器配置 */
 export interface PlayerSettings {
   /** 加载后自动播放 */
@@ -45,6 +54,12 @@ export interface PlayerSettings {
   volume: number;
   /** 音量均衡（响度归一化） */
   loudnessNormalization: boolean;
+  /** AutoMix 下一曲高频提前量（毫秒） */
+  automixPreRollMs: number;
+  /** AutoMix 全屏态策略 */
+  automixFullscreenPolicy: AutoMixFullscreenPolicy;
+  /** AutoMix 低剩余时间保护阈值（毫秒），0 表示不保护 */
+  automixLowRemainingGuardMs: number;
   /** 音频输出模式：共享（默认）/ WASAPI 独占（仅 Windows） */
   audioOutputMode: AudioOutputMode;
   /** 均衡器配置 */

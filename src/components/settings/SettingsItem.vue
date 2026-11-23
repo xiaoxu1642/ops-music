@@ -15,7 +15,7 @@ const model = props.item.binding ? useSettingModel(props.item.binding) : ref<any
 /** 应用变更 */
 const applyChange = async (next: unknown): Promise<void> => {
   const cfg = props.item.confirm;
-  if (cfg && (!cfg.when || cfg.when(next))) {
+  if (cfg && (!cfg.when || cfg.when(next)) && (!cfg.whenCurrent || cfg.whenCurrent(model.value))) {
     const confirmed = await dialog.confirm({
       title: cfg.titleKey ? t(cfg.titleKey) : undefined,
       content: t(cfg.contentKey),

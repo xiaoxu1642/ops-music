@@ -486,14 +486,14 @@ export const registerPlayerIpc = (): void => {
       const seq = loadSeq;
       const current = getPlayer();
       try {
-        const automix = mode === "automix" ? getPreparedAutoMixPlan(id) : undefined;
+        const automixPlan = mode === "automix" ? getPreparedAutoMixPlan(id) : undefined;
+        const automix = automixPlan?.stems ? automixPlan : undefined;
         if (
           mode === "automix" &&
-          (!automix ||
-            !canAutoMix(current.getSpeed(), current.getPitch()) ||
-            !(await installPreparedAutoMixStems(id)))
+          (!automixPlan || !canAutoMix(current.getSpeed(), current.getPitch()))
         )
           return { success: false };
+        if (automix && !(await installPreparedAutoMixStems(id))) return { success: false };
         playerLog.info("开始寻找曲尾交接点", {
           to: options.meta?.title,
           preference,
@@ -526,6 +526,13 @@ export const registerPlayerIpc = (): void => {
                   startSeconds: span.startMs / 1000,
                   endSeconds: span.endMs / 1000,
                 })),
+                preRoll:
+                  automix.preRoll == null
+                    ? undefined
+                    : {
+                        startSeconds: automix.preRoll.startMs / 1000,
+                        endSeconds: automix.preRoll.endMs / 1000,
+                      },
               }
             : undefined,
         );

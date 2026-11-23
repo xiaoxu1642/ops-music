@@ -40,6 +40,8 @@ declare global {
         fetchRemoteBytes: (url: string) => Promise<IpcResponse<Buffer | null>>;
         relaunch: () => Promise<void>;
         getPathForFile: (file: File) => string;
+        onOpenFiles: (callback: (files: string[]) => void) => () => void;
+        consumePendingAudioFiles: () => Promise<string[]>;
       };
       library: LibraryApi;
       playlist: PlaylistApi;

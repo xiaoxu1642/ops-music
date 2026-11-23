@@ -1,6 +1,10 @@
 use anyhow::{ensure, Result};
-use std::fs;
+use std::fs::File;
+use std::io::Read;
 use std::sync::Arc;
+
+/// 分块读取声部文件时复用的字节缓冲大小，保持 4 字节采样对齐
+const STEM_READ_BUFFER: usize = 256 * 1024;
 
 /// 当前或下一曲的有限分离窗口，三路双声道按帧排列
 pub struct StemWindow {
@@ -20,21 +24,29 @@ impl StemWindow {
             start.is_finite() && (88_200..=1_058_444).contains(&frames),
             "无效的声部窗口"
         );
-        ensure!(
-            fs::metadata(path)?.len() == u64::from(frames) * 24,
-            "声部文件长度不匹配"
-        );
-        let raw = fs::read(path)?;
-        let samples: Vec<f32> = raw
-            .as_chunks::<4>()
-            .0
-            .iter()
-            .map(|bytes| f32::from_le_bytes(*bytes))
-            .collect();
-        ensure!(
-            samples.iter().all(|sample| sample.is_finite()),
-            "声部文件含无效采样"
-        );
+        let expected = u64::from(frames) * 24;
+        let mut file = File::open(path)?;
+        ensure!(file.metadata()?.len() == expected, "声部文件长度不匹配");
+        let mut samples = Vec::with_capacity(frames as usize * 6);
+        let mut buffer = vec![0_u8; STEM_READ_BUFFER];
+        let mut remaining = expected as usize;
+        let mut read = 0_usize;
+        while remaining > 0 {
+            let take = remaining.min(STEM_READ_BUFFER);
+            let chunk = &mut buffer[..take];
+            file.read_exact(chunk)?;
+            read += take;
+            for bytes in chunk.as_chunks::<4>().0 {
+                let sample = f32::from_le_bytes(*bytes);
+                ensure!(sample.is_finite(), "声部文件含无效采样");
+                samples.push(sample);
+            }
+            remaining -= take;
+        }
+        drop(file);
+        ensure!(read as u64 == expected, "声部文件长度不匹配");
+        ensure!(read % 4 == 0, "声部文件长度不匹配");
+        ensure!(samples.len() == frames as usize * 6, "声部文件长度不匹配");
         Ok(Arc::new(Self {
             samples,
             start,

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { getEngine } from "@main/services/engine";
 import { automixCacheDir } from "@main/utils/paths";
@@ -11,7 +12,24 @@ import { playerLog } from "@main/utils/logger";
 import type { AutoMixCandidate } from "./planner";
 
 /** 只保留最近四对交接的磁盘窗口，不缓存 PCM 或模型张量 */
-const completed = new Map<string, { plan: AutoMixPlan; directory: string }>();
+interface CompletedCacheEntry {
+  plan: AutoMixPlan;
+  directory: string;
+}
+
+interface NegativeCacheEntry {
+  key: string;
+  at: number;
+  reason: "vocalLoss";
+}
+
+type AutoMixCacheHit = "profile" | "plan" | "negative" | "none";
+
+const completed = new Map<string, CompletedCacheEntry>();
+const rejected = new Map<string, NegativeCacheEntry>();
+const REJECTED_TTL_MS = 60_000;
+const COMPLETED_CACHE_LIMIT = 4;
+const REJECTED_CACHE_LIMIT = 64;
 let workspace: Promise<void> | undefined;
 /** 声部分离窗口上限，对应 worker 与引擎的 1_058_444 帧（44.1kHz 下 24 秒） */
 const MAX_SEPARATION_MS = 24_000;
@@ -23,6 +41,45 @@ interface Separation {
   frames: number[];
   vocals: number[][];
 }
+
+const cacheKey = (value: unknown) =>
+  createHash("sha256").update(JSON.stringify(value)).digest("hex");
+
+const touchCompleted = (key: string) => {
+  const entry = completed.get(key);
+  if (!entry) return;
+  completed.delete(key);
+  completed.set(key, entry);
+};
+
+const evictCompleted = async () => {
+  while (completed.size > COMPLETED_CACHE_LIMIT) {
+    const key = completed.keys().next().value!;
+    const entry = completed.get(key)!;
+    completed.delete(key);
+    await rm(entry.directory, { recursive: true, force: true });
+  }
+};
+
+const setRejected = (key: string) => {
+  rejected.delete(key);
+  rejected.set(key, { key, at: Date.now(), reason: "vocalLoss" });
+  while (rejected.size > REJECTED_CACHE_LIMIT) {
+    rejected.delete(rejected.keys().next().value!);
+  }
+};
+
+const getRejected = (key: string) => {
+  const entry = rejected.get(key);
+  if (!entry) return undefined;
+  if (Date.now() - entry.at >= REJECTED_TTL_MS) {
+    rejected.delete(key);
+    return undefined;
+  }
+  rejected.delete(key);
+  rejected.set(key, entry);
+  return entry;
+};
 
 /**
  * 导出窗口并运行声部分离，失败时清理目录
@@ -102,10 +159,36 @@ export const enhanceAutoMixPlan = (
         return [track.source, info.size, info.mtimeMs, info.ctimeMs];
       }),
     );
-    const key = JSON.stringify([identities, candidate, currentEndMs]);
+    const key = cacheKey([identities, candidate, currentEndMs]);
     signal.throwIfAborted();
     const cached = completed.get(key);
-    if (cached) return cached.plan;
+    if (cached) {
+      touchCompleted(key);
+      let stemsExist = true;
+      try {
+        if (!cached.plan.stems) throw new Error("缺少声部窗口");
+        await Promise.all(Object.values(cached.plan.stems).map((stem) => stat(stem.path)));
+      } catch {
+        stemsExist = false;
+      }
+      if (stemsExist) {
+        playerLog.info("AutoMix 混音缓存", { cacheHit: "plan" satisfies AutoMixCacheHit });
+        return cached.plan;
+      }
+      completed.delete(key);
+      await rm(cached.directory, { recursive: true, force: true });
+      playerLog.info("AutoMix 混音缓存", { cacheHit: "none" satisfies AutoMixCacheHit });
+    }
+    const rejectedEntry = getRejected(key);
+    if (rejectedEntry) {
+      playerLog.info("AutoMix 混音缓存", {
+        cacheHit: "negative" satisfies AutoMixCacheHit,
+        key: rejectedEntry.key,
+        at: rejectedEntry.at,
+        reason: rejectedEntry.reason,
+      });
+      return undefined;
+    }
     const ranges = profiles.map((profile, index) => {
       const start = index ? candidate.inStartMs : candidate.outStartMs;
       // 下一曲从原始入口起分离，入口后移跳过的唱句也要计入损失
@@ -130,6 +213,8 @@ export const enhanceAutoMixPlan = (
     const { plan, vocalLossMs } = refineAutoMixVocals(candidate, profiles, voices);
     if (!plan) {
       await rm(directory, { recursive: true, force: true });
+      setRejected(key);
+      playerLog.info("AutoMix 负缓存", { key, at: rejected.get(key)?.at, reason: "vocalLoss" });
       playerLog.info("AutoMix 交接会截断唱句，不做混音", {
         vocalLossMs: vocalLossMs.map(Math.round),
       });
@@ -153,12 +238,8 @@ export const enhanceAutoMixPlan = (
       stems: { outgoing: stem(0), incoming: stem(1) },
     };
     await Promise.all(windows.map((window) => rm(window.input, { force: true })));
+    completed.delete(key);
     completed.set(key, { plan: result, directory });
-    while (completed.size > 4) {
-      const oldest = completed.keys().next().value!;
-      const entry = completed.get(oldest)!;
-      completed.delete(oldest);
-      await rm(entry.directory, { recursive: true, force: true });
-    }
+    await evictCompleted();
     return result;
   });

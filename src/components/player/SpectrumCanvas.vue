@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { useStatusStore } from "@/stores/status";
+import { useMediaStore } from "@/stores/media";
 import { useThemeStore } from "@/stores/theme";
 
 const props = withDefaults(
   defineProps<{
     /** 挂载面是否可见，不可见时停 RAF，恢复后自动续 */
     active?: boolean;
+    /** 绘制形态：柱状频谱或连续波纹 */
+    mode?: "bars" | "wave";
   }>(),
-  { active: true },
+  { active: true, mode: "bars" },
 );
 
 const status = useStatusStore();
+const media = useMediaStore();
 const theme = useThemeStore();
 const { isPlaying } = storeToRefs(status);
 const prefersReducedMotion = usePreferredReducedMotion();
@@ -42,6 +46,14 @@ const readHue = (): void => {
   if (Number.isFinite(n)) hue = n;
 };
 
+/** Canvas 渐变需要显式 alpha，避免 hsl() 覆盖色丢掉淡出 */
+const colorWithAlpha = (color: string, alpha: number): string => {
+  if (!color.startsWith("hsl(")) return color;
+  const values = color.slice(4, -1).split(/\s*,\s*/);
+  if (values.length !== 3) return color;
+  return `hsla(${values.join(", ")}, ${alpha})`;
+};
+
 const fitCanvas = (): void => {
   const canvas = canvasRef.value;
   if (!canvas) return;
@@ -68,6 +80,40 @@ const draw = (): void => {
   if (!canvas || !ctx) return;
   const { width: w, height: h } = canvas;
   ctx.clearRect(0, 0, w, h);
+  if (props.mode === "wave") {
+    const computedStyle = getComputedStyle(canvas);
+    const override = computedStyle.getPropertyValue("--waveform-color").trim();
+    const colorSource = override || `hsl(${hue}, 90%, 62%)`;
+    const ratio = window.devicePixelRatio || 1;
+    const lineWidth = Math.max(2, Math.round(h * 0.075));
+    const amplitude = Math.min(28 * ratio, h - lineWidth);
+    const gradient = ctx.createLinearGradient(0, 0, w, h);
+    gradient.addColorStop(0, colorWithAlpha(colorSource, 0.15));
+    gradient.addColorStop(0.5, colorWithAlpha(colorSource, 0.95));
+    gradient.addColorStop(1, colorWithAlpha(colorSource, 0.15));
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let i = 0; i < BAR_COUNT; i++) {
+      const x = (i / (BAR_COUNT - 1)) * w;
+      const y = h - Math.max(lineWidth, amp[i] * amplitude);
+      if (i === 0) ctx.lineTo(x, y);
+      else {
+        const prevX = ((i - 1) / (BAR_COUNT - 1)) * w;
+        const prevY = h - Math.max(lineWidth, amp[i - 1] * amplitude);
+        ctx.quadraticCurveTo(prevX, prevY, (prevX + x) / 2, (prevY + y) / 2);
+      }
+    }
+    const lastY = h - Math.max(lineWidth, amp[BAR_COUNT - 1] * amplitude);
+    ctx.lineTo(w, lastY);
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    return;
+  }
   ctx.fillStyle = `hsla(${hue}, 90%, 62%, 1)`;
   const barW = w / BAR_COUNT;
   const gap = barW * 0.35;
@@ -128,10 +174,24 @@ const resume = (): void => {
   rafId = requestAnimationFrame(tick);
 };
 
+const resetSpectrum = (): void => {
+  amp.fill(prefersReducedMotion.value === "reduce" ? IDLE_LEVEL : 0);
+  realBars = null;
+  lastRealAt = 0;
+  if (!rafId) resume();
+};
+
 watch(
   () => props.active,
   (on) => (on ? resume() : stopLoop()),
 );
+watch(
+  () => props.mode,
+  () => {
+    if (!rafId) draw();
+  },
+);
+watch(() => media.track && `${media.track.source}:${media.track.id}`, resetSpectrum);
 watch(isPlaying, (on) => on && resume());
 watch(prefersReducedMotion, (value) => {
   if (value === "reduce") {
@@ -162,6 +222,7 @@ onMounted(() => {
   resume();
   // 引擎真频谱：暂停后 Rust 端静默检测输出全零，柱体经平滑自然落底
   unsubscribeSpectrum = window.api.player.onSpectrum(({ bars }) => {
+    if (bars.length !== BAR_COUNT) return;
     if (realBars === null || realBars.length !== bars.length) realBars = new Float32Array(bars);
     for (let i = 0; i < realBars.length; i++) realBars[i] = bars[i];
     lastRealAt = performance.now();

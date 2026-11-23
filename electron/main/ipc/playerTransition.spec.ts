@@ -35,6 +35,7 @@ vi.mock("@main/services/engine", () => {
     getVolume: () => 1,
     getCoverRaw: () => null,
     getStatus: () => ({ state: "playing" }),
+    setExclusiveMode: vi.fn(),
   };
   return {
     getPlayer: () => player,

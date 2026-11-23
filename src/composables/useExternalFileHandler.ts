@@ -2,7 +2,7 @@ import * as player from "@/core/player";
 import { isAudioFile } from "@shared/utils/audioFile";
 
 /**
- * 接入拖拽音频文件播放
+ * 接入外部音频文件打开与拖拽播放
  */
 export const useExternalFileHandler = (): void => {
   const onDragOver = (event: DragEvent): void => {

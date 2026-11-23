@@ -13,6 +13,8 @@ import { createAutoMixProfile } from "./features";
 const MODEL_FRAMES = 1488;
 const MEL_BINS = 128;
 
+type AutoMixCacheHit = "profile" | "plan" | "none";
+
 /** 只复用最近八个紧凑档案，不保留频谱、PCM 或模型张量 */
 const cache = new Map<string, AutoMixProfile>();
 
@@ -52,7 +54,16 @@ export const analyzeAutoMixTracks = (
       }),
     );
     signal.throwIfAborted();
-    const profiles = keys.map((key) => cache.get(key) ?? null);
+    let cacheHit: AutoMixCacheHit = "none";
+    const profiles = keys.map((key) => {
+      const profile = cache.get(key);
+      if (!profile) return null;
+      cache.delete(key);
+      cache.set(key, profile);
+      cacheHit = "profile";
+      return profile;
+    });
+    playerLog.info("AutoMix 档案缓存", { cacheHit });
     const pending = profiles.flatMap((profile, index) => (profile ? [] : [index]));
     if (!pending.length) return profiles as AutoMixProfile[];
     await mkdir(automixCacheDir, { recursive: true });
@@ -86,6 +97,7 @@ export const analyzeAutoMixTracks = (
           new Float32Array(data.buffer, data.byteOffset, data.byteLength / 4),
           tracks[index].tail,
         );
+        cache.delete(keys[index]);
         cache.set(keys[index], profile);
         profiles[index] = profile;
       }

@@ -5,7 +5,7 @@
     "pnpm-lock.yaml": "7fb7598c9966324f5427b96e52701c7eddc363c9cb5c0a99e1f5b3bb2a6cbf58"
   },
   "generated_by": "scripts/verify-baseline.sh compatible generator",
-  "git_head": "83befdc69ebb1735a52f17f7e6093d6631db63a0",
+  "git_head": "e4a7554df6030430e0af463810c8e6612dab4a68",
   "repo": "C:\\KaiFa\\OpsMusic",
   "repo_mode": "git",
   "toolchain": {
@@ -31,11 +31,11 @@
     }
   },
   "verification": {
-    "command": "bash scripts/verify-baseline.sh",
+    "command": "cargo test -p audio-engine --lib && cargo build -p audio-engine --release --message-format short && git diff --check && rustfmt --edition 2021 --check",
     "exit_code": 0,
-    "notes": "2026-11-22 批次 D 性能测量收口（后台 CDP 实证，dev 实例已关闭）。四项测量全部低于修复阈值，未改任何热路径代码；墨极光常驻动画空闲主线程占用约 10%（合成属性）留档供决策。测量记录：wenjian/本仓库审查结果/全量扫描-2026-11-22/性能测量记录-批次D-2026-11-22.md。A/B/C 三批提交 b1e7a4d/2931766/83befdc 未变。",
-    "result": "修复方案 v1 全批次收口：A/B/C 代码修复已提交验证，D 测量完成（均低于阈值不修）。"
+    "notes": "2026-11-24 StemWindow::load 分块读取落地：256 KiB 分块到预分配 Vec<f32>，读后关闭文件并校验长度/有限性；新增 10 个 Rust 回归测试。验证：cargo test -p audio-engine --lib 139 passed/0 failed/4 ignored，release build 通过，git diff --check 与 rustfmt 通过。基线数据：旧实现最大窗口峰值 48.45 MiB；实验快照 24.48 MiB，loadMs 中位 -10.7%、p95 -16%，临时文件删除 20/20。",
+    "result": "StemWindow load 分块读取与测试通过"
   },
-  "verified_at": "2026-11-22T23:07:02+08:00",
-  "worktree_fingerprint": "7ed4b6f83787f0f1711887a24d16636522de24a05e0b037233b8ab6545d234af"
+  "verified_at": "2026-11-24T05:35:00+08:00",
+  "worktree_fingerprint": "496b574efcea2e239647f30687ba7b8c87c40c10085c27deeb120e33fff6544d"
 }

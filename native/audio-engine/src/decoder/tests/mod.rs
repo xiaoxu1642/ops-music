@@ -1,3 +1,5 @@
+mod stems;
+
 use super::*;
 use crate::decoder::buffer::PopResult;
 

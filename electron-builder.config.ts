@@ -1,4 +1,5 @@
 import type { Configuration } from "electron-builder";
+import { SUPPORTED_AUDIO_EXTENSIONS } from "./shared/utils/audioFile";
 
 const config: Configuration = {
   appId: "com.ops.music",
@@ -70,6 +71,14 @@ const config: Configuration = {
     forceCodeSigning: false,
     // 只出 zip 免安装版：解压一次后直接运行，启动免去单文件自解压开销；安装器（NSIS）链路已退役
     target: ["zip"],
+    fileAssociations: [
+      {
+        ext: [...SUPPORTED_AUDIO_EXTENSIONS].map((extension) => extension.replace(".", "")),
+        name: "Audio File",
+        description: "音频文件",
+        role: "Viewer",
+      },
+    ],
   },
   npmRebuild: false,
   electronDownload: {

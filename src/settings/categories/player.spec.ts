@@ -56,7 +56,24 @@ const Select = defineComponent({
   setup:
     (_props, { emit }) =>
     () =>
-      h("button", { onClick: () => emit("update:modelValue", "crossfade") }, "crossfade"),
+      h(
+        "span",
+        {},
+        {
+          default: () => [
+            h(
+              "button",
+              { "data-mode": "crossfade", onClick: () => emit("update:modelValue", "crossfade") },
+              "crossfade",
+            ),
+            h(
+              "button",
+              { "data-mode": "automix", onClick: () => emit("update:modelValue", "automix") },
+              "automix",
+            ),
+          ],
+        },
+      ),
 });
 
 describe("开启预载的缓存确认", () => {
@@ -111,8 +128,28 @@ describe("播放过渡设置", () => {
     mocks.setSystem.mockResolvedValue(undefined);
   });
 
+  it("选择交叉过渡时不弹高占用确认并启用预载和缓存", async () => {
+    mocks.confirm.mockResolvedValue(true);
+    const wrapper = mount(SettingsItem, {
+      props: { item: transitionItem },
+      global: {
+        plugins: [
+          createI18n({ legacy: false, locale: "zh-CN", missingWarn: false, fallbackWarn: false }),
+        ],
+        stubs: { SSelect: Select },
+      },
+    });
+    await wrapper.get('[data-mode="crossfade"]').trigger("click");
+    await flushPromises();
+    expect(mocks.confirm).not.toHaveBeenCalled();
+    expect(mocks.enabled).toBe("crossfade");
+    expect(mocks.player.preloadNextTrack).toBe(true);
+    expect(mocks.setSystem).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
   for (const confirmed of [false, true]) {
-    it(confirmed ? "开启交叉过渡时启用预载和缓存" : "取消确认时保留无过渡", async () => {
+    it(confirmed ? "确认 AutoMix 时启用预载和缓存" : "取消 AutoMix 确认时保留无过渡", async () => {
       mocks.confirm.mockResolvedValue(confirmed);
       const wrapper = mount(SettingsItem, {
         props: { item: transitionItem },
@@ -123,20 +160,59 @@ describe("播放过渡设置", () => {
           stubs: { SSelect: Select },
         },
       });
-      await wrapper.get("button").trigger("click");
+      await wrapper.get('[data-mode="automix"]').trigger("click");
       await flushPromises();
       expect(mocks.confirm).toHaveBeenCalledOnce();
-      expect(mocks.enabled).toBe(confirmed ? "crossfade" : "none");
+      expect(mocks.enabled).toBe(confirmed ? "automix" : "none");
       expect(mocks.player.preloadNextTrack).toBe(confirmed);
       expect(mocks.setSystem).toHaveBeenCalledTimes(confirmed ? 1 : 0);
       wrapper.unmount();
     });
   }
 
-  it("缓存已开启时切换到过渡仍提示高占用", () => {
+  it("只有切入 AutoMix 时提示高占用", () => {
     mocks.cache = { enabled: true };
-    expect(transitionItem.confirm!.when!("crossfade")).toBe(true);
+    expect(transitionItem.confirm!.when!("crossfade")).toBe(false);
     expect(transitionItem.confirm!.when!("automix")).toBe(true);
     expect(transitionItem.confirm!.when!("none")).toBe(false);
+    expect(transitionItem.confirm!.whenCurrent!("none")).toBe(true);
+    expect(transitionItem.confirm!.whenCurrent!("crossfade")).toBe(true);
+    expect(transitionItem.confirm!.whenCurrent!("automix")).toBe(false);
+  });
+});
+
+describe("AutoMix 环境感知设置", () => {
+  const children = () =>
+    playerCategory
+      .sections!.find((section) => section.id === "playbackTransition")!
+      .items.find((item) => item.key === "transitionMode")!.children!;
+
+  beforeEach(() => {
+    mocks.player.transitionMode = "none";
+  });
+
+  it("全屏策略与低剩余阈值绑定到主进程配置", () => {
+    const policy = children().find((child) => child.key === "automixFullscreenPolicy")!;
+    expect(policy.binding!.path).toBe("system.player.automixFullscreenPolicy");
+    expect(policy.options!.map((option) => option.value)).toEqual([
+      "auto",
+      "skipDemucs",
+      "beatOnly",
+      "unlimited",
+    ]);
+    expect(policy.defaultValue).toBe("auto");
+    const guard = children().find((child) => child.key === "automixLowRemainingGuardMs")!;
+    expect(guard.binding!.path).toBe("system.player.automixLowRemainingGuardMs");
+    expect(guard.defaultValue).toBe(0);
+  });
+
+  it("只在 AutoMix 过渡方式下可见", () => {
+    const policy = children().find((child) => child.key === "automixFullscreenPolicy")!;
+    const guard = children().find((child) => child.key === "automixLowRemainingGuardMs")!;
+    expect(policy.visible!()).toBe(false);
+    expect(guard.visible!()).toBe(false);
+    mocks.player.transitionMode = "automix";
+    expect(policy.visible!()).toBe(true);
+    expect(guard.visible!()).toBe(true);
   });
 });

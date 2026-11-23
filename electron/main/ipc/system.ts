@@ -4,6 +4,7 @@ import { getMainWindow, focusMainWindow } from "@main/window";
 import { fetchBytes } from "@main/utils/fetchBytes";
 import { logsDir } from "@main/utils/paths";
 import { store } from "@main/store";
+import { consumePendingAudioFiles } from "@main/services/externalFile";
 
 /**
  * 注册系统相关的 IPC 事件
@@ -18,6 +19,9 @@ export const registerSystemIpc = (): void => {
 
   // 打开日志目录
   ipcMain.handle("system:openLogsDir", () => shell.openPath(logsDir));
+
+  // 渲染层取走冷启动暂存的外部音频文件
+  ipcMain.handle("system:consumePendingAudioFiles", () => consumePendingAudioFiles());
 
   // 显示并聚焦主窗口
   ipcMain.handle("system:focusMainWindow", () => focusMainWindow());

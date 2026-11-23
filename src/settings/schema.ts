@@ -5,6 +5,7 @@ import playerCategory from "./categories/player";
 import lyricCategory from "./categories/lyric";
 import externalLyricCategory from "./categories/externalLyric";
 import hotkeysCategory from "./categories/hotkeys";
+import downloadCategory from "./categories/download";
 import localCacheCategory from "./categories/localCache";
 import otherCategory from "./categories/other";
 import AboutSettings from "@/components/settings/custom/AboutSettings.vue";
@@ -17,6 +18,7 @@ export const settingsSchema: SettingCategory[] = [
   lyricCategory,
   externalLyricCategory,
   hotkeysCategory,
+  downloadCategory,
   localCacheCategory,
   otherCategory,
   { id: "about", icon: IconLucideInfo, component: AboutSettings },

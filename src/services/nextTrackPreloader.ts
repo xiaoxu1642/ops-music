@@ -12,7 +12,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { useMediaStore } from "@/stores/media";
 import * as queue from "@/stores/queue";
 import { isAutoMixReady, connectAutoMixComponents } from "@/services/automix";
-import { AUTOMIX_ARM_LEAD_MS } from "@shared/constants/playback";
+import { AUTOMIX_ARM_LEAD_MS, NEXT_TRACK_WATCH_DEBOUNCE_MS } from "@shared/constants/playback";
 
 /** 预载结果 */
 export interface NextTrackPreloadResult {
@@ -23,6 +23,8 @@ export interface NextTrackPreloadResult {
   autoMixStartMs?: number;
   source: ResolvedTrackSource | null;
   contextKey: string;
+  /** AutoMix 分析代次，用于旧任务迟到时合并队列 */
+  generation?: number;
 }
 
 let currentToken = 0;
@@ -32,8 +34,11 @@ let cachedResult: NextTrackPreloadResult | null = null;
 let currentContextKey: string | null = null;
 let pendingCover: HTMLImageElement | null = null;
 let transitionPreparedId: string | null = null;
+let generationOwner: number | null = null;
+let latestRequestedGeneration = 0;
 let stopContextWatch: (() => void) | null = null;
 let stopAutoMixComponents: (() => void) | null = null;
+let watchDebounce: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * 拼装上下文指纹，用于去重与作废
@@ -94,6 +99,11 @@ export const invalidateNextTrackPreload = (): void => {
   nativePreloadId = null;
   cachedResult = null;
   currentContextKey = null;
+  if (watchDebounce) {
+    clearTimeout(watchDebounce);
+    watchDebounce = null;
+  }
+  generationOwner = null;
   if (pendingCover) {
     pendingCover.src = "";
     pendingCover = null;
@@ -128,9 +138,14 @@ export const consumePreloadedTrack = (track: Track): NextTrackPreloadResult | nu
   const result = cachedResult;
   nativePreloadId = null;
   preloadAbort = null;
+  if (watchDebounce) {
+    clearTimeout(watchDebounce);
+    watchDebounce = null;
+  }
   currentToken++;
   cachedResult = null;
   currentContextKey = null;
+  latestRequestedGeneration = currentToken;
   return result;
 };
 
@@ -169,6 +184,7 @@ export const beginPreparedTransition = (
   const result = consumePreloadedTrack(track);
   if (!result?.preparedId) return null;
   transitionPreparedId = result.preparedId;
+  generationOwner = result.generation ?? null;
   return result;
 };
 
@@ -180,12 +196,35 @@ export const beginPreparedTransition = (
 export const finishPreparedTransition = (id: string, rejected?: NextTrackPreloadResult): void => {
   if (transitionPreparedId !== id) return;
   transitionPreparedId = null;
+  generationOwner = null;
   if (rejected) {
     cachedResult = { ...rejected, preparedId: undefined, autoMixStartMs: undefined };
     currentContextKey = rejected.contextKey;
   }
   void window.api.player.cancelPrepared(id).catch(console.warn);
   scheduleNextTrackPreload();
+};
+
+/**
+ * 合并高频上下文变化，只保留最新的预载调度
+ */
+export const debouncedScheduleNextTrackPreload = (): void => {
+  if (watchDebounce) clearTimeout(watchDebounce);
+  watchDebounce = setTimeout(() => {
+    watchDebounce = null;
+    scheduleNextTrackPreload();
+  }, NEXT_TRACK_WATCH_DEBOUNCE_MS);
+};
+
+/**
+ * 在加载状态变化后立即恢复预载，避免等待防抖窗口
+ */
+const resumeDeferredPreload = (): boolean => {
+  if (!watchDebounce) return false;
+  clearTimeout(watchDebounce);
+  watchDebounce = null;
+  scheduleNextTrackPreload();
+  return true;
 };
 
 /**
@@ -204,8 +243,11 @@ export const scheduleNextTrackPreload = (): void => {
     invalidateNextTrackPreload();
     return;
   }
-  if (status.trackLoading || status.state === "loading") return;
   const currentTrack = status.currentTrack;
+  if (status.trackLoading || status.state === "loading") {
+    return;
+  }
+  if (resumeDeferredPreload()) return;
   if (!currentTrack || useMediaStore().track?.id !== currentTrack.id) {
     invalidateNextTrackPreload();
     return;
@@ -230,6 +272,8 @@ export const scheduleNextTrackPreload = (): void => {
     return;
   }
   const contextKey = buildContextKey(candidateTrack);
+  const generation = latestRequestedGeneration + 1;
+  if (generationOwner != null && generation <= generationOwner) return;
   // 上下文指纹一致且已有缓存，避免重复触发
   if (cachedResult && cachedResult.contextKey === contextKey) {
     preloadLyricForTrack(candidateTrack);
@@ -238,6 +282,7 @@ export const scheduleNextTrackPreload = (): void => {
 
   // 避免在异步生成过程中重复调度同一 contextKey
   if (currentContextKey === contextKey && !cachedResult) {
+    latestRequestedGeneration = Math.max(latestRequestedGeneration, generation);
     preloadLyricForTrack(candidateTrack);
     return;
   }
@@ -245,6 +290,7 @@ export const scheduleNextTrackPreload = (): void => {
   invalidateNextTrackPreload();
   preloadLyricForTrack(candidateTrack);
   const token = ++currentToken;
+  latestRequestedGeneration = Math.max(latestRequestedGeneration, generation);
   const id = crypto.randomUUID();
   const abort = new AbortController();
   preloadAbort = abort;
@@ -293,7 +339,7 @@ export const scheduleNextTrackPreload = (): void => {
             ? {
                 mode: "automix",
                 endMs: candidateTrack.cueEndMs,
-                analysisContext: { generation: currentToken },
+                analysisContext: { generation },
               }
             : undefined,
         );
@@ -312,6 +358,7 @@ export const scheduleNextTrackPreload = (): void => {
         contextKey,
         preparedId,
         autoMixStartMs,
+        generation,
       };
       if (!preparedId) {
         console.info("[player:preload] 下一曲音源已准备，PCM 未预载", {
@@ -372,7 +419,7 @@ export const installNextTrackPreloadWatchers = (): void => {
         stopAutoMixComponents?.();
         stopAutoMixComponents = null;
       }
-      scheduleNextTrackPreload();
+      debouncedScheduleNextTrackPreload();
     },
     { flush: "post" },
   );
@@ -380,6 +427,8 @@ export const installNextTrackPreloadWatchers = (): void => {
 
 /** 清理预载上下文监听 */
 export const disposeNextTrackPreload = (): void => {
+  if (watchDebounce) clearTimeout(watchDebounce);
+  watchDebounce = null;
   stopContextWatch?.();
   stopContextWatch = null;
   stopAutoMixComponents?.();

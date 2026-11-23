@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "862ac232-76ae-44f2-a430-425886c8e6ac",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\candidate.json",
+  "output": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\opsmusic-architecture.html",
+  "specification": {
+    "sha256": "923dfe0ddd48a0a04f112a304910e5ae58be68d9d8412cd667664bce1c1af353",
+    "bytes": 8797
+  },
+  "artifact": {
+    "sha256": "e1adefc1e0867b56f457b0b235a656decf252dd12a0360a09c42a982ea63fc66",
+    "bytes": 858061
+  }
+}

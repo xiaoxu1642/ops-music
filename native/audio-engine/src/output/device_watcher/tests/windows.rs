@@ -1,7 +1,7 @@
 use super::*;
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use windows::Win32::Media::Audio::{DEVICE_STATE_ACTIVE, eCapture, eMultimedia};
+use std::sync::Arc;
+use windows::Win32::Media::Audio::{eCapture, eMultimedia, DEVICE_STATE_ACTIVE};
 
 fn test_client(commands: mpsc::SyncSender<WatchCommand>) -> IMMNotificationClient {
     DeviceNotificationClient {

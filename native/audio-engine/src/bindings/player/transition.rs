@@ -92,6 +92,10 @@ impl AudioPlayer {
                                     end: (span.end_seconds / plan.duration_seconds) as f32,
                                 })
                                 .collect(),
+                            pre_roll: plan.pre_roll.map(|span| MixEnvelope {
+                                start: (span.start_seconds / plan.duration_seconds) as f32,
+                                end: (span.end_seconds / plan.duration_seconds) as f32,
+                            }),
                         }),
                     )
                     .into_napi()?;

@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result, ensure};
 use ort::{
     ep,
     logging::LogLevel,
@@ -6,7 +6,7 @@ use ort::{
     value::{DynTensor, Tensor},
 };
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::{
     fs,
     io::{self, Read, Write},
@@ -170,9 +170,46 @@ fn peak_memory() -> u64 {
     }
 }
 
+/// 返回单调计时器的毫秒耗时
+fn elapsed_ms(started: Instant) -> f64 {
+    (started.elapsed().as_secs_f64() * 1_000_000.0).round() / 1_000.0
+}
+
+/// 读取 Windows NVIDIA 全卡已用显存，其他环境或工具不可用时返回空
+#[cfg(windows)]
+fn vram_used_mb() -> Option<u64> {
+    use std::os::windows::process::CommandExt;
+
+    let output = std::process::Command::new("nvidia-smi")
+        .args([
+            "-i",
+            "0",
+            "--query-gpu=memory.used",
+            "--format=csv,noheader,nounits",
+        ])
+        .creation_flags(0x0800_0000)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    std::str::from_utf8(&output.stdout)
+        .ok()?
+        .trim()
+        .parse()
+        .ok()
+}
+
+/// 非 Windows 环境不读取显存
+#[cfg(not(windows))]
+fn vram_used_mb() -> Option<u64> {
+    None
+}
+
 /// 运行一批串行窗口，结果写完后结束进程并释放全部模型资源
 /// @returns 发回主进程的紧凑结果
 fn run() -> Result<Value> {
+    let vram_before = vram_used_mb();
     let began = Instant::now();
     let mut input = String::new();
     io::stdin().take(256_001).read_to_string(&mut input)?;
@@ -192,7 +229,10 @@ fn run() -> Result<Value> {
         .with_telemetry(false)
         .commit();
     let mut gpu = cfg!(windows) && !request.cpu_only;
+    let mut init_ms = 0.0;
+    let mut validate_ms = 0.0;
     let (mut session, backend) = loop {
+        let init_started = Instant::now();
         let candidate = (|| -> Result<Session> {
             // 分离模型在 CPU 使用两条执行流及时释放张量，节拍模型仍按顺序执行
             let parallel = !gpu && request.kind == Kind::Demucs;
@@ -215,16 +255,25 @@ fn run() -> Result<Value> {
             }
             providers.push(ep::CPU::default().with_arena_allocator(false).build());
             builder = builder.with_execution_providers(providers)?;
-            let mut session = builder.commit_from_file(&request.model)?;
-            validate(&mut session, &request)?;
-            Ok(session)
+            Ok(builder.commit_from_file(&request.model)?)
         })();
+        init_ms += elapsed_ms(init_started);
         match candidate {
-            Ok(session) => break (session, if gpu { "DirectML" } else { "CPU" }),
+            Ok(mut session) => {
+                let validate_started = Instant::now();
+                let validation = validate(&mut session, &request);
+                validate_ms += elapsed_ms(validate_started);
+                match validation {
+                    Ok(()) => break (session, if gpu { "DirectML" } else { "CPU" }),
+                    Err(error) if !gpu => return Err(error),
+                    Err(_) => gpu = false,
+                }
+            }
             Err(error) if !gpu => return Err(error),
             Err(_) => gpu = false,
         }
     };
+    let infer_started = Instant::now();
     let mut results = Vec::new();
     for window in request.windows {
         let samples = read_samples(&window.input)?;
@@ -238,12 +287,20 @@ fn run() -> Result<Value> {
             results.push(json!({"frames": samples.len() / 2, "structure": {"vocals": vocals}}));
         }
     }
+    let infer_ms = elapsed_ms(infer_started);
+    let seconds = began.elapsed().as_secs_f64();
+    let vram_mb =
+        vram_before.and_then(|before| vram_used_mb().map(|after| after.saturating_sub(before)));
     Ok(json!({
         "windows": results,
         "analysisId": request.analysis_id.unwrap_or_default(),
         "backend": backend,
         "memoryMb": (peak_memory() as f64 / 1_048_576.0).round(),
-        "seconds": began.elapsed().as_secs_f64()
+        "seconds": seconds,
+        "initMs": init_ms,
+        "validateMs": validate_ms,
+        "inferMs": infer_ms,
+        "vramMb": vram_mb
     }))
 }
 

@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\candidate.json",
+    "sha256": "923dfe0ddd48a0a04f112a304910e5ae58be68d9d8412cd667664bce1c1af353",
+    "bytes": 8797
+  },
+  "artifact": {
+    "path": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\opsmusic-architecture.html",
+    "sha256": "e1adefc1e0867b56f457b0b235a656decf252dd12a0360a09c42a982ea63fc66",
+    "bytes": 858061
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\review-1.3.2\\opsmusic-architecture.finalize.json",
+    "summaryReceipt": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\review-1.3.2\\opsmusic-architecture.finalize-summary.json",
+    "browserCheckReceipt": "C:\\KaiFa\\OpsMusic\\.archify\\architecture-opsmusic-20261122-163000\\review-1.3.2\\opsmusic-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.3.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.3.0",
+    "severity": "normal",
+    "summary": "Adds Code Analysis & Architecture Diagnosis, Story walkthroughs and 1080p video, PR walkthroughs, automatic architecture placement, and lighter installs.",
+    "checkedAt": "2026-11-23T22:00:20.494Z",
+    "source": "network",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.2.0 → 3.3.0. A newer release is available. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.3.0. Would you like me to update Archify?",
+    "eventKey": "archify@sha256:00e4ff53267aee7dabf22ed333360cd3e380db20271a50264ae146ee25cf2538"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3005,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 4,
+      "routesOverSuggestedBends": 4
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "e1",
+            "from": "preload-bridge",
+            "to": "ipc-router",
+            "label": "invoke",
+            "collectionIndex": 1,
+            "artifactIndex": 2
+          },
+          "right": {
+            "id": "e6",
+            "from": "electron-main",
+            "to": "sqlite-config",
+            "label": "曲库/配置读写",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "point": [453, 92]
+        },
+        {
+          "left": {
+            "id": "e6",
+            "from": "electron-main",
+            "to": "sqlite-config",
+            "label": "曲库/配置读写",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "right": {
+            "id": "e8",
+            "from": "online-api",
+            "to": "electron-main",
+            "label": "cookie/登录窗",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "point": [453, 148],
+          "sharedNode": "electron-main"
+        },
+        {
+          "left": {
+            "id": "e6",
+            "from": "electron-main",
+            "to": "sqlite-config",
+            "label": "曲库/配置读写",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "right": {
+            "id": "e9",
+            "from": "electron-main",
+            "to": "lyric-window",
+            "label": "nowPlaying 同步",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "point": [831, 36],
+          "sharedNode": "electron-main"
+        },
+        {
+          "left": {
+            "id": "e8",
+            "from": "online-api",
+            "to": "electron-main",
+            "label": "cookie/登录窗",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "right": {
+            "id": "e11",
+            "from": "electron-main",
+            "to": "automix",
+            "label": "worker 分析",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "point": [474.15384615384613, 148],
+          "sharedNode": "electron-main"
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "e6",
+            "from": "electron-main",
+            "to": "sqlite-config",
+            "label": "曲库/配置读写",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "bends": 4,
+          "stretch": 1.076
+        },
+        {
+          "relationship": {
+            "id": "e9",
+            "from": "electron-main",
+            "to": "lyric-window",
+            "label": "nowPlaying 同步",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "bends": 4,
+          "stretch": 1.272
+        },
+        {
+          "relationship": {
+            "id": "e10",
+            "from": "lyric-window",
+            "to": "native-win",
+            "label": "任务栏嵌入",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "bends": 3,
+          "stretch": 1.083
+        },
+        {
+          "relationship": {
+            "id": "e11",
+            "from": "electron-main",
+            "to": "automix",
+            "label": "worker 分析",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "bends": 4,
+          "stretch": 1
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "electron-main has 6 relationships facing its left side, which fits 3 ports: make that side at least 102px, or move some of those neighbours so they face another side of electron-main.",
+      "preload-bridge → ipc-router crosses electron-main → sqlite-config: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "electron-main → sqlite-config and online-api → electron-main cross next to electron-main: move node sqlite-config or online-api so the two reach electron-main from different sides (for example one level with it, one directly above or below it).",
+      "electron-main → sqlite-config and electron-main → lyric-window cross next to electron-main: move node sqlite-config or lyric-window so the two reach electron-main from different sides (for example one level with it, one directly above or below it).",
+      "online-api → electron-main and electron-main → automix cross next to electron-main: move node online-api or automix so the two reach electron-main from different sides (for example one level with it, one directly above or below it).",
+      "electron-main → sqlite-config needs 4 bends: move node electron-main or sqlite-config so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "electron-main → lyric-window needs 4 bends: move node electron-main or lyric-window so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "lyric-window → native-win needs 3 bends: move node lyric-window or native-win so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

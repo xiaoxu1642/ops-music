@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { flushPromises } from "@vue/test-utils";
 import { arrangeAutoMix } from "./automix/arrangement";
 import type { AutoMixProfile } from "@shared/types/automix";
+import { AUTOMIX_DEMUX_MIN_REMAINING_MS } from "@shared/constants/playback";
 
 const mocks = vi.hoisted(() => ({
   handlers: new Map<string, (...args: unknown[]) => unknown>(),
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   speed: vi.fn(),
   pitch: vi.fn(),
   stems: vi.fn(),
+  storeGet: vi.fn(),
 }));
 vi.mock("@main/services/engine", () => ({
   onPlayerReset: vi.fn(),
@@ -31,7 +33,7 @@ vi.mock("@main/services/songCache", () => ({
   cancelPreload: vi.fn(),
   invalidate: vi.fn(),
 }));
-vi.mock("@main/store", () => ({ store: { get: () => false } }));
+vi.mock("@main/store", () => ({ store: { get: (key: string) => mocks.storeGet(key) } }));
 vi.mock("@main/utils/logger", () => ({ playerLog: { info: vi.fn(), warn: vi.fn() } }));
 vi.mock("./automix/analysisHost", () => ({ analyzeAutoMixTracks: mocks.automix }));
 vi.mock("./automix/enhancement", () => ({ enhanceAutoMixPlan: mocks.enhance }));
@@ -62,6 +64,7 @@ describe("后台曲尾交接通知", () => {
     vi.clearAllMocks();
     mocks.prepare.mockResolvedValue(true);
     mocks.analyze.mockResolvedValue(25.25);
+    mocks.storeGet.mockReturnValue(false);
     mocks.automix.mockResolvedValue(null);
     mocks.enhance.mockReset().mockImplementation(async (plan, _tracks, profiles) => ({
       ...arrangeAutoMix(plan, profiles[0], profiles[1]),
@@ -118,6 +121,23 @@ describe("后台曲尾交接通知", () => {
     finish(25.25);
     await flushPromises();
     expect(service.getTransitionEndMs(90000)).toBe(90000);
+  });
+
+  it("取消预载后，迟到的尾部判定必须被丢弃", async () => {
+    let finish!: (end: number) => void;
+    mocks.analyze.mockImplementation(
+      () =>
+        new Promise<number>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const service = await import("./playerPreload");
+    service.setCurrentTransitionRange(0, 40000);
+    await service.prepareNextTrack("next", "next.wav", 0, "standard");
+    service.cancelPreparedTrack("next");
+    finish(25.25);
+    await flushPromises();
+    expect(service.getTransitionEndMs(40000)).toBe(40000);
   });
 
   it("未启用交叉或分析失败时使用原始结尾", async () => {
@@ -193,7 +213,11 @@ describe("后台曲尾交接通知", () => {
     mocks.automix.mockResolvedValue([profile(), profile()]);
     const service = await import("./playerPreload");
     service.setCurrentTransitionRange(0, 20_000, "current.wav");
-    const context = { generation: 7, remainingMs: 12_000, fullscreen: "unknown" as const };
+    const context = {
+      generation: 7,
+      remainingMs: AUTOMIX_DEMUX_MIN_REMAINING_MS,
+      fullscreen: "unknown" as const,
+    };
     await service.prepareNextTrack("next", "next.wav", 0, "standard", {
       mode: "automix",
       analysisContext: context,
@@ -238,6 +262,24 @@ describe("后台曲尾交接通知", () => {
     service.cancelPreparedTrack("next");
     complete(true);
     expect(await installing).toBe(false);
+  });
+
+  it("剩余时间不足或全屏时跳过 AutoMix，保留 PCM 兜底交接", async () => {
+    mocks.automix.mockResolvedValue([profile(), profile()]);
+    mocks.storeGet.mockImplementation((key: string) =>
+      key === "player.automixLowRemainingGuardMs" ? AUTOMIX_DEMUX_MIN_REMAINING_MS : false,
+    );
+    const service = await import("./playerPreload");
+    service.setCurrentTransitionRange(0, 20_000, "current.wav");
+    await service.prepareNextTrack("next", "next.wav", 0, "standard", {
+      mode: "automix",
+      analysisContext: { generation: 8, remainingMs: 1000, fullscreen: true },
+    });
+    expect(mocks.automix).toHaveBeenCalledOnce();
+    expect(mocks.enhance).not.toHaveBeenCalled();
+    expect(service.getPreparedAutoMixPlan("next")).toBeUndefined();
+    expect(mocks.prepare).toHaveBeenCalledWith("next", "next.wav", 0);
+    expect(service.takeTransitionReady(5000)).toBe("next");
   });
 
   it("取消后迟到的模型结果不能复活下一曲槽位", async () => {

@@ -17,6 +17,8 @@ export interface SettingOption {
 export interface SettingConfirm {
   /** 仅当新值满足条件时才确认 */
   when?: (nextValue: unknown) => boolean;
+  /** 按切换前的值再筛一次，避免离开高占用模式时也弹确认 */
+  whenCurrent?: (currentValue: unknown) => boolean;
   /** 标题 i18n key */
   titleKey?: string;
   /** 正文 i18n key */

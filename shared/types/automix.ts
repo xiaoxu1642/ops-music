@@ -55,6 +55,12 @@ export interface AutoMixEnvelope {
   endMs: number;
 }
 
+/** 下一曲高频预入窗口，相对混音起点；低频与底鼓仍按声部包络换手 */
+export interface AutoMixPreRoll {
+  startMs: number;
+  endMs: number;
+}
+
 /** 主进程提交给原生引擎的有限混音计划 */
 export interface AutoMixPlan {
   outStartMs: number;
@@ -65,13 +71,17 @@ export interface AutoMixPlan {
   levelRatio: number;
   /** 顺序为当前曲与下一曲各自的鼓、贝斯、人声、伴奏，均在音频回调按帧执行 */
   envelopes: AutoMixEnvelope[];
+  /** 可选的高频预入，仅 AutoMix 使用 */
+  preRoll?: AutoMixPreRoll;
   /** 对拍乐句、短旋律交接或鼓不重叠的原速桥接 */
   strategy: "phrase" | "handoff" | "bridge";
-  stems: { outgoing: AutoMixStemWindow; incoming: AutoMixStemWindow };
+  stems?: { outgoing: AutoMixStemWindow; incoming: AutoMixStemWindow };
 }
 
 /** 分轨窗口绑定前的声部编排 */
-export type AutoMixArrangement = Omit<AutoMixPlan, "stems">;
+export type AutoMixArrangement = Omit<AutoMixPlan, "stems"> & {
+  stems?: AutoMixPlan["stems"];
+};
 
 /** 随预载提交的 AutoMix 范围，不包含服务器凭据 */
 export interface AutoMixPrepareOptions {

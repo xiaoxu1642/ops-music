@@ -1,24 +1,24 @@
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem;
-use std::ptr::{NonNull, null};
+use std::ptr::{null, NonNull};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, SyncSender};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use objc2_core_audio::{
+    kAudioDevicePropertyDataSource, kAudioDevicePropertyDataSources,
+    kAudioDevicePropertyDeviceIsAlive, kAudioDevicePropertyJackIsConnected,
+    kAudioDevicePropertyNominalSampleRate, kAudioDevicePropertyPreferredChannelLayout,
+    kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput,
+    kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyStreams, kAudioHardwareNoError,
+    kAudioHardwarePropertyDefaultOutputDevice, kAudioHardwarePropertyDevices,
+    kAudioObjectPropertyElementMain, kAudioObjectPropertyScopeGlobal, kAudioObjectSystemObject,
     AudioDeviceID, AudioObjectAddPropertyListener, AudioObjectGetPropertyData,
     AudioObjectGetPropertyDataSize, AudioObjectID, AudioObjectPropertyAddress,
-    AudioObjectRemovePropertyListener, kAudioDevicePropertyDataSource,
-    kAudioDevicePropertyDataSources, kAudioDevicePropertyDeviceIsAlive,
-    kAudioDevicePropertyJackIsConnected, kAudioDevicePropertyNominalSampleRate,
-    kAudioDevicePropertyPreferredChannelLayout, kAudioDevicePropertyPreferredChannelsForStereo,
-    kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreamConfiguration,
-    kAudioDevicePropertyStreams, kAudioHardwareNoError, kAudioHardwarePropertyDefaultOutputDevice,
-    kAudioHardwarePropertyDevices, kAudioObjectPropertyElementMain,
-    kAudioObjectPropertyScopeGlobal, kAudioObjectSystemObject,
+    AudioObjectRemovePropertyListener,
 };
 
 use super::{DeviceChangedCallback, PlatformBackend};

@@ -9,6 +9,8 @@ import i18n from "./i18n";
 import { useThemeStore } from "./stores/theme";
 import { useHotkeyStore } from "./stores/hotkey";
 import { initPlayer, restoreLastTrack } from "./core/player";
+import { playFiles } from "./core/player";
+import { isAudioFile } from "@shared/utils/audioFile";
 import { installHotkeyManager } from "./core/hotkey/manager";
 import { vRipple } from "./directives/ripple";
 
@@ -57,7 +59,24 @@ const removeSplash = (): void => {
  */
 const bootstrapPlayback = async (): Promise<void> => {
   await initPlayer();
-  await restoreLastTrack();
+  let restoring = true;
+  const pendingPlayFiles: string[][] = [];
+  window.api.system.onOpenFiles((files) => {
+    const valid = files.filter((file) => isAudioFile(file));
+    if (!valid.length) return;
+    if (restoring) {
+      pendingPlayFiles.push(valid);
+      return;
+    }
+    void playFiles(valid);
+  });
+  const pendingFiles = (await window.api.system.consumePendingAudioFiles()).filter((file) =>
+    isAudioFile(file),
+  );
+  if (pendingFiles.length) await playFiles(pendingFiles);
+  else await restoreLastTrack();
+  restoring = false;
+  for (const files of pendingPlayFiles) void playFiles(files);
 };
 
 // 初始化程序

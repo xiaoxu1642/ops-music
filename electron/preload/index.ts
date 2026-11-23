@@ -215,8 +215,7 @@ const api = {
     },
     // 订阅频谱柱数据（主进程仅在主窗口可见时转发）
     onSpectrum: (callback: (data: { bars: number[] }) => void) => {
-      ipcRenderer.removeAllListeners("player:spectrum");
-      return subscribe("player:spectrum", callback);
+      return subscribeShared("player:spectrum", callback);
     },
   },
   system: {
@@ -245,6 +244,12 @@ const api = {
     relaunch: () => ipcRenderer.invoke("system:relaunch"),
     // 获取 File 对象的本地绝对路径（用于拖拽播放）
     getPathForFile: (file: File): string => webUtils.getPathForFile(file),
+    // 订阅外部音频文件打开事件
+    onOpenFiles: (callback: (files: string[]) => void) =>
+      subscribe<string[]>("system:open-files", callback),
+    // 取走冷启动暂存的外部音频文件
+    consumePendingAudioFiles: (): Promise<string[]> =>
+      ipcRenderer.invoke("system:consumePendingAudioFiles"),
   },
   library: {
     // 开始扫描（默认增量）
@@ -431,6 +436,10 @@ const api = {
     clearFinished: () => ipcRenderer.invoke("download:clearFinished"),
     // 拉取全部任务
     list: () => ipcRenderer.invoke("download:list"),
+    getDir: (): Promise<string> => ipcRenderer.invoke("download:getDir"),
+    resetDir: (): Promise<string> => ipcRenderer.invoke("download:resetDir"),
+    pickDir: (): Promise<{ ok: boolean; dir: string; reason?: "canceled" }> =>
+      ipcRenderer.invoke("download:pickDir"),
     // 订阅进度
     onProgress: (callback: (data: unknown) => void) => subscribe("download:progress", callback),
     // 订阅状态变更

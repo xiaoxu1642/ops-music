@@ -209,6 +209,37 @@ fn plan(
 }
 
 #[test]
+fn automix_pre_roll_lifts_high_frequencies_before_the_main_blend() {
+    let first = buffered(vec![0.0; 2000]);
+    let mut high = Vec::with_capacity(2000);
+    for index in 0..2000 {
+        let wave = (index as f32 * std::f32::consts::TAU * 500.0 / 1000.0).sin();
+        high.push((wave * 0.8 + (index as f32 * 0.002).sin() * 0.1).max(0.0));
+    }
+    let second = buffered(high);
+    let mut source = TransitionSource::new(first, Arc::new(FftAnalyzer::new()));
+    let signals = source
+        .control()
+        .queue(
+            second,
+            TransitionPlan {
+                auto_start_sample: Some(0),
+                fade_samples: 1000,
+                pre_roll: Some(MixEnvelope {
+                    start: 0.0,
+                    end: 0.5,
+                }),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    source.begin_callback();
+    let early: Vec<f32> = (0..200).map(|_| source.next().unwrap()).collect();
+    assert!(signals.started.load(Ordering::Acquire));
+    assert!(early.iter().any(|sample| *sample > 0.01));
+}
+
+#[test]
 fn crossfade_keeps_one_output_source_and_skips_quiet_intro() {
     let first = buffered(vec![0.6; 500]);
     let mut second_samples = vec![0.0; 40];
@@ -225,13 +256,17 @@ fn crossfade_keeps_one_output_source_and_skips_quiet_intro() {
     let mut output: Vec<f32> = (0..90).map(|_| source.next().unwrap()).collect();
     assert!(!signals.started.load(Ordering::Acquire));
     output.extend((90..240).map(|_| source.next().unwrap()));
-    assert!(output[..90]
-        .iter()
-        .all(|sample| (*sample - 0.6).abs() < 0.001));
+    assert!(
+        output[..90]
+            .iter()
+            .all(|sample| (*sample - 0.6).abs() < 0.001)
+    );
     assert!(output[145] > 0.5 && output[145] < 0.8);
-    assert!(output[220..]
-        .iter()
-        .all(|sample| (*sample - 0.5).abs() < 0.001));
+    assert!(
+        output[220..]
+            .iter()
+            .all(|sample| (*sample - 0.5).abs() < 0.001)
+    );
     assert!(signals.started.load(Ordering::Acquire));
     assert!(signals.completed.load(Ordering::Acquire));
     control.drain_retired();
@@ -384,9 +419,11 @@ fn long_intro_silence_is_skipped_before_the_deadline() {
 
     let output: Vec<f32> = (0..700).map(|_| source.next().unwrap()).collect();
     assert!(output[550] > 0.5 && output[550] < 0.8);
-    assert!(output[650..]
-        .iter()
-        .all(|sample| (*sample - 0.5).abs() < 0.001));
+    assert!(
+        output[650..]
+            .iter()
+            .all(|sample| (*sample - 0.5).abs() < 0.001)
+    );
     assert!(signals.completed.load(Ordering::Acquire));
 }
 

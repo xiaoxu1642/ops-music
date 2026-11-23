@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Ops Music 架构地图（1.3.2 收口）",
+    "output": "opsmusic-architecture.html",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/xiaoxu1642/ops-music.git",
+      "revision": "e4a7554df6030430e0af463810c8e6612dab4a68",
+      "link_mode": "web",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "vue-renderer",
+      "type": "frontend",
+      "label": "Vue 渲染前端",
+      "sublabel": "SPA / Pinia",
+      "tag": "音源/队列/播放器",
+      "sources": [
+        {
+          "path": "src/main.ts",
+          "line": 15,
+          "end_line": 76
+        },
+        {
+          "path": "src/core/player/index.ts",
+          "line": 1,
+          "end_line": 39
+        }
+      ],
+      "pos": [40, 60],
+      "size": [170, 64]
+    },
+    {
+      "id": "lyric-window",
+      "type": "frontend",
+      "label": "任务栏歌词窗口",
+      "sublabel": "独立 Vite 入口",
+      "tag": "逐字高亮同步",
+      "sources": [
+        {
+          "path": "windows/taskbar-lyric/main.ts",
+          "line": 1,
+          "end_line": 4
+        },
+        {
+          "path": "windows/shared/composables/useNowPlayingSync.ts",
+          "line": 34,
+          "end_line": 100
+        }
+      ],
+      "pos": [40, 360],
+      "size": [170, 64]
+    },
+    {
+      "id": "preload-bridge",
+      "type": "frontend",
+      "label": "Preload 安全桥",
+      "sublabel": "contextBridge",
+      "tag": "window.api",
+      "sources": [
+        {
+          "path": "electron/preload/index.ts",
+          "line": 47,
+          "end_line": 213
+        }
+      ],
+      "pos": [280, 60],
+      "size": [170, 64]
+    },
+    {
+      "id": "electron-main",
+      "type": "backend",
+      "label": "Electron 主进程",
+      "sublabel": "core / window",
+      "tag": "单例 / 生命周期",
+      "sources": [
+        {
+          "path": "electron/main/core/index.ts",
+          "line": 100,
+          "end_line": 165
+        },
+        {
+          "path": "electron/main/window/index.ts",
+          "line": 1,
+          "end_line": 34
+        }
+      ],
+      "pos": [760, 60],
+      "size": [170, 64]
+    },
+    {
+      "id": "ipc-router",
+      "type": "backend",
+      "label": "IPC 路由",
+      "sublabel": "ipcMain.handle",
+      "tag": "16 组处理器",
+      "sources": [
+        {
+          "path": "electron/main/ipc/index.ts",
+          "line": 1,
+          "end_line": 36
+        }
+      ],
+      "pos": [520, 60],
+      "size": [170, 64]
+    },
+    {
+      "id": "audio-engine",
+      "type": "backend",
+      "label": "原生音频引擎",
+      "sublabel": "FFmpeg + CPAL",
+      "tag": "解码/播放/FFT",
+      "sources": [
+        {
+          "path": "native/audio-engine/src/lib.rs",
+          "line": 1,
+          "end_line": 19
+        },
+        {
+          "path": "electron/main/services/engine.ts",
+          "line": 25,
+          "end_line": 57
+        }
+      ],
+      "pos": [760, 210],
+      "size": [170, 64]
+    },
+    {
+      "id": "native-win",
+      "type": "backend",
+      "label": "Windows 原生集成",
+      "sublabel": "SMTC / 任务栏",
+      "tag": "封面/歌词/媒体键",
+      "sources": [
+        {
+          "path": "native/media-ctrl/src/lib.rs",
+          "line": 20,
+          "end_line": 110
+        },
+        {
+          "path": "native/taskbar-lyric/src/service.rs",
+          "line": 1,
+          "end_line": 88
+        }
+      ],
+      "pos": [520, 210],
+      "size": [170, 64]
+    },
+    {
+      "id": "sqlite-config",
+      "type": "database",
+      "label": "曲库与配置持久化",
+      "sublabel": "better-sqlite3",
+      "tag": "library.db + 原子配置",
+      "sources": [
+        {
+          "path": "electron/main/database/index.ts",
+          "line": 8,
+          "end_line": 164
+        },
+        {
+          "path": "electron/main/store/index.ts",
+          "line": 12,
+          "end_line": 125
+        }
+      ],
+      "pos": [280, 210],
+      "size": [170, 64]
+    },
+    {
+      "id": "online-api",
+      "type": "external",
+      "label": "在线音源与歌词 API",
+      "sublabel": "Netease/Bili/Migu",
+      "tag": "缓存/登录窗",
+      "sources": [
+        {
+          "path": "electron/main/ipc/apis.ts",
+          "line": 26,
+          "end_line": 88
+        },
+        {
+          "path": "electron/main/apis/netease/index.ts",
+          "line": 1,
+          "end_line": 12
+        }
+      ],
+      "pos": [40, 210],
+      "size": [170, 64]
+    },
+    {
+      "id": "automix",
+      "type": "external",
+      "label": "AutoMix 推理进程",
+      "sublabel": "ONNX + Rust worker",
+      "tag": "beat / demucs",
+      "sources": [
+        {
+          "path": "native/automix-worker/src/main.rs",
+          "line": 21,
+          "end_line": 44
+        },
+        {
+          "path": "electron/main/services/automix/analysisHost.ts",
+          "line": 26,
+          "end_line": 96
+        }
+      ],
+      "pos": [280, 360],
+      "size": [170, 64]
+    },
+    {
+      "id": "build-tools",
+      "type": "backend",
+      "label": "构建与打包",
+      "sublabel": "napi + electron-builder",
+      "tag": "zip / extraResources",
+      "sources": [
+        {
+          "path": "scripts/build-native.ts",
+          "line": 9,
+          "end_line": 27
+        },
+        {
+          "path": "electron-builder.config.ts",
+          "line": 3,
+          "end_line": 78
+        }
+      ],
+      "pos": [520, 360],
+      "size": [170, 64]
+    }
+  ],
+  "connections": [
+    {
+      "id": "e0",
+      "from": "vue-renderer",
+      "to": "preload-bridge",
+      "label": "window.api"
+    },
+    {
+      "id": "e1",
+      "from": "preload-bridge",
+      "to": "ipc-router",
+      "label": "invoke"
+    },
+    {
+      "id": "e2",
+      "from": "ipc-router",
+      "to": "electron-main",
+      "label": "主进程处理"
+    },
+    {
+      "id": "e3",
+      "from": "electron-main",
+      "to": "audio-engine",
+      "label": "加载 .node"
+    },
+    {
+      "id": "e4",
+      "from": "audio-engine",
+      "to": "electron-main",
+      "label": "state/position 事件"
+    },
+    {
+      "id": "e5",
+      "from": "electron-main",
+      "to": "native-win",
+      "label": "SMTC/任务栏"
+    },
+    {
+      "id": "e6",
+      "from": "electron-main",
+      "to": "sqlite-config",
+      "label": "曲库/配置读写"
+    },
+    {
+      "id": "e7",
+      "from": "vue-renderer",
+      "to": "online-api",
+      "label": "音源解析"
+    },
+    {
+      "id": "e8",
+      "from": "online-api",
+      "to": "electron-main",
+      "label": "cookie/登录窗"
+    },
+    {
+      "id": "e9",
+      "from": "electron-main",
+      "to": "lyric-window",
+      "label": "nowPlaying 同步"
+    },
+    {
+      "id": "e10",
+      "from": "lyric-window",
+      "to": "native-win",
+      "label": "任务栏嵌入"
+    },
+    {
+      "id": "e11",
+      "from": "electron-main",
+      "to": "automix",
+      "label": "worker 分析"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "双界面",
+      "items": ["主 SPA 播放器 + 独立任务栏歌词窗口，后者借原生 UIA/DWM 嵌入任务栏。"]
+    },
+    {
+      "dot": "emerald",
+      "title": "原生内核",
+      "items": ["FFmpeg 音频引擎与 SMTC/任务栏/OpenCC 均经 NAPI-RS 以 .node 接入主进程。"]
+    },
+    {
+      "dot": "violet",
+      "title": "数据",
+      "items": ["SQLite 曲库 WAL + 自研 JSON 配置原子写，统一数据目录 {userData}/app-data。"]
+    },
+    {
+      "dot": "rose",
+      "title": "外部",
+      "items": ["在线音源与 AutoMix 独立运行时均为外部能力，后者按需下载 ONNX Runtime。"]
+    }
+  ]
+}

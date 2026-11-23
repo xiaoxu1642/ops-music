@@ -50,8 +50,9 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
   <!-- 浮动模式 -->
   <div v-if="isFloating" class="relative flex items-center px-4 gap-4 min-w-0">
     <SpectrumCanvas
-      class="spectrum-veil absolute inset-0 rounded-full pointer-events-none"
+      class="spectrum-veil wave-veil absolute inset-x-0 bottom-0 rounded-full pointer-events-none"
       :active="!isPlayerExpanded"
+      mode="wave"
     />
     <PlayerControls compact />
     <div class="flex flex-col flex-1 min-w-0 gap-1 pt-2 pb-1">
@@ -121,8 +122,9 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
   <!-- 默认模式 -->
   <div v-else class="relative h-full">
     <SpectrumCanvas
-      class="spectrum-veil absolute inset-0 pointer-events-none"
+      class="spectrum-veil wave-veil absolute inset-x-0 bottom-0 pointer-events-none"
       :active="!isPlayerExpanded"
+      mode="wave"
     />
     <div class="absolute left-0 right-0 top-0 -translate-y-1/2 z-10">
       <SSlider
@@ -196,6 +198,14 @@ const { items: menuItems, handleSelect: onMenuSelect } = useTrackMenu(toRef(medi
 /* 墨极光：频谱透明度随氛围光效强度（--s-fx 默认 0.8 时等效原型 0.16） */
 .spectrum-veil {
   opacity: calc(0.2 * var(--s-fx));
+}
+
+.wave-veil {
+  height: 30px;
+  opacity: calc(0.55 * var(--s-fx));
+  --waveform-color: hsl(calc(var(--s-hue) + 25) 85% 60%);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
 
 /* 墨极光：进度条发光填充，色相跟随 --s-hue */

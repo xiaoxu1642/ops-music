@@ -42,6 +42,7 @@ declare module 'vue' {
     DialogRoot: typeof import('reka-ui')['DialogRoot']
     DialogTitle: typeof import('reka-ui')['DialogTitle']
     DialogTrigger: typeof import('reka-ui')['DialogTrigger']
+    DownloadDirConfig: typeof import('./src/components/settings/custom/DownloadDirConfig.vue')['default']
     DownloadList: typeof import('./src/components/list/DownloadList.vue')['default']
     DropdownMenuContent: typeof import('reka-ui')['DropdownMenuContent']
     DropdownMenuItem: typeof import('reka-ui')['DropdownMenuItem']
