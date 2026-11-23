@@ -142,7 +142,6 @@ export const useSettingsStore = defineStore(
       transitionMode: "none",
       transitionPreference: "standard",
       automixCrossfadeFallback: true,
-      automixPreRollMs: 1200,
       searchPlayBehavior: "current",
     });
 
@@ -332,12 +331,6 @@ export const useSettingsStore = defineStore(
         }
         if (typeof lyric.detectBackgroundLyrics !== "boolean") {
           lyric.detectBackgroundLyrics = true;
-        }
-        if (
-          typeof player.automixPreRollMs !== "number" ||
-          !Number.isFinite(player.automixPreRollMs)
-        ) {
-          player.automixPreRollMs = 1200;
         }
         if (typeof lyric.enableLrcmuxWordLyric !== "boolean") {
           lyric.enableLrcmuxWordLyric = false;

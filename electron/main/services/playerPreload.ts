@@ -298,12 +298,17 @@ export const prepareNextTrack = async (
     if (task.analysis.signal.aborted) return false;
     if (options?.mode === "automix" && !task.automix)
       playerLog.info("AutoMix 本次不可用，按设置交叉过渡或直接切歌");
-    const plan = task.automix;
-    const planStems = plan?.stems;
-    if (plan) {
+    const basePlan = task.automix;
+    const planStems = basePlan?.stems;
+    let plan = basePlan;
+    if (basePlan) {
       const preRollMs = Math.max(0, Math.min(3000, store.get("player.automixPreRollMs") ?? 1200));
-      const span = Math.min(preRollMs, plan.durationMs / 2);
-      plan.preRoll = span > 0 ? { startMs: 0, endMs: span } : undefined;
+      const span = Math.min(Math.max(0, preRollMs), basePlan.durationMs / 2);
+      plan = {
+        ...basePlan,
+        preRoll: span > 0 ? { startMs: 0, endMs: span } : undefined,
+      };
+      task.automix = plan;
     }
     const ready =
       plan && planStems

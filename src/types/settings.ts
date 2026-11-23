@@ -246,8 +246,6 @@ export interface PlayerSettings {
   transitionPreference: TransitionPreference;
   /** AutoMix 不可用或失败时回退为交叉过渡（关闭则直接切歌） */
   automixCrossfadeFallback: boolean;
-  /** 提前叠入下一曲高频的窗口毫秒数，0 表示不预入 */
-  automixPreRollMs: number;
   /** 搜索页播放行为 */
   searchPlayBehavior: SearchPlayBehavior;
 }

@@ -49,7 +49,10 @@ const readHue = (): void => {
 /** Canvas 渐变需要显式 alpha，避免 hsl() 覆盖色丢掉淡出 */
 const colorWithAlpha = (color: string, alpha: number): string => {
   if (!color.startsWith("hsl(")) return color;
-  const values = color.slice(4, -1).split(/\s*,\s*/);
+  const values = color
+    .slice(4, -1)
+    .split(/\s*(?:,\s*|\s+)/)
+    .filter(Boolean);
   if (values.length !== 3) return color;
   return `hsla(${values.join(", ")}, ${alpha})`;
 };
