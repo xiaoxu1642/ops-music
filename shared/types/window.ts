@@ -1,5 +1,16 @@
 import type { TaskbarLyricSettings } from "./settings";
 
+/** 主窗口生命周期运行模式 */
+export type LifecycleMode = "full" | "minimizedWithLyric" | "minimizedWithoutLyric" | "tray";
+
+/** 主窗口生命周期模式变化负载 */
+export interface LifecycleState {
+  /** 当前生命周期模式 */
+  mode: LifecycleMode;
+  /** 任务栏歌词用户开关当前是否开启 */
+  taskbarLyricEnabled: boolean;
+}
+
 /** 任务栏歌词自动关闭原因 */
 export type TaskbarLyricAutoCloseReason = "fullscreen" | "paused";
 
@@ -40,8 +51,18 @@ export interface WindowApi {
   onFullscreenChange: (callback: (fullscreen: boolean) => void) => () => void;
   /** 隐藏主窗口到托盘 */
   hide: () => void;
+  /** 订阅主窗口生命周期模式变化，并清理 HMR 遗留监听器 */
+  onLifecycleModeChange: (callback: (payload: LifecycleState) => void) => () => void;
+  /** 查询当前生命周期状态，避免错过启动前广播 */
+  getLifecycleState: () => Promise<LifecycleState>;
   /** 退出应用 */
   quit: () => void;
+}
+
+/** 启动里程碑 API */
+export interface StartupApi {
+  /** 上报渲染进程达成的启动里程碑，时间由主进程记录 */
+  reportMilestone: (milestone: "playbackRuntimeReady" | "playbackReady" | "fullUiReady") => void;
 }
 
 /** 任务栏歌词布局事件 */

@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
 import type { TaskbarLyricSettings } from "@shared/types/settings";
 import type { TaskbarLyricAutoClosePayload } from "@shared/types/window";
+import type { LifecycleState } from "@shared/types/window";
 import type { HotkeyActionId, HotkeyBinding, HotkeyConflict } from "@shared/types/hotkey";
 import type {
   LoadOptions,
@@ -344,7 +345,17 @@ const api = {
     onFullscreenChange: (callback: (fullscreen: boolean) => void) =>
       subscribeShared<boolean>("window:fullscreenChange", callback),
     hide: () => ipcRenderer.send("window:hide"),
+    // 订阅主窗口生命周期模式变化（full / minimizedWithLyric / minimizedWithoutLyric / tray）
+    onLifecycleModeChange: (callback: (payload: LifecycleState) => void) =>
+      subscribeShared("lifecycle:modeChanged", callback),
+    // 渲染端启动时读取当前生命周期，避免错过启动前广播
+    getLifecycleState: (): Promise<LifecycleState> => ipcRenderer.invoke("lifecycle:getState"),
     quit: () => ipcRenderer.send("window:quit"),
+  },
+  startup: {
+    // 上报渲染进程里程碑，时间戳由主进程记录
+    reportMilestone: (milestone: "playbackRuntimeReady" | "playbackReady" | "fullUiReady") =>
+      ipcRenderer.send("startup:reportMilestone", milestone),
   },
   taskbarLyric: {
     setContentWidth: (width: number) => ipcRenderer.send("taskbarLyric:setContentWidth", width),

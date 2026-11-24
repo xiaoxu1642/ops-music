@@ -490,7 +490,7 @@ const lyricCategory: SettingCategory = {
         {
           key: "systemMediaControls",
           type: "switch",
-          binding: { store: "settings", path: "system.media.systemMediaControls" },
+          binding: { store: "settings", path: "media.systemMediaControls" },
           defaultValue: true,
         },
       ],

@@ -10,6 +10,7 @@ import * as autoClose from "@/services/autoClose";
 import * as abLoop from "@/services/abLoop";
 import * as cacheScheduler from "@/services/cacheScheduler";
 import { setDeviceVolume } from "@/services/deviceVolume";
+import { isPlaybackRestrictedMode, isSmartTransitionEnabled } from "@/lifecycle/playbackGates";
 import * as playStats from "./stats";
 import {
   applySavedVolumeForActiveDevice,
@@ -42,15 +43,18 @@ const finishCurrentTrack = async (): Promise<void> => {
   if (endedGuard) return;
   endedGuard = true;
   try {
-    const stopByTimer = autoClose.onTrackEnded();
+    const restricted = isPlaybackRestrictedMode();
+    const stopByTimer = restricted ? false : autoClose.onTrackEnded();
     // FM 模式跳过
     const repeatOne = status.repeatMode === "one" && !status.fmMode;
     // 结算播放统计
-    playStats.onTrackEnded(repeatOne && !stopByTimer);
+    if (!restricted) playStats.onTrackEnded(repeatOne && !stopByTimer);
     // 定时关闭"等本曲结束"模式
     if (stopByTimer) return;
-    // 单曲循环：seek 回开头继续播放
-    if (repeatOne) {
+    // 受限态私人 FM 不预取下一首，当前曲结束后直接停止
+    if (restricted && status.fmMode) return;
+    // 受限态不做单曲循环，按队列结束策略停止；完整态保留单曲循环
+    if (repeatOne && !restricted) {
       await seek(0);
       await play();
     } else {
@@ -103,14 +107,17 @@ export const handleEvent = async (event: PlayerEvent): Promise<void> => {
       if (event.data.active) status.transitionMode = event.data.mode;
       break;
     case "transitionReady":
-      await trySmartTransition(event.data.position, event.data.id, event.data.endPosition);
+      if (isSmartTransitionEnabled()) {
+        await trySmartTransition(event.data.position, event.data.id, event.data.endPosition);
+      }
       break;
     case "position": {
       // 歌曲加载中不更新进度
       if (status.trackLoading) break;
       const settings = useSettingsStore();
       const transitionEnabled =
-        settings.player.preloadNextTrack || settings.player.transitionMode !== "none";
+        isSmartTransitionEnabled() &&
+        (settings.player.preloadNextTrack || settings.player.transitionMode !== "none");
       // seek 后丢弃旧位置，直到后端推送的位置到达 seek 目标附近
       if (!hasReachedSeekTarget(event.data.position)) break;
       const adjusted = playback.setCurrentTime(event.data.position);

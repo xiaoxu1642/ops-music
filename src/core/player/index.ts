@@ -26,10 +26,11 @@ import {
   beginPreparedTransition,
   peekPreparedTrack,
   finishPreparedTransition,
+  refreshSmartTransitionAvailability,
   scheduleNextTrackPreload,
 } from "@/services/nextTrackPreloader";
 import { getNextTrackCandidate } from "./candidate";
-import { installPlayStats, onTrackEnded } from "./stats";
+import { installPlayStats, onTrackEnded, setPlayStatsEnabled } from "./stats";
 import { useFavorite } from "@/composables/useFavorite";
 import { extractColorFromUrl } from "@/utils/color";
 import { handleError, isNoSourceSkippableError, isSkippableError } from "@/utils/errors";
@@ -37,6 +38,14 @@ import { ErrorCode } from "@shared/types/errors";
 import { shouldSkipKeywordTrack } from "@/utils/preset/skipKeywords";
 import { toast } from "@/composables/useToast";
 import i18n from "@/i18n";
+import {
+  initPlaybackModeBridge,
+  isFullUiMode,
+  isPlaybackRestrictedMode,
+  isSmartTransitionEnabled,
+  onPlaybackModeChange,
+  reportPlaybackStartupMilestone,
+} from "@/lifecycle/playbackGates";
 
 /** 加载运行时选项 */
 interface LoadRuntimeOptions {
@@ -72,6 +81,8 @@ let loadToken = 0;
 /** loadTrack 竞态 token */
 let trackToken = 0;
 let transitionInFlight = false;
+/** 生命周期切换代次，用于拒绝受限态之后迟到的交接结果 */
+let transitionEpoch = 0;
 let lastLoggedTransitionId: string | null = null;
 /** 连续加载失败计数，成功时重置 */
 let consecutiveFailures = 0;
@@ -208,7 +219,7 @@ export const load = async (
   const isOnline = meta?.source !== "local";
   if (isOnline) {
     void lyricLoader.loadForTrack(null);
-    extractColorFromUrl(meta?.cover ?? meta?.coverOriginal ?? null);
+    if (isFullUiMode()) extractColorFromUrl(meta?.cover ?? meta?.coverOriginal ?? null);
   }
   try {
     const result =
@@ -432,7 +443,7 @@ export const loadTrack = async (
         failureError = result.error;
       } else if (result.ok) {
         // 用户主动触发的成功播放记入历史；initPlayer 的恢复路径走 load() 不经此处
-        void useHistoryStore().record(track);
+        if (!isPlaybackRestrictedMode()) void useHistoryStore().record(track);
         if (resolved.cacheRequest) {
           cacheScheduler.schedule(track.id, resolved.cacheRequest);
         }
@@ -982,6 +993,7 @@ export const trySmartTransition = async (
   const settings = useSettingsStore();
   const status = useStatusStore();
   if (
+    !isSmartTransitionEnabled() ||
     transitionInFlight ||
     settings.player.transitionMode === "none" ||
     !status.isPlaying ||
@@ -1031,6 +1043,7 @@ export const trySmartTransition = async (
   const oldIndex = status.playIndex;
   const oldTrackId = status.currentTrack?.id;
   const token = trackToken;
+  const epoch = transitionEpoch;
   transitionInFlight = true;
   let completed = false;
   try {
@@ -1046,6 +1059,10 @@ export const trySmartTransition = async (
       },
       ...(autoMix ? ["automix" as const] : []),
     );
+    if (epoch !== transitionEpoch || isPlaybackRestrictedMode()) {
+      if (shouldLog) console.info("[player:transition] 生命周期已切换，丢弃迟到的交接结果");
+      return;
+    }
     if (token !== trackToken) {
       if (shouldLog) console.info("[player:transition] 交叉过渡已被新的播放操作取消");
       return;
@@ -1375,13 +1392,35 @@ export const moveInQueue = (fromIndex: number, toIndex: number): void => {
 };
 
 let unsubscribe: (() => void) | null = null;
+let unsubscribeLifecycleMode: (() => void) | null = null;
 let initialized = false;
+
+/** 生命周期切换时裁剪播放副链路，并刷新智能过渡能力 */
+const handlePlaybackModeChange = (): void => {
+  if (isPlaybackRestrictedMode()) {
+    transitionEpoch++;
+    transitionInFlight = false;
+    lastLoggedTransitionId = null;
+    useStatusStore().transitioning = false;
+    autoClose.cancel();
+    setPlayStatsEnabled(false);
+    refreshSmartTransitionAvailability();
+    return;
+  }
+  setPlayStatsEnabled(true);
+  installPlayStats();
+  refreshSmartTransitionAvailability();
+};
 
 /** 初始化播放器 */
 export const initPlayer = async (): Promise<void> => {
   if (initialized) return;
   initialized = true;
   console.log("[player] init");
+  initPlaybackModeBridge();
+  unsubscribeLifecycleMode?.();
+  unsubscribeLifecycleMode = onPlaybackModeChange(handlePlaybackModeChange);
+  setPlayStatsEnabled(!isPlaybackRestrictedMode());
   // 先从主进程同步后端配置，确保 system 设置可用
   const settings = useSettingsStore();
   await settings.syncSystem();
@@ -1422,7 +1461,7 @@ export const initPlayer = async (): Promise<void> => {
   if (unsubscribe) unsubscribe();
   unsubscribe = window.api.player.onEvent(handleEvent);
   // 安装播放统计累加器
-  installPlayStats();
+  if (!isPlaybackRestrictedMode()) installPlayStats();
   // 订阅主进程下发的歌词偏移变化
   const media = useMediaStore();
   // 当前歌曲喜欢状态变化时同步到托盘菜单
@@ -1445,7 +1484,8 @@ export const initPlayer = async (): Promise<void> => {
   }
   // 下一首预载的监听器
   installNextTrackPreloadWatchers();
-  scheduleNextTrackPreload();
+  refreshSmartTransitionAvailability();
+  reportPlaybackStartupMilestone("playbackRuntimeReady");
 };
 
 /** 恢复上次播放状态 */
@@ -1500,6 +1540,9 @@ export const restoreLastTrack = async (): Promise<void> => {
 /** 清理事件订阅 */
 export const disposePlayer = (): void => {
   disposeNextTrackPreload();
+  unsubscribeLifecycleMode?.();
+  unsubscribeLifecycleMode = null;
+  setPlayStatsEnabled(false);
   if (unsubscribe) {
     unsubscribe();
     unsubscribe = null;

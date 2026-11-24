@@ -3,9 +3,15 @@ import { join } from "path";
 import { is } from "@electron-toolkit/utils";
 import { createWindow } from "./create";
 import { shouldDestroyIdleMainWindow } from "./idleDestroy";
+import {
+  applyLifecycleEvent,
+  configureLifecycleModeHooks,
+  getCurrentLifecycleMode,
+  initializeLifecycleMode,
+} from "./lifecycleMode";
 import { initThumbar } from "@main/services/thumbar";
 import { enableTaskbarThumbnail } from "@main/services/thumbnail";
-import { initTray } from "@main/services/tray";
+import { initTray, refreshTray } from "@main/services/tray";
 import { lightSnapshot } from "@main/services/nowPlaying";
 import { store } from "@main/store";
 import { MAIN_PARTITION } from "@main/utils/protocol";
@@ -21,6 +27,22 @@ const isInternalNavigation = (url: string): boolean => {
   const devBase = process.env["ELECTRON_RENDERER_URL"];
   return !!devBase && url.startsWith(devBase);
 };
+
+configureLifecycleModeHooks({
+  onModeChanged: (state) => {
+    broadcast("lifecycle:modeChanged", state);
+    refreshTray();
+  },
+  onExitTray: () => {
+    // 托盘态已持久化关闭歌词，恢复完整态时不自动重开
+  },
+  onEnterTray: () => {
+    store.set("windowStates.taskbarLyric.visible", false);
+    void import("./taskbarLyric")
+      .then(({ closeTaskbarLyricWindow }) => closeTaskbarLyricWindow())
+      .catch((error) => coreLog.error("关闭任务栏歌词失败", error));
+  },
+});
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -44,8 +66,10 @@ const cancelIdleDestroy = (): void => {
  */
 const armIdleDestroy = (win: BrowserWindow): void => {
   cancelIdleDestroy();
+  if (getCurrentLifecycleMode() !== "full") return;
   const check = (): void => {
     idleDestroyTimer = null;
+    if (getCurrentLifecycleMode() !== "full") return;
     if (shouldDestroyIdleMainWindow(!win.isVisible(), lightSnapshot().playing)) {
       coreLog.info("主窗口闲置，销毁窗口以释放常驻内存");
       win.destroy();
@@ -60,6 +84,7 @@ const armIdleDestroy = (win: BrowserWindow): void => {
  * 创建主窗口
  */
 export const createMainWindow = (): BrowserWindow => {
+  initializeLifecycleMode(store.get("windowStates.taskbarLyric.visible") === true);
   const remember = store.get("system.rememberWindowState") ?? true;
   const saved = remember ? store.get("windowStates.main") : undefined;
 
@@ -149,11 +174,14 @@ export const createMainWindow = (): BrowserWindow => {
       return;
     }
     event.preventDefault();
+    applyLifecycleEvent("closeToTray");
     mainWindow?.hide();
   });
   // 隐藏期间才允许闲置销毁；重新显示立即取消计时
   mainWindow.on("hide", () => armIdleDestroy(mainWindow!));
   mainWindow.on("show", cancelIdleDestroy);
+  mainWindow.on("minimize", () => applyLifecycleEvent("minimize"));
+  mainWindow.on("restore", () => applyLifecycleEvent("restore"));
   // 最大化
   mainWindow.on("maximize", () => {
     saveWindowState();
@@ -235,11 +263,13 @@ export const getMainWindow = (): BrowserWindow | null => {
 export const focusMainWindow = (): void => {
   const win = getMainWindow();
   if (win) {
+    applyLifecycleEvent("restore");
     if (win.isMinimized()) win.restore();
     win.show();
     win.focus();
     return;
   }
+  applyLifecycleEvent("restore");
   // 重建时不提前 show()：交给 ready-to-show 显示，避免空白窗口闪烁
   const created = createMainWindow();
   created.once("ready-to-show", () => created.focus());
@@ -247,7 +277,10 @@ export const focusMainWindow = (): void => {
 
 /** 最小化主窗口 */
 export const minimizeMainWindow = (): void => {
-  getMainWindow()?.minimize();
+  const win = getMainWindow();
+  if (!win) return;
+  applyLifecycleEvent("minimize");
+  win.minimize();
 };
 
 /** 切换最大化 */
@@ -278,7 +311,10 @@ export const isMainWindowFullscreen = (): boolean => !!getMainWindow()?.isFullSc
 
 /** 隐藏主窗口 */
 export const hideMainWindow = (): void => {
-  getMainWindow()?.hide();
+  const win = getMainWindow();
+  if (!win) return;
+  applyLifecycleEvent("closeToTray");
+  win.hide();
 };
 
 /** 任务栏进度刷新间隔（毫秒）：系统任务栏的视觉刷新需求远低于播放位置推送率（5Hz） */

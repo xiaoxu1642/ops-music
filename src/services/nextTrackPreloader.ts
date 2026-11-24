@@ -13,6 +13,7 @@ import { useMediaStore } from "@/stores/media";
 import * as queue from "@/stores/queue";
 import { isAutoMixReady, connectAutoMixComponents } from "@/services/automix";
 import { AUTOMIX_ARM_LEAD_MS, NEXT_TRACK_WATCH_DEBOUNCE_MS } from "@shared/constants/playback";
+import { isFullUiMode, isSmartTransitionEnabled } from "@/lifecycle/playbackGates";
 
 /** 预载结果 */
 export interface NextTrackPreloadResult {
@@ -73,7 +74,7 @@ const buildContextKey = (track: Track): string => {
  * @param url - 要预载的封面地址
  */
 const preloadCover = async (url: string): Promise<void> => {
-  if (!url) return;
+  if (!url || !isFullUiMode()) return;
   if (pendingCover) pendingCover.src = "";
   const image = new Image();
   pendingCover = image;
@@ -111,12 +112,26 @@ export const invalidateNextTrackPreload = (): void => {
   invalidatePreloadedLyric();
 };
 
+/** 模式切换到受限态时作废预载与正在交接的原生槽位 */
+export const invalidateSmartTransitionForModeChange = (): void => {
+  if (transitionPreparedId) {
+    void window.api.player.cancelPrepared(transitionPreparedId).catch(console.warn);
+    transitionPreparedId = null;
+  }
+  generationOwner = null;
+  invalidateNextTrackPreload();
+};
+
 /**
  * 消费预载结果
  * @param track - 正在切入播放的目标歌曲
  * @returns 匹配的预载结果，未命中或已作废则返回 null
  */
 export const consumePreloadedTrack = (track: Track): NextTrackPreloadResult | null => {
+  if (!isSmartTransitionEnabled()) {
+    invalidateSmartTransitionForModeChange();
+    return null;
+  }
   if (!useSettingsStore().player.preloadNextTrack) {
     invalidateNextTrackPreload();
     return null;
@@ -155,6 +170,7 @@ export const consumePreloadedTrack = (track: Track): NextTrackPreloadResult | nu
  * @returns 仍有效且原生 PCM 已就绪的预载结果
  */
 export const peekPreparedTrack = (track: Track): NextTrackPreloadResult | null => {
+  if (!isSmartTransitionEnabled()) return null;
   if (!useSettingsStore().player.preloadNextTrack) return null;
   if (cachedResult?.trackId !== track.id || !cachedResult.preparedId) return null;
   return cachedResult.contextKey === buildContextKey(track) ? cachedResult : null;
@@ -172,6 +188,7 @@ export const beginPreparedTransition = (
   expectedId?: string,
   positionMs?: number,
 ): NextTrackPreloadResult | null => {
+  if (!isSmartTransitionEnabled()) return null;
   if (transitionPreparedId) return null;
   const prepared = peekPreparedTrack(track);
   if (!prepared?.source || (expectedId && prepared.preparedId !== expectedId)) return null;
@@ -202,7 +219,7 @@ export const finishPreparedTransition = (id: string, rejected?: NextTrackPreload
     currentContextKey = rejected.contextKey;
   }
   void window.api.player.cancelPrepared(id).catch(console.warn);
-  scheduleNextTrackPreload();
+  if (isSmartTransitionEnabled()) scheduleNextTrackPreload();
 };
 
 /**
@@ -231,6 +248,10 @@ const resumeDeferredPreload = (): boolean => {
  * 调度下一首预载任务
  */
 export const scheduleNextTrackPreload = (): void => {
+  if (!isSmartTransitionEnabled()) {
+    invalidateSmartTransitionForModeChange();
+    return;
+  }
   if (transitionPreparedId) return;
   const settings = useSettingsStore();
   if (!settings.player.preloadNextTrack) {
@@ -383,7 +404,7 @@ export const scheduleNextTrackPreload = (): void => {
 export const installNextTrackPreloadWatchers = (): void => {
   if (stopContextWatch) return;
   const settings = useSettingsStore();
-  if (settings.player.transitionMode === "automix")
+  if (settings.player.transitionMode === "automix" && isSmartTransitionEnabled())
     stopAutoMixComponents = connectAutoMixComponents();
   const status = useStatusStore();
   stopContextWatch = watch(
@@ -413,16 +434,34 @@ export const installNextTrackPreloadWatchers = (): void => {
       settings.system.localLyric.repoDir,
     ],
     () => {
-      if (settings.player.transitionMode === "automix") {
-        stopAutoMixComponents ??= connectAutoMixComponents();
-      } else {
-        stopAutoMixComponents?.();
-        stopAutoMixComponents = null;
-      }
+      syncAutoMixComponents();
       debouncedScheduleNextTrackPreload();
     },
     { flush: "post" },
   );
+};
+
+/** 按当前模式与过渡配置同步 AutoMix 组件订阅 */
+const syncAutoMixComponents = (): void => {
+  const settings = useSettingsStore();
+  if (settings.player.transitionMode === "automix" && isSmartTransitionEnabled()) {
+    stopAutoMixComponents ??= connectAutoMixComponents();
+    return;
+  }
+  stopAutoMixComponents?.();
+  stopAutoMixComponents = null;
+};
+
+/** 模式变化后刷新智能过渡能力，受限态取消预载并停止 AutoMix 订阅 */
+export const refreshSmartTransitionAvailability = (): void => {
+  if (!isSmartTransitionEnabled()) {
+    stopAutoMixComponents?.();
+    stopAutoMixComponents = null;
+    invalidateSmartTransitionForModeChange();
+    return;
+  }
+  syncAutoMixComponents();
+  scheduleNextTrackPreload();
 };
 
 /** 清理预载上下文监听 */
@@ -433,5 +472,5 @@ export const disposeNextTrackPreload = (): void => {
   stopContextWatch = null;
   stopAutoMixComponents?.();
   stopAutoMixComponents = null;
-  invalidateNextTrackPreload();
+  invalidateSmartTransitionForModeChange();
 };

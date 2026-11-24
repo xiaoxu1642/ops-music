@@ -8,6 +8,7 @@
 
 import { useStatusStore } from "@/stores/status";
 import * as player from "@/core/player";
+import { isPlaybackRestrictedMode } from "@/lifecycle/playbackGates";
 
 /** 倒计时 setInterval 句柄 */
 let tickHandle: ReturnType<typeof setInterval> | null = null;
@@ -15,7 +16,8 @@ let tickHandle: ReturnType<typeof setInterval> | null = null;
 let pendingPauseOnEnd = false;
 
 /** 是否应在当前曲目结束后停止，供过渡调度跳过下一曲 */
-export const shouldStopAfterCurrentTrack = (): boolean => pendingPauseOnEnd;
+export const shouldStopAfterCurrentTrack = (): boolean =>
+  !isPlaybackRestrictedMode() && pendingPauseOnEnd;
 
 const stopTick = (): void => {
   if (tickHandle !== null) {
@@ -26,6 +28,10 @@ const stopTick = (): void => {
 
 /** 倒计时 tick：每秒刷新 remainTime；归零后按模式触发 pause */
 const tick = (): void => {
+  if (isPlaybackRestrictedMode()) {
+    cancel();
+    return;
+  }
   const status = useStatusStore();
   const { autoClose } = status;
   if (!autoClose.enable) {
@@ -52,6 +58,7 @@ const tick = (): void => {
  * @param waitSongEnd true = 到点等本曲结束再停
  */
 export const start = (durationMin: number, waitSongEnd: boolean): void => {
+  if (isPlaybackRestrictedMode()) return;
   const status = useStatusStore();
   const safe = Math.max(1, Math.round(durationMin));
   status.autoClose.enable = true;
@@ -81,6 +88,10 @@ export const cancel = (): void => {
  * 返回 true 表示已处理 pause（调用方应跳过自动跳下一首）。
  */
 export const onTrackEnded = (): boolean => {
+  if (isPlaybackRestrictedMode()) {
+    pendingPauseOnEnd = false;
+    return false;
+  }
   if (!pendingPauseOnEnd) return false;
   pendingPauseOnEnd = false;
   player.pause().catch(() => {});

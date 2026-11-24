@@ -1,7 +1,9 @@
+import { app } from "electron";
 import { loadNativeModule } from "@main/utils/nativeLoader";
 import { mediaLog, nativeLogsDir } from "@main/utils/logger";
 import { isDev } from "@main/utils/config";
 import { store } from "@main/store";
+import { getCurrentLifecycleMode } from "@main/window/lifecycleMode";
 import type { MediaEvent, MetadataParam, PlayStateParam, TimelineParam } from "@splayer/media-ctrl";
 
 export type { MediaEvent, MetadataParam, PlayStateParam, TimelineParam };
@@ -56,10 +58,20 @@ const ensureLoaded = (): MediaCtrlModule | null => {
 };
 
 /** 是否启用系统媒体控件；关闭时连原生模块都不加载 */
-const isEnabled = (): boolean => !!store.get("media.systemMediaControls");
+const isEnabled = (): boolean =>
+  !!store.get("media.systemMediaControls") &&
+  ["full", "minimizedWithLyric"].includes(getCurrentLifecycleMode());
+
+/** 按当前生命周期与用户配置同步系统媒体控件 */
+export const syncMediaControlWithLifecycle = (): void => {
+  safeCall(() => {
+    if (isEnabled()) ensureLoaded()?.enable();
+    else mc?.disable();
+  });
+};
 
 /** 启用系统媒体控件 */
-export const enable = (): void => safeCall(() => ensureLoaded()?.enable());
+export const enable = (): void => syncMediaControlWithLifecycle();
 
 /** 禁用系统媒体控件 */
 export const disable = (): void => safeCall(() => mc?.disable());
@@ -113,3 +125,15 @@ export const setVolume = (volume: number): void => {
   if (!isEnabled()) return;
   safeCall(() => ensureLoaded()?.setVolume(volume));
 };
+
+// broadcast 只发给渲染进程，主进程需要在窗口事件后按当前生命周期同步原生会话
+app.on("browser-window-created", (_event, win) => {
+  const sync = (): void => {
+    setTimeout(syncMediaControlWithLifecycle, 0);
+  };
+  win.on("hide", sync);
+  win.on("show", sync);
+  win.on("minimize", sync);
+  win.on("restore", sync);
+  win.on("closed", sync);
+});

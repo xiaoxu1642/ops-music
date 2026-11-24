@@ -47,6 +47,7 @@ pub fn shutdown() {
 /// 启用系统媒体控件
 #[napi]
 pub fn enable() -> Result<()> {
+    info!("启用系统媒体控件");
     sys_media::get_platform_controls()
         .enable()
         .map_err(|e| napi::Error::from_reason(e.to_string()))
@@ -55,6 +56,7 @@ pub fn enable() -> Result<()> {
 /// 禁用系统媒体控件
 #[napi]
 pub fn disable() -> Result<()> {
+    info!("禁用系统媒体控件");
     sys_media::get_platform_controls()
         .disable()
         .map_err(|e| napi::Error::from_reason(e.to_string()))

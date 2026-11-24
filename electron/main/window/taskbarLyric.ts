@@ -11,6 +11,7 @@ import { broadcast } from "@main/utils/broadcast";
 import { setTrayTaskbarLyric } from "@main/services/tray";
 import { store } from "@main/store";
 import { isAppQuitting } from "@main/utils/lifecycle";
+import { applyLifecycleEvent, getCurrentLifecycleMode } from "@main/window/lifecycleMode";
 import * as nowPlaying from "@main/services/nowPlaying";
 import type { TaskbarLyricPosition } from "@shared/types/settings";
 import type {
@@ -120,6 +121,12 @@ export const getTaskbarLyricWindow = (): BrowserWindow | null =>
  * @returns 用户开关开启、窗口存在、未最小化、未被隐藏且未折叠时返回 true
  */
 export const isTaskbarLyricPresented = (): boolean => {
+  if (
+    getCurrentLifecycleMode() === "tray" ||
+    getCurrentLifecycleMode() === "minimizedWithoutLyric"
+  ) {
+    return false;
+  }
   const win = getTaskbarLyricWindow();
   return isTaskbarLyricPresentationShown({
     enabled: store.get("windowStates.taskbarLyric.visible"),
@@ -570,6 +577,7 @@ export const createTaskbarLyricWindow = (): BrowserWindow | null => {
     broadcast("taskbarLyric:visibilityChange", false);
     if (!isAppQuitting()) {
       store.set("windowStates.taskbarLyric.visible", false);
+      applyLifecycleEvent("taskbarLyricChanged", false);
     }
   });
 

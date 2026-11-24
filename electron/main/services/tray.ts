@@ -1,10 +1,12 @@
-import { app, Menu, MenuItemConstructorOptions, nativeTheme, Tray } from "electron";
+import { app, Menu, nativeTheme, Tray } from "electron";
+import type { MenuItemConstructorOptions } from "electron";
 import type { RepeatMode, ShuffleMode } from "@shared/types/player";
 import { sendToMain } from "@main/utils/broadcast";
 import { appName, isWin } from "@main/utils/config";
 import { loadIcon, loadThemedIcon } from "@main/utils/icon";
 import { t } from "@main/utils/i18n";
 import { trayLog } from "@main/utils/logger";
+import { applyLifecycleEvent, getCurrentLifecycleMode } from "@main/window/lifecycleMode";
 import { toggleTaskbarLyricWindow, focusMainWindow } from "@main/window";
 
 type PlayState = "playing" | "paused";
@@ -19,6 +21,12 @@ let taskbarLyricOpen = false;
 
 /** 上次构建菜单时的状态签名，null 表示尚未构建 */
 let traySignature: string | null = null;
+
+/** 托盘是否应提供任务栏歌词入口 */
+const canToggleTaskbarLyric = (): boolean => {
+  const mode = getCurrentLifecycleMode();
+  return isWin && (mode === "full" || mode === "minimizedWithLyric");
+};
 
 const repeatLabel = (mode: RepeatMode): string =>
   ({ list: t("repeatList"), one: t("repeatOne") })[mode];
@@ -39,7 +47,10 @@ const buildMenu = (): Menu => {
       label: songName || appName,
       icon: menuIcon("music"),
       enabled: !!songName,
-      click: () => focusMainWindow(),
+      click: () => {
+        applyLifecycleEvent("restore");
+        focusMainWindow();
+      },
     },
     {
       label: liked ? t("removeFromLiked") : t("addToLiked"),
@@ -106,12 +117,16 @@ const buildMenu = (): Menu => {
     },
     { type: "separator" },
     // 任务栏歌词
-    ...(isWin
+    ...(canToggleTaskbarLyric()
       ? [
           {
             label: taskbarLyricOpen ? t("closeTaskbarLyric") : t("openTaskbarLyric"),
             icon: menuIcon("lyric"),
-            click: () => toggleTaskbarLyricWindow(),
+            click: () => {
+              if (!canToggleTaskbarLyric()) return;
+              const open = toggleTaskbarLyricWindow();
+              applyLifecycleEvent("taskbarLyricChanged", open);
+            },
           },
         ]
       : []),
@@ -134,6 +149,7 @@ const menuSignature = (): string =>
     repeatMode,
     shuffleMode,
     taskbarLyricOpen ? "1" : "0",
+    getCurrentLifecycleMode(),
     nativeTheme.shouldUseDarkColors ? "dark" : "light",
   ].join("|");
 
@@ -155,7 +171,10 @@ export const initTray = (): void => {
   traySignature = null;
   refreshTray();
   // 单击托盘图标显示窗口
-  tray.on("click", () => focusMainWindow());
+  tray.on("click", () => {
+    applyLifecycleEvent("restore");
+    focusMainWindow();
+  });
   // 系统主题变化时刷新菜单图标
   nativeTheme.on("updated", refreshTray);
   trayLog.info("初始化系统托盘");

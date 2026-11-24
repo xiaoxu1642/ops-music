@@ -12,6 +12,7 @@
 import type { Track } from "@shared/types/player";
 import { useMediaStore } from "@/stores/media";
 import { useStatusStore } from "@/stores/status";
+import { isPlaybackRestrictedMode } from "@/lifecycle/playbackGates";
 
 /** 低于此收听时长不记录 */
 const MIN_RECORD_MS = 5000;
@@ -28,6 +29,7 @@ interface Session {
 
 let session: Session | null = null;
 let installed = false;
+let enabled = true;
 
 /** 曲目身份标识 */
 const trackKey = (track: Track): string => `${track.source}:${track.id}`;
@@ -47,6 +49,10 @@ const begin = (track: Track, playing: boolean): void => {
 
 /** 结算当前会话并落库 */
 const finalize = (): void => {
+  if (!enabled || isPlaybackRestrictedMode()) {
+    session = null;
+    return;
+  }
   if (!session) return;
   settle();
   const { track, startedAt, listenedMs } = session;
@@ -60,10 +66,20 @@ const finalize = (): void => {
  * @param restart - 单曲循环:结算后立即为同一首开新会话,使每圈各成一行
  */
 export const onTrackEnded = (restart: boolean): void => {
+  if (!enabled || isPlaybackRestrictedMode()) {
+    session = null;
+    return;
+  }
   finalize();
   if (!restart) return;
   const track = useMediaStore().track;
   if (track) begin(track, true);
+};
+
+/** 启用或停用播放统计；停用时丢弃未结算会话，避免退出受限态后补记 */
+export const setPlayStatsEnabled = (value: boolean): void => {
+  enabled = value;
+  if (!value) session = null;
 };
 
 /** 安装播放统计累加器 */
@@ -77,6 +93,10 @@ export const installPlayStats = (): void => {
   watch(
     () => (media.track ? trackKey(media.track) : null),
     () => {
+      if (!enabled || isPlaybackRestrictedMode()) {
+        session = null;
+        return;
+      }
       finalize();
       if (media.track) begin(media.track, status.state === "playing");
     },
@@ -86,6 +106,10 @@ export const installPlayStats = (): void => {
   watch(
     () => status.state,
     (state) => {
+      if (!enabled || isPlaybackRestrictedMode()) {
+        session = null;
+        return;
+      }
       if (!session) return;
       if (state === "playing") {
         if (session.playingSince === null) session.playingSince = Date.now();

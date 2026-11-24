@@ -6,7 +6,7 @@ import { NowPlayingApi } from "@shared/types/nowPlaying";
 import { ApisApi } from "@shared/types/apis";
 import { LyricsApi } from "@shared/types/lyrics";
 import { DownloadApi } from "@shared/types/download";
-import { WindowApi, TaskbarLyricApi } from "@shared/types/window";
+import { WindowApi, TaskbarLyricApi, StartupApi } from "@shared/types/window";
 import { HotkeyApi } from "@shared/types/hotkey";
 import { IpcResponse } from "@shared/types/player";
 import { StatsApi } from "@shared/types/stats";
@@ -80,6 +80,7 @@ declare global {
         };
       };
       stats: StatsApi;
+      startup: StartupApi;
       hotkey: HotkeyApi;
     };
   }

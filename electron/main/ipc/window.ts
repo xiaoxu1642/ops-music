@@ -13,15 +13,33 @@ import {
   isMainWindowFullscreen,
   hideMainWindow,
 } from "@main/window";
+import {
+  applyLifecycleEvent,
+  getCurrentLifecycleMode,
+  getLifecycleState,
+} from "@main/window/lifecycleMode";
 
 /** 窗口管理 IPC */
 export const registerWindowIpc = (): void => {
   // 任务栏歌词仅在 Windows 注册
   if (isWin) {
     // 切换任务栏歌词窗口
-    ipcMain.handle("window:toggleTaskbarLyric", () => toggleTaskbarLyricWindow());
+    ipcMain.handle("window:toggleTaskbarLyric", () => {
+      if (
+        getCurrentLifecycleMode() === "tray" ||
+        getCurrentLifecycleMode() === "minimizedWithoutLyric"
+      )
+        return false;
+      const open = toggleTaskbarLyricWindow();
+      applyLifecycleEvent("taskbarLyricChanged", open);
+      return open;
+    });
     // 关闭任务栏歌词窗口
-    ipcMain.handle("window:closeTaskbarLyric", () => closeTaskbarLyricWindow());
+    ipcMain.handle("window:closeTaskbarLyric", () => {
+      if (getCurrentLifecycleMode() === "tray") return;
+      closeTaskbarLyricWindow();
+      applyLifecycleEvent("taskbarLyricChanged", false);
+    });
     // 查询任务栏歌词窗口是否打开
     ipcMain.handle("window:isTaskbarLyricOpen", () => !!getTaskbarLyricWindow());
     // 取回自动关闭提示（主窗口缺失期间暂存）
@@ -46,4 +64,6 @@ export const registerWindowIpc = (): void => {
   ipcMain.handle("window:isFullscreen", () => isMainWindowFullscreen());
   ipcMain.on("window:hide", () => hideMainWindow());
   ipcMain.on("window:quit", () => app.quit());
+  // 渲染端启动时读取当前生命周期，避免错过启动前广播
+  ipcMain.handle("lifecycle:getState", () => getLifecycleState());
 };

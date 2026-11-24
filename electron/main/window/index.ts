@@ -1,5 +1,6 @@
 import { store } from "@main/store";
 import { isWin } from "@main/utils/config";
+import { getCurrentLifecycleMode } from "@main/window/lifecycleMode";
 import { createTaskbarLyricWindow } from "./taskbarLyric";
 
 export { createWindow } from "./create";
@@ -28,7 +29,12 @@ export {
 
 /** 恢复歌词相关窗口 */
 export const restoreLyricWindows = (): void => {
-  if (isWin && store.get("windowStates.taskbarLyric.visible")) {
+  if (
+    isWin &&
+    getCurrentLifecycleMode() !== "tray" &&
+    getCurrentLifecycleMode() !== "minimizedWithoutLyric" &&
+    store.get("windowStates.taskbarLyric.visible")
+  ) {
     createTaskbarLyricWindow();
   }
 };

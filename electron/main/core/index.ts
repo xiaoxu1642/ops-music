@@ -16,7 +16,9 @@ import { init as initSongCache } from "@main/services/songCache";
 import { init as initDownload } from "@main/services/downloadManager";
 import { captureAudioFiles, extractAudioFiles } from "@main/services/externalFile";
 import { registerCacheScheme, handleCacheProtocol } from "@main/utils/protocol";
+import { initTray } from "@main/services/tray";
 import { coreLog, initLogger } from "@main/utils/logger";
+import { markStartupMilestone } from "@main/utils/startupMetrics";
 
 /**
  * 配置 Chromium 启动参数以优化内存占用
@@ -126,6 +128,9 @@ export const initApp = (): void => {
   // 其他初始化
   const initPromise = app.whenReady().then(() => {
     electronApp.setAppUserModelId("com.ops.music");
+    // 托盘不依赖主窗口，尽早创建以满足“可播放 + 托盘就绪”的启动上限
+    initTray();
+    markStartupMilestone("trayReady");
     // 注册 cache:// 协议处理
     handleCacheProtocol();
     // 注册 IPC
@@ -134,16 +139,17 @@ export const initApp = (): void => {
     // 初始化数据库
     initDatabase();
     logStartupStage("数据库初始化");
-    // 创建主窗口
-    createMainWindow();
-    logStartupStage("主窗口创建");
     // 启动歌曲缓存
     void initSongCache();
     // 启动下载服务
     void initDownload();
-    // 恢复歌词相关窗口
-    restoreLyricWindows();
-    logStartupStage("歌词窗口恢复");
+    // 主窗口和歌词窗口不阻塞播放里程碑，安排到当前任务结束后创建
+    setTimeout(() => {
+      createMainWindow();
+      logStartupStage("主窗口创建");
+      restoreLyricWindows();
+      logStartupStage("歌词窗口恢复");
+    }, 0);
     // 注册全局快捷键
     initGlobalHotkey();
     // 周期记录各进程内存
